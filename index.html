@@ -209,6 +209,7 @@
 
   <div class="content">
     <div class="content-header">
+      <button class="btn" id="btnDataBackup" style="margin-right:auto;">備份 / 匯入</button>
       <button class="btn" id="editBtn">編輯</button>
       <div class="edit-actions" id="editActions">
         <button class="btn cancel" id="cancelBtn">取消</button>
@@ -291,6 +292,21 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalBackupOverlay" style="display:none;">
+  <div class="modal">
+    <h3>資料備份與還原</h3>
+    <p class="hint">公開版預設不含個人資料。您可以匯出備份 JSON，或匯入先前儲存的資料檔案。</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:16px 0;">
+      <button class="btn" id="btnExportDashboard" style="width:100%;padding:10px;text-align:center;">匯出個人資料 (JSON)</button>
+      <button class="btn" id="btnImportDashboard" style="width:100%;padding:10px;text-align:center;">匯入個人資料 (JSON)</button>
+      <input type="file" id="dashboardFileInput" accept=".json" style="display:none;">
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" id="modalBackupClose">關閉</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -317,15 +333,8 @@
   }
 
   var DEFAULT_DATA = {
-    copyItems: [
-      { id:'c1', text:'三山羊長老' },
-      { id:'c2', text:'我屁股好痛' },
-      { id:'c3', text:'9879-2456' }
-    ],
-    shortcutItems: [
-      { id:'s1', name:'機車mode', input:'' },
-      { id:'s2', name:'整合行動支付 3.0', input:'' }
-    ],
+    copyItems: [],
+    shortcutItems: [],
     accounts: [],
     expenses: [],
     budget: 0
@@ -746,6 +755,60 @@
   }
   modalConfirm.addEventListener('click', confirmModal);
   modalInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') confirmModal(); });
+
+  // ==================== 備份與還原 ====================
+  document.getElementById('btnDataBackup').addEventListener('click', function(){
+    document.getElementById('modalBackupOverlay').style.display = 'flex';
+  });
+  document.getElementById('modalBackupClose').addEventListener('click', function(){
+    document.getElementById('modalBackupOverlay').style.display = 'none';
+  });
+  document.getElementById('btnExportDashboard').addEventListener('click', function(){
+    var filename = 'super-dashboard-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    var jsonStr = JSON.stringify({
+      copyItems: state.copyItems,
+      shortcutItems: state.shortcutItems,
+      accounts: state.accounts,
+      expenses: state.expenses,
+      budget: state.budget
+    }, null, 2);
+    var blob = new Blob([jsonStr], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('備份已下載');
+  });
+  document.getElementById('btnImportDashboard').addEventListener('click', function(){
+    document.getElementById('dashboardFileInput').click();
+  });
+  document.getElementById('dashboardFileInput').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var parsed = JSON.parse(evt.target.result);
+        if(!parsed) throw new Error('invalid');
+        state.copyItems = Array.isArray(parsed.copyItems) ? parsed.copyItems : [];
+        state.shortcutItems = Array.isArray(parsed.shortcutItems) ? parsed.shortcutItems : [];
+        state.accounts = Array.isArray(parsed.accounts) ? parsed.accounts : [];
+        state.expenses = Array.isArray(parsed.expenses) ? parsed.expenses : [];
+        state.budget = Number(parsed.budget) || 0;
+        saveData();
+        renderAll();
+        renderFinance();
+        document.getElementById('modalBackupOverlay').style.display = 'none';
+        showToast('資料匯入完成');
+      }catch(err){
+        alert('匯入失敗，請確認檔案格式是否正確。');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
 
   // ==================== 日期顯示 ====================
   function updateDate(){
