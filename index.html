@@ -24,13 +24,14 @@
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
   html,body{
-    height:100%; margin:0; overscroll-behavior:none; background:var(--panel);
+    height:100%; margin:0; padding:0; overscroll-behavior:none; background:#0E0C09;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Helvetica Neue",sans-serif;
     color:var(--text);
   }
   #app{
     height:100dvh; display:flex; flex-direction:column; overflow:hidden;
-    padding-top:env(safe-area-inset-top);
+    margin:0; padding:0; padding-top:env(safe-area-inset-top, 0);
+    box-sizing:border-box; background:#0E0C09;
   }
 
   .icon{ width:1em; height:1em; display:inline-block; vertical-align:-0.125em; flex-shrink:0; }
@@ -530,20 +531,26 @@
   .wallet-empty-title{ font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
   .wallet-empty-sub{ font-size:12.5px; margin-bottom:16px; }
 
-  /* ---- tab bar ---- */
+  /* ---- tab bar (填滿 iPhone PWA 底部安全區，消除大下巴) ---- */
   .tabbar{
-    display:flex; border-top:1px solid var(--border); flex-shrink:0;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 6px);
+    display:flex;
+    background:#0E0C09;
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+    padding-bottom:env(safe-area-inset-bottom, 0);
+    box-sizing:border-box;
+    position:relative;
+    z-index:40;
   }
   .tab{
     flex:1; background:none; border:none; color:var(--text-muted);
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    padding:10px 0 4px; cursor:pointer;
+    padding:8px 0 6px; cursor:pointer; box-sizing:border-box;
   }
   .tab .icon{ font-size:20px; }
   .tab .txt{ font-size:10.5px; letter-spacing:.5px; }
-  .tab.active{ color:var(--text); }
-  .tab.active .icon{ filter:drop-shadow(0 0 6px var(--amber)); }
+  .tab.active{ color:var(--amber); }
+  .tab.active .icon{ color:var(--amber); filter:drop-shadow(0 0 6px var(--amber)); }
   .tab.placeholder{ opacity:.3; pointer-events:none; }
 
   /* ---- modal 雙頁簽設計 ---- */
@@ -4887,6 +4894,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(emptyEl) emptyEl.style.display = hasCards ? 'none' : 'block';
     if(stageEl) stageEl.style.display = hasCards ? 'block' : 'none';
     if(histEl) histEl.style.display = hasCards ? 'block' : 'none';
+    updateAddCardBtnVisibility();
 
     if(!hasCards){ renderCardTxList(null); return; }
 
@@ -5130,8 +5138,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       senseOverlayEl.classList.remove('closing');
       senseOverlayEl.style.display = 'none';
       senseActiveCard = null;
-      // 關鍵要求：感應打勾完成後 100% 跳回錢包頁面
-      switchTab('wallet');
+      // 關鍵修復：打勾完成後 100% 正確跳回錢包主頁面
+      switchPage('wallet');
       renderWallet();
     }, 240);
   }
@@ -5250,10 +5258,29 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var addCardHeaderBtn = document.getElementById('addCardHeaderBtn');
   var walletMoreBtn = document.getElementById('walletMoreBtn');
   function updateAddCardBtnVisibility(){
-    var show = (currentPage === 'wallet' && !state.editMode);
-    if(addCardHeaderBtn) addCardHeaderBtn.style.display = show ? 'inline-flex' : 'none';
-    if(walletMoreBtn) walletMoreBtn.style.display = show ? 'inline-flex' : 'none';
+    var isWallet = (currentPage === 'wallet');
+    var hasCards = (state.cards && state.cards.length > 0);
+
+    // 關鍵要求：在新增第一張卡片之前，上方不該出現「新增卡片」與「編輯」
+    if(addCardHeaderBtn){
+      addCardHeaderBtn.style.display = (isWallet && !state.editMode && hasCards) ? 'inline-flex' : 'none';
+    }
+    if(editBtn){
+      if(isWallet){
+        // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
+        editBtn.style.display = (!state.editMode && hasCards) ? 'inline-block' : 'none';
+      } else {
+        // 在儀表板或財務頁面：正常顯示編輯按鈕
+        editBtn.style.display = state.editMode ? 'none' : 'inline-block';
+      }
+    }
+    if(walletMoreBtn){
+      // 三個點更多設定中樞：在錢包頁面非編輯模式下顯示
+      walletMoreBtn.style.display = (isWallet && !state.editMode) ? 'inline-flex' : 'none';
+    }
   }
+
+  window.switchTab = function(tab){ switchPage(tab); };
 
   function switchPage(page){
     if(state.editMode){ cancelEdit(); }
@@ -5613,6 +5640,146 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }, 1200);
     });
   }
+
+  // ==================== 彈窗控制核心 (新增/編輯/預算) ====================
+  function configureModalFields(type){
+    var isCard = (type === 'card');
+    var isExpense = (type === 'expense');
+
+    var modalTabBar = document.getElementById('modalTabBar');
+    if(modalTabBar) modalTabBar.style.display = isCard ? 'flex' : 'none';
+
+    var modalFieldTheme = document.getElementById('modalFieldTheme');
+    if(modalFieldTheme) modalFieldTheme.style.display = isCard ? 'block' : 'none';
+
+    var modalField2 = document.getElementById('modalField2');
+    if(modalField2) modalField2.style.display = (type === 'copy') ? 'none' : 'block';
+
+    var modalField3 = document.getElementById('modalField3');
+    if(modalField3) modalField3.style.display = (isExpense || isCard) ? 'block' : 'none';
+
+    var expressGroup = document.getElementById('expressTransitGroup');
+    if(expressGroup) expressGroup.style.display = (isCard && modalCategory === 'transit') ? 'block' : 'none';
+
+    if(isExpense || isCard) buildCategorySeg(type);
+
+    if(type === 'copy'){
+      modalLabel1.textContent = '內容';
+      modalInput.placeholder = '例如:常用地址、代碼…';
+    } else if(type === 'shortcut'){
+      modalLabel1.textContent = '捷徑名稱';
+      modalInput.placeholder = '例如:機車mode';
+      modalLabel2.textContent = 'Input 參數(選填,傳給捷徑的「輸入」)';
+      modalInput2.placeholder = '留空則不帶參數';
+      modalInput2.setAttribute('inputmode','text');
+    } else if(type === 'account'){
+      modalLabel1.textContent = '帳戶 / 電子支付名稱';
+      modalInput.placeholder = '例如:國泰銀行、LINE Pay';
+      modalLabel2.textContent = '目前餘額';
+      modalInput2.placeholder = '例如:35000';
+      modalInput2.setAttribute('inputmode','decimal');
+    } else if(type === 'expense'){
+      modalLabel1.textContent = '項目名稱';
+      modalInput.placeholder = '例如:機車保險、Netflix';
+      modalLabel2.textContent = '每月金額';
+      modalInput2.placeholder = '例如:299';
+      modalInput2.setAttribute('inputmode','decimal');
+    } else if(type === 'card'){
+      modalLabel1.textContent = '卡片名稱';
+      modalInput.placeholder = '例如:悠遊卡、住家門禁、愛車鑰匙';
+      modalLabel2.textContent = '起始餘額(公車捷運類型才會扣款,其他可留 0)';
+      modalInput2.placeholder = '例如:500';
+      modalInput2.setAttribute('inputmode','decimal');
+    }
+  }
+
+  function openAddModal(type){
+    modalMode = 'add';
+    modalTarget = type;
+    switchModalTab('general');
+    configureModalFields(type);
+    var titles = { copy:'新增文字', shortcut:'新增捷徑', account:'新增帳戶', expense:'新增固定支出', card:'新增卡片' };
+    var hints = {
+      copy:'這段文字會同時作為按鈕名稱與複製內容',
+      shortcut:'請輸入「捷徑」App 中的捷徑名稱,需完全一致',
+      account:'記錄餘額,方便掌握總資產',
+      expense:'保險、訂閱等每月固定要付的錢',
+      card:'公車、門禁、車鑰匙都可以,新增後可設定自動加值'
+    };
+    modalTitle.textContent = titles[type] || '新增項目';
+    modalHint.textContent = hints[type] || '';
+    modalConfirm.textContent = '新增';
+    modalInput.value = '';
+    modalInput2.value = '';
+    setCategory(type === 'card' ? 'transit' : 'other');
+    setTheme('theme-gold');
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); }, 50);
+  }
+
+  function openEditModal(type, item){
+    modalMode = 'edit';
+    editContext = { type:type, id:item.id };
+    switchModalTab('general');
+    configureModalFields(type);
+    var titles = { copy:'編輯文字', shortcut:'編輯捷徑', account:'編輯帳戶', expense:'編輯固定支出', card:'編輯卡片' };
+    var hints = {
+      copy:'這段文字會同時作為按鈕名稱與複製內容',
+      shortcut:'請輸入「捷徑」App 中的捷徑名稱,需完全一致',
+      account:'記錄餘額,方便掌握總資產',
+      expense:'保險、訂閱等每月固定要付的錢',
+      card:'公車、門禁、車鑰匙都可以,新增後可設定自動加值'
+    };
+    modalTitle.textContent = titles[type] || '編輯項目';
+    modalHint.textContent = hints[type] || '';
+
+    if(type === 'copy'){ modalInput.value = item.text; }
+    else if(type === 'shortcut'){ modalInput.value = item.name; modalInput2.value = item.input || ''; }
+    else if(type === 'account'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; }
+    else if(type === 'expense'){ modalInput.value = item.name; modalInput2.value = item.amount || ''; setCategory(item.category || 'other'); }
+    else if(type === 'card'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; setCategory(item.type || 'other'); setTheme(item.theme || 'theme-gold'); }
+
+    modalConfirm.textContent = '儲存';
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
+  }
+
+  function openBudgetModal(){
+    modalMode = 'budget';
+    var modalFieldTheme = document.getElementById('modalFieldTheme');
+    if(modalFieldTheme) modalFieldTheme.style.display = 'none';
+    var modalTabBar = document.getElementById('modalTabBar');
+    if(modalTabBar) modalTabBar.style.display = 'none';
+    var modalField2 = document.getElementById('modalField2');
+    if(modalField2) modalField2.style.display = 'none';
+    var modalField3 = document.getElementById('modalField3');
+    if(modalField3) modalField3.style.display = 'none';
+    var expressGroup = document.getElementById('expressTransitGroup');
+    if(expressGroup) expressGroup.style.display = 'none';
+
+    modalTitle.textContent = '設定每月預算';
+    modalHint.textContent = '用來估算固定支出是否超支';
+    modalLabel1.textContent = '每月預算金額';
+    modalInput.placeholder = '例如:20000';
+    modalInput.setAttribute('inputmode','decimal');
+    modalInput.value = state.budget ? String(state.budget) : '';
+    modalConfirm.textContent = '儲存';
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
+  }
+  var budgetEditBtn = document.getElementById('budgetEditBtn');
+  if(budgetEditBtn){
+    budgetEditBtn.addEventListener('click', openBudgetModal);
+  }
+
+  function closeModal(){
+    modalOverlay.classList.remove('show');
+    modalInput.removeAttribute('inputmode');
+  }
+  if(modalCancel) modalCancel.addEventListener('click', closeModal);
+  var modalAirlineCancel = document.getElementById('modalAirlineCancel');
+  if(modalAirlineCancel) modalAirlineCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function(e){ if(e.target === modalOverlay) closeModal(); });
 
   function confirmModal(){
     if(modalMode === 'budget'){
