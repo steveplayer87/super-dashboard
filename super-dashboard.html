@@ -201,7 +201,7 @@
     display: flex;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 8px 8% 22px 8%;
+    padding: 10px calc(50% - 155px) 22px; width: 100%; box-sizing: border-box;
     perspective: 1000px;
     cursor: grab;
     box-sizing: border-box;
@@ -333,7 +333,7 @@
     border:1px solid #4a3c1f;
     box-shadow:0 8px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
     color:#F3E3B8;
-    transform-style:preserve-3d; will-change:transform; touch-action:none; overflow:hidden;
+    transform-style:preserve-3d; will-change:transform; touch-action:pan-x pan-y; overflow:hidden;
     display:flex; flex-direction:column; justify-content:space-between;
     transition:box-shadow .3s ease, border-color .3s ease;
   }
@@ -2725,7 +2725,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name">全聯福利中心 (PX Pay / 實體卡)</div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><circle cx="8" cy="12" r="6" stroke="#005bac" stroke-width="2.5"/><circle cx="16" cy="12" r="6" stroke="#e60012" stroke-width="2.5"/></svg><span>全聯福利中心 (PX Pay)</span></div>
                 <div class="loyalty-item-desc">結帳自動報號並累積福利點數</div>
               </div>
             </div>
@@ -2739,7 +2739,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name">7-ELEVEN OPEN POINT</div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect width="24" height="24" rx="4" fill="#007B5F"/><path d="M5 5 H19 V8 L10 19 H6 L13 8 H5 Z" fill="#EE1C25"/><path d="M14 9 H18 V19 H15 V12 H14 Z" fill="#F58220"/></svg><span>7-ELEVEN OPEN POINT</span></div>
                 <div class="loyalty-item-desc">統一超商、康是美全集團自動積點</div>
               </div>
             </div>
@@ -2753,7 +2753,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name">全家 FamilyMart (全盈+PAY / 點數)</div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="7" fill="#008FD7" rx="1"/><rect x="2" y="13" width="20" height="7" fill="#58B826" rx="1"/></svg><span>全家 FamilyMart</span></div>
                 <div class="loyalty-item-desc">會員條碼與發票載具雙重同動</div>
               </div>
             </div>
@@ -2767,7 +2767,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name">家樂福 Carrefour (VIP 點數)</div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><path d="M4 6 L10 12 L4 18" stroke="#E2001A" stroke-width="3" stroke-linecap="round"/><path d="M20 6 L14 12 L20 18" stroke="#00387B" stroke-width="3" stroke-linecap="round"/></svg><span>家樂福 Carrefour</span></div>
                 <div class="loyalty-item-desc">大賣場與超市消費紅利自動歸戶</div>
               </div>
             </div>
@@ -2781,7 +2781,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name">屈臣氏 Watsons (寵i俱樂部)</div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect width="24" height="16" y="4" rx="3" fill="#008080"/><text x="12" y="15" font-size="7" font-weight="900" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">W</text></svg><span>屈臣氏 Watsons</span></div>
                 <div class="loyalty-item-desc">藥妝門市感應付款即享會員價與積點</div>
               </div>
             </div>
@@ -4463,7 +4463,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             '<span class="info-val">' + escapeHtml(card.boardingTime || '10:30') + '</span>' +
           '</div>' +
           '<div class="boarding-expand-btn">' +
-            '<span>感應 / 條碼</span>' +
+            '<span>感應交易</span>' +
             '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
           '</div>' +
         '</div>' +
@@ -5499,10 +5499,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       name: '星宇航空 JX800',
       type: 'boarding',
       airline: 'STARLUX 星宇航空',
-      provider: 'STARLUX AIRLINES',
-      title: '星宇航空國際線登機證',
-      desc: '台北(TPE) 直飛 大阪關西(KIX)，JX800 商務艙專屬優先登機。感應時啟動 Face ID 雙重認證解鎖動態 QR Code。',
-      perks: ['優先安檢', '貴賓室使用', '32kg 行李額度'],
+      passType: 'airline',
       btnText: '取得星宇航空登機證',
       fromCode: 'TPE', toCode: 'KIX', flightNo: 'JX800', gate: 'B7', seat: '12A', boardingTime: '10:30', ticketNo: '289-9817263541',
       theme: 'theme-boarding'
@@ -5511,37 +5508,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       name: '東京地鐵 24H 乘車券',
       type: 'boarding',
       airline: 'Tokyo Metro & Toei',
-      provider: 'TOKYO METRO & TOEI SUBWAY',
-      title: '東京地下鐵 24 小時觀光通票',
-      desc: '全線 13 條地下鐵路線（銀座線、丸之內線、日比谷線等）無限次數自由搭乘，於檢票閘門光學讀卡機感應二維碼秒過。',
-      perks: ['13條路線暢乘', '開卡後24小時', '外籍旅客專屬'],
+      passType: 'subway',
       btnText: '取得東京地鐵 24H 通票',
-      fromCode: 'TKY', toCode: 'ALL', flightNo: 'METRO 24H', gate: '地下鐵閘門', seat: '全線暢乘', boardingTime: '24H有效', ticketNo: 'SUBWAY-TKY-24H-8924',
-      theme: 'theme-aurora'
+      fromCode: 'TKY', toCode: 'ALL', flightNo: 'METRO 24H', gate: '閘門掃描', seat: '全線通用', boardingTime: '24H有效', ticketNo: 'SUBWAY-TKY-24H-8924',
+      theme: 'theme-subway'
     },
     seven_eleven: {
       name: '7-11 特大拿鐵提貨券',
       type: 'boarding',
       airline: '7-ELEVEN CITY CAFE',
-      provider: 'PRESIDENT CHAIN STORE CORP.',
-      title: '7-ELEVEN CITY CAFE 特大熱拿鐵',
-      desc: '全台統一超商實體門市條碼即刷即領，支援冷熱互換與自備杯折 5 元優惠，條碼經 Face ID 驗證後顯現防止盜刷。',
-      perks: ['全台門市通用', '30天兌換期', '冰熱互換自選'],
+      passType: 'seven',
       btnText: '領取 7-11 拿鐵兌換券',
       fromCode: '7-11', toCode: 'CAFE', flightNo: 'CITY CAFE', gate: '全台門市', seat: '特大熱拿鐵', boardingTime: '30天有效', ticketNo: '711-CITY-CAFE-9824',
-      theme: 'theme-copper'
+      theme: 'theme-seven'
     },
     starbucks: {
       name: '星巴克預點取餐卡',
       type: 'boarding',
       airline: 'Starbucks Coffee',
-      provider: 'STARBUCKS MOBILE ORDER',
-      title: '星巴克行動預點即時取餐卡',
-      desc: '台北信義微風門市 ‧ 專屬取餐叫號卡。飲品製作完成時推播通知，櫃檯出示條碼或 Apple Watch 即可領取。',
-      perks: ['免排隊取餐', '特選燕麥馥列白', '特大杯飲品'],
+      passType: 'starbucks',
       btnText: '領取星巴克取餐卡',
       fromCode: 'SBUX', toCode: 'ORDER', flightNo: '#SB-8924', gate: '吧台取餐區', seat: '信義微風門市', boardingTime: '製作完成', ticketNo: 'SBUX-ORDER-8924',
-      theme: 'theme-emerald'
+      theme: 'theme-starbucks'
     }
   };
 
@@ -5556,61 +5544,46 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       carousel.querySelectorAll('.ticket-card-slide').forEach(function(s){
         var isMatch = (s.dataset.ticket === tKey);
         s.classList.toggle('active', isMatch);
-        if(isMatch){
+        if(isMatch && carousel.scrollLeft !== undefined){
           var targetLeft = s.offsetLeft - (carousel.clientWidth - s.clientWidth) / 2;
           carousel.scrollTo({ left: targetLeft, behavior: 'smooth' });
         }
       });
     }
 
-    var titleEl = document.getElementById('ticketDetailTitle');
-    var provEl = document.getElementById('ticketDetailProvider');
-    var descEl = document.getElementById('ticketDetailDesc');
-    var perksEl = document.getElementById('ticketDetailPerks');
     var btnTextEl = document.getElementById('airlineBtnText');
-
-    if(titleEl) titleEl.textContent = tData.title;
-    if(provEl) provEl.textContent = tData.provider;
-    if(descEl) descEl.textContent = tData.desc;
     if(btnTextEl) btnTextEl.textContent = tData.btnText;
-    if(perksEl){
-      perksEl.innerHTML = tData.perks.map(function(p){
-        return '<span class="ticket-perk-chip">' + escapeHtml(p) + '</span>';
-      }).join('');
-    }
   }
 
-  // 監聽票卡點擊與滑動
   var ticketsCarousel = document.getElementById('ticketsCarousel');
   if(ticketsCarousel){
     ticketsCarousel.querySelectorAll('.ticket-card-slide').forEach(function(slide){
-      slide.addEventListener('click', function(){
+      slide.onclick = function(){
         setTicket(slide.dataset.ticket);
-      });
+      };
     });
 
-    var tScrollTimer = null;
-    ticketsCarousel.addEventListener('scroll', function(){
-      clearTimeout(tScrollTimer);
-      tScrollTimer = setTimeout(function(){
-        var slides = ticketsCarousel.querySelectorAll('.ticket-card-slide');
-        if(!slides.length) return;
-        var center = ticketsCarousel.scrollLeft + ticketsCarousel.clientWidth / 2;
-        var closestKey = 'starlux';
-        var minDiff = Infinity;
-        slides.forEach(function(s){
-          var sCenter = s.offsetLeft + s.clientWidth / 2;
-          var diff = Math.abs(center - sCenter);
-          if(diff < minDiff){
-            minDiff = diff;
-            closestKey = s.dataset.ticket;
-          }
-        });
-        if(closestKey && closestKey !== currentSelectedTicket){
-          setTicket(closestKey);
+    ticketsCarousel.onscroll = function(){
+      var slides = ticketsCarousel.querySelectorAll('.ticket-card-slide');
+      if(!slides.length) return;
+      var center = ticketsCarousel.scrollLeft + ticketsCarousel.clientWidth / 2;
+      var closestKey = 'starlux';
+      var minDiff = Infinity;
+      slides.forEach(function(s){
+        var sCenter = s.offsetLeft + s.clientWidth / 2;
+        var diff = Math.abs(center - sCenter);
+        if(diff < minDiff){
+          minDiff = diff;
+          closestKey = s.dataset.ticket;
         }
-      }, 100);
-    });
+      });
+      if(closestKey && closestKey !== currentSelectedTicket){
+        currentSelectedTicket = closestKey;
+        var btnTextEl = document.getElementById('airlineBtnText');
+        if(btnTextEl && TICKETS_DATA[closestKey]) btnTextEl.textContent = TICKETS_DATA[closestKey].btnText;
+        slides.forEach(function(s){ s.classList.toggle('active', s.dataset.ticket === closestKey); });
+      }
+    };
   }
 
   var btnImportAirlinePass = document.getElementById('btnImportAirlinePass');
@@ -5620,7 +5593,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var airlineBtnTimer = null;
 
   if(btnImportAirlinePass){
-    btnImportAirlinePass.addEventListener('click', function(){
+    btnImportAirlinePass.onclick = function(){
       var tData = TICKETS_DATA[currentSelectedTicket] || TICKETS_DATA.starlux;
       btnImportAirlinePass.classList.add('loading');
       if(airlineBtnSpinner) airlineBtnSpinner.style.display = 'inline-block';
@@ -5634,11 +5607,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         if(airlineBtnPlaneIcon) airlineBtnPlaneIcon.style.display = 'inline-block';
         if(airlineBtnText) airlineBtnText.textContent = tData.btnText;
 
-        // 加入錢包卡片資料結構
         var newPass = {
           id: uid('k'),
           name: tData.name,
           type: 'boarding',
+          passType: tData.passType,
           airline: tData.airline,
           fromCode: tData.fromCode,
           toCode: tData.toCode,
@@ -5654,11 +5627,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         activeCardIndex = state.cards.length - 1;
         saveData();
         closeModal();
-        switchTab('wallet');
+        switchPage('wallet');
         renderEverything();
         showToast('已成功取得『' + tData.name + '』並加入錢包！');
-      }, 1200);
-    });
+      }, 1000);
+    };
   }
 
   // ==================== 彈窗控制核心 (新增/編輯/預算) ====================
