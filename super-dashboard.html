@@ -1536,6 +1536,208 @@
     font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;
   }
 
+
+  /* 新增卡片按鈕動效：比照三點按鈕微浮與回彈 */
+  .add-card-header-btn{
+    background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text);
+    padding:6px 14px; border-radius:18px; font-size:13px; font-weight:700; cursor:pointer;
+    display:none; align-items:center; gap:6px;
+    transition:all .18s cubic-bezier(.2,.8,.4,1);
+  }
+  .add-card-header-btn:hover{
+    border-color:var(--gold); color:var(--gold); transform:translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212,175,55,.18);
+  }
+  .add-card-header-btn:active{ transform:scale(0.95); }
+
+  /* 錢包無卡片時的歡迎首頁 (Apple 旗艦級橫幅圖解) */
+  .wallet-welcome-hero{
+    background: radial-gradient(120% 120% at 85% 15%, rgba(212,175,55,.18) 0%, transparent 60%),
+                linear-gradient(145deg, #1C1812 0%, #120F0B 60%, #0A0806 100%);
+    border: 1px solid rgba(212,175,55,.3); border-radius: 24px; padding: 26px 22px 24px;
+    position: relative; overflow: hidden; margin-bottom: 24px;
+    box-shadow: 0 12px 36px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .welcome-card-visual{
+    position: relative; height: 140px; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center; perspective: 1000px;
+  }
+  .welcome-mock-card{
+    position: absolute; border-radius: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.65);
+    transition: transform .4s ease;
+  }
+  .welcome-mock-card.card-c{
+    width: 210px; height: 130px; background: linear-gradient(135deg, #2D1A10, #140C07);
+    border: 1px solid rgba(220,140,70,.35); transform: translateY(-16px) scale(0.86); opacity: 0.5;
+  }
+  .welcome-mock-card.card-b{
+    width: 226px; height: 136px; background: linear-gradient(135deg, #0D223D, #081729);
+    border: 1px solid rgba(212,175,55,.4); transform: translateY(-8px) scale(0.93); opacity: 0.78;
+  }
+  .welcome-mock-card.card-a{
+    width: 240px; height: 142px; background: linear-gradient(135deg, #262118, #14110C);
+    border: 1.5px solid var(--gold); transform: translateY(0) scale(1); z-index: 2;
+    padding: 12px 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .welcome-card-top{ display: flex; justify-content: space-between; align-items: center; }
+  .welcome-chip{ width: 30px; height: 22px; border-radius: 5px; background: linear-gradient(135deg, #F5D888, #B8862E); }
+  .welcome-nfc-icon{ color: var(--gold); opacity: 0.85; }
+  .welcome-card-badge{
+    font-size: 9px; font-weight: 800; letter-spacing: 1px; color: var(--gold);
+    font-family: ui-monospace, monospace; text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  }
+  .welcome-hero-tag{
+    display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800;
+    color: #241705; background: linear-gradient(135deg, #F5D888, #C89A3B); padding: 3px 9px; border-radius: 20px;
+    letter-spacing: .5px; margin-bottom: 8px;
+  }
+  .welcome-hero-title{ font-size: 19px; font-weight: 900; color: #F3E3B8; margin: 0 0 8px; letter-spacing: .4px; }
+  .welcome-hero-desc{ font-size: 13px; color: #B8A87C; line-height: 1.6; margin: 0 0 20px; }
+  .welcome-hero-action-row{ display: flex; justify-content: space-between; align-items: center; }
+  .welcome-add-first-btn{
+    background: linear-gradient(135deg, #F5D888, #C89A3B); border: none; color: #241705;
+    padding: 10px 18px; border-radius: 20px; font-size: 13.5px; font-weight: 800; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 4px 16px rgba(212,175,55,.35);
+    transition: all .18s ease; margin-left: auto;
+  }
+  .welcome-add-first-btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 20px rgba(212,175,55,.5); }
+  .welcome-add-first-btn:active{ transform: scale(0.96); }
+
+  /* 居中卡片輪播核心：當前卡居中，左右各露約 10% 寬度 */
+  .card-viewport{
+    width: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    display: flex;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 12px 10% 22px 10%;
+    box-sizing: border-box;
+    scroll-padding: 0 10%;
+  }
+  .card-viewport::-webkit-scrollbar{ display: none; }
+  .card-track{
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    width: max-content;
+  }
+  .wallet-card-slide{
+    flex: 0 0 78vw;
+    max-width: 310px;
+    aspect-ratio: 1.586/1;
+    scroll-snap-align: center;
+    transition: transform .32s cubic-bezier(.2,.9,.4,1), opacity .32s ease;
+    opacity: 0.65;
+    transform: scale(0.92);
+  }
+  .wallet-card-slide.active{
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* 新增彈窗卡面預覽輪播：同樣保證居中且左右露頭 10% */
+  .style-carousel{
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 8px 10% 18px 10%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    box-sizing: border-box;
+    scroll-padding: 0 10%;
+  }
+  .style-carousel::-webkit-scrollbar{ display: none; }
+  .style-card-item{
+    flex: 0 0 76%;
+    max-width: 250px;
+    height: 154px;
+    position: relative;
+    cursor: pointer;
+    scroll-snap-align: center;
+    user-select: none;
+    transition: transform .28s cubic-bezier(.2,.9,.4,1), opacity .28s ease;
+    opacity: 0.7;
+    transform: scale(0.93);
+  }
+  .style-card-item.active{
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* 車鑰匙品牌選擇懸停動畫 */
+  .car-brand-row{
+    display: flex; justify-content: space-between; align-items: center; padding: 12px 14px;
+    border-radius: 12px; background: var(--panel-raised-2); border: 1px solid var(--border);
+    transition: all .22s cubic-bezier(.2,.8,.4,1); cursor: pointer; margin-bottom: 8px;
+  }
+  .car-brand-row:hover{
+    transform: translateY(-2px) scale(1.01);
+    border-color: var(--gold);
+    background: rgba(212,175,55,.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,.4), 0 0 12px rgba(212,175,55,.18);
+  }
+  .car-brand-row:active{ transform: scale(0.98); }
+
+  /* 車輛綁定後專屬控制面板 (開後車廂、亮燈尋車、解除綁定) */
+  .bound-car-dashboard{
+    background: var(--panel-raised-2); border: 1px solid rgba(212,175,55,.4); border-radius: 14px;
+    padding: 14px 16px; margin-top: 10px; animation: carDashFadeIn .3s ease;
+  }
+  @keyframes carDashFadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .bound-car-header{
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .bound-car-title{
+    display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 800; color: #F3E3B8;
+  }
+  .bound-car-status-pill{
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800;
+    color: var(--good); background: rgba(92,214,138,.15); padding: 3px 8px; border-radius: 12px;
+  }
+  .bound-car-actions-grid{
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+  }
+  .bound-car-act-btn{
+    background: var(--panel-raised); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 0; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .18s cubic-bezier(.2,.8,.4,1);
+  }
+  .bound-car-act-btn:hover{ border-color: var(--gold); color: var(--gold); transform: translateY(-1px); }
+  .bound-car-act-btn:active{ transform: scale(0.96); }
+  .bound-car-unbind-btn{
+    width: 100%; background: none; border: 1px dashed rgba(193,68,60,.4); color: #ff9d95;
+    padding: 8px 0; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .18s;
+  }
+  .bound-car-unbind-btn:hover{ background: rgba(193,68,60,.12); border-color: var(--danger); }
+
+  /* 更多設定全域中樞 (解決貼邊問題，比照標準 Modal 留出舒適邊距) */
+  .hub-modal{
+    width: calc(100% - 32px);
+    max-width: 410px;
+    margin: 16px auto;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 22px 20px;
+    box-shadow: 0 16px 44px rgba(0,0,0,.75);
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+  .flow-modal{
+    width: calc(100% - 32px);
+    max-width: 390px;
+    margin: 16px auto;
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-sizing: border-box;
+  }
+
 </style>
 </head>
 <body>
@@ -1633,11 +1835,39 @@
     <div class="page" id="page-wallet" style="display:none;">
       
 
-      <div class="wallet-empty" id="walletEmpty">
-        <span class="wallet-empty-icon" id="walletEmptyIcon"></span>
-        <div class="wallet-empty-title">還沒有任何卡片</div>
-        <div class="wallet-empty-sub">新增第一張，體驗滑動切換與感應驗證動畫</div>
-        <button class="wallet-add-btn" id="addCardBtnEmpty"><span id="iconAddCardEmpty"></span>新增卡片</button>
+      <!-- 錢包無卡片時的旗艦級歡迎首頁 (圖解 + 大字功能介紹 + 右下角新增按鈕) -->
+      <div class="wallet-welcome-hero" id="walletEmpty">
+        <div class="welcome-card-visual">
+          <div class="welcome-mock-card card-c"></div>
+          <div class="welcome-mock-card card-b"></div>
+          <div class="welcome-mock-card card-a">
+            <div class="welcome-card-inner">
+              <div class="welcome-card-top">
+                <span class="welcome-chip"></span>
+                <span class="welcome-nfc-icon">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/></svg>
+                </span>
+              </div>
+              <div class="welcome-card-badge">APPLE WALLET 旗艦標準</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-hero-content">
+          <div class="welcome-hero-tag">SUPER WALLET</div>
+          <h2 class="welcome-hero-title">專屬數位卡包 · 一觸即發</h2>
+          <p class="welcome-hero-desc">
+            支援多款奢華金屬工藝擬物卡面，整合大眾捷運、車輛數位鑰匙、門禁通行與星宇航空登機證；雙向同動發票載具條碼與實體通路會員積點。
+          </p>
+
+          <div class="welcome-hero-action-row">
+            <span></span>
+            <button type="button" class="welcome-add-first-btn" id="addCardBtnEmpty">
+              <span id="iconAddCardEmpty"></span>
+              <span>新增第一張卡片</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div id="walletStageWrap" style="display:none;">
@@ -1669,7 +1899,7 @@
         <!-- 快速交通卡設定列 (僅交通卡顯示) -->
         <div class="settings-row" id="walletExpressTransitRow" style="display:none;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:16px;">⚡</span>
+            <span style="font-size:16px;"></span>
             <span class="settings-label">快速交通卡</span>
           </div>
           <button class="toggle" id="walletExpressTransitToggle"><span class="toggle-knob"></span></button>
@@ -1681,7 +1911,36 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.2 1 12 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
             <span>車輛數位鑰匙配對</span>
           </div>
-          <div class="car-brand-list">
+
+          <!-- 已綁定時的車輛中控面板 (開後車廂、亮燈尋車、解除綁定) -->
+          <div class="bound-car-dashboard" id="boundCarDashboard" style="display:none;">
+            <div class="bound-car-header">
+              <div class="bound-car-title" id="boundCarTitle">
+                <span id="boundCarBrandIcon"></span>
+                <span id="boundCarBrandName">已連線車輛</span>
+              </div>
+              <span class="bound-car-status-pill">
+                <span style="width:6px; height:6px; border-radius:50%; background:var(--good); display:inline-block;"></span>
+                <span>UWB KEY 連線中</span>
+              </span>
+            </div>
+            <div class="bound-car-actions-grid">
+              <button type="button" class="bound-car-act-btn" id="btnCarTrunk" title="遙控開啟後車廂">
+                <span id="iconCarTrunk"></span>
+                <span>開後車廂</span>
+              </button>
+              <button type="button" class="bound-car-act-btn" id="btnCarLights" title="雙黃燈閃爍與鳴笛尋車">
+                <span id="iconCarLights"></span>
+                <span>亮燈尋車</span>
+              </button>
+            </div>
+            <button type="button" class="bound-car-unbind-btn" id="btnUnbindCar" title="解除目前車輛授權配對">
+              <span id="iconCarUnbind"></span>
+              <span>解除車輛配對</span>
+            </button>
+          </div>
+
+          <div class="car-brand-list" id="carBrandList">
             <!-- 1. BMW -->
             <div class="car-brand-row">
               <div class="car-brand-info">
@@ -1812,7 +2071,7 @@
         </div>
       </div>
 
-      <div class="section">
+      <div class="section" id="walletHistorySection">
         <div class="section-title"><span class="section-icon amber" id="iconHistorySection"></span><span id="historySectionTitle">活動紀錄</span></div>
         <div class="fin-list" id="cardTxList"></div>
       </div>
@@ -1854,12 +2113,12 @@
           <div class="style-carousel-wrapper">
             <div class="style-carousel-header">
               <span class="field-label" style="margin:0;">卡面樣式風格</span>
-              <span class="style-carousel-hint">左右滑動選擇 ➔</span>
+              <span class="style-carousel-hint">左右滑動選擇 →</span>
             </div>
             <div class="style-carousel" id="themeCarousel">
               <!-- 1. 黑曜金 -->
               <div class="style-card-item active" data-theme="theme-gold">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-gold">
                   <div class="mini-top-row">
                     <div class="mini-chip gold"></div>
@@ -1876,7 +2135,7 @@
 
               <!-- 2. 鈦銀 -->
               <div class="style-card-item" data-theme="theme-titanium">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-titanium">
                   <div class="mini-top-row">
                     <div class="mini-chip silver"></div>
@@ -1893,7 +2152,7 @@
 
               <!-- 3. 星紫 -->
               <div class="style-card-item" data-theme="theme-aurora">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-aurora">
                   <div class="mini-top-row">
                     <div class="mini-chip purple"></div>
@@ -1910,7 +2169,7 @@
 
               <!-- 4. 赤焰 -->
               <div class="style-card-item" data-theme="theme-carbon">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-carbon">
                   <div class="mini-top-row">
                     <div class="mini-chip red"></div>
@@ -1927,7 +2186,7 @@
 
               <!-- 5. 翡翠 -->
               <div class="style-card-item" data-theme="theme-emerald">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-emerald">
                   <div class="mini-top-row">
                     <div class="mini-chip green"></div>
@@ -1944,7 +2203,7 @@
 
               <!-- 6. 蒸氣黃銅 -->
               <div class="style-card-item" data-theme="theme-copper">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-copper">
                   <div class="mini-top-row">
                     <div class="mini-chip gold"></div>
@@ -1961,7 +2220,7 @@
 
               <!-- 7. 和風櫻雪 -->
               <div class="style-card-item" data-theme="theme-sakura">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-sakura">
                   <div class="mini-top-row">
                     <div class="mini-chip purple"></div>
@@ -1978,7 +2237,7 @@
 
               <!-- 8. 星宇藍 -->
               <div class="style-card-item" data-theme="theme-boarding">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-boarding">
                   <div class="mini-top-row">
                     <div class="mini-chip aero"></div>
@@ -1995,7 +2254,7 @@
 
               <!-- 9. 自訂圖片 (最後一個是自訂圖片) -->
               <div class="style-card-item" data-theme="theme-custom" id="customThemeCard">
-                <div class="style-card-badge">✓</div>
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-custom" id="miniCustomCardPreview">
                   <div class="mini-top-row">
                     <div class="mini-chip gold"></div>
@@ -2004,7 +2263,7 @@
                     </div>
                   </div>
                   <div class="mini-card-text">
-                    <div class="mini-card-name">自訂卡面圖片 🎨</div>
+                    <div class="mini-card-name">自訂卡面圖片 </div>
                     <div class="mini-card-sub" id="customCardMiniSub">上傳相片或挑選預設</div>
                   </div>
                 </div>
@@ -2043,7 +2302,7 @@
         <div class="field-group" id="expressTransitGroup" style="display:none; margin-top:10px; padding:10px 14px; background:rgba(255,215,130,0.06); border-radius:12px; border:1px solid rgba(255,215,130,0.25);">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:16px;">⚡</span>
+              <span style="font-size:16px;"></span>
               <span class="field-label" style="margin:0; font-size:13.5px; font-weight:700; color:var(--text);">快速交通卡模式</span>
             </div>
             <button type="button" class="toggle active" id="expressTransitToggle"><span class="toggle-knob"></span></button>
@@ -2106,7 +2365,7 @@
 
           <div style="display:flex; justify-content:space-between; align-items:flex-end; margin:4px 0;">
             <div>
-              <div style="font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; line-height:1;">TPE <span style="color:var(--gold); font-size:16px;">➔</span> KIX</div>
+              <div style="font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; line-height:1;">TPE <span style="color:var(--gold); font-size:16px;">→</span> KIX</div>
               <div style="font-size:11px; color:#c5bcac; margin-top:4px;">班機 JX800 · 登機門 B7 · 座位 12A</div>
             </div>
             <div style="text-align:right;">
@@ -2157,18 +2416,18 @@
 <!-- 登機證匯入成功跳出視窗 (Success Modal) -->
 <div class="success-modal-overlay" id="boardingSuccessModal">
   <div class="success-card">
-    <div class="success-badge">✨ 加入成功</div>
+    <div class="success-badge"> 加入成功</div>
     <div class="success-title">您的班機資訊已就緒</div>
     <div class="success-sub">電子登機證已同步至超級卡包</div>
 
     <div class="success-preview-wrap">
       <div class="preview-flight-row">
-        <span>✈️ 星宇航空 STARLUX</span>
+        <span> 星宇航空 STARLUX</span>
         <span style="color:var(--amber);">JX800</span>
       </div>
       <div class="preview-route-row">
         <span class="preview-city">TPE</span>
-        <span class="preview-arrow">➔</span>
+        <span class="preview-arrow">→</span>
         <span class="preview-city">KIX</span>
       </div>
       <div class="preview-meta-grid">
@@ -2215,7 +2474,7 @@
             <span class="p-pass-code" id="pPassFromCode">TPE</span>
             <span class="p-pass-city-name">台北桃園</span>
           </div>
-          <span class="p-pass-plane-arrow">➔</span>
+          <span class="p-pass-plane-arrow">→</span>
           <div class="p-pass-city-col" style="align-items:flex-end;">
             <span class="p-pass-code" id="pPassToCode">KIX</span>
             <span class="p-pass-city-name">大阪關西</span>
@@ -2297,14 +2556,14 @@
 
 <div id="dinoModalOverlay">
   <div class="dino-card">
-    <div class="dino-card-close" id="dinoModalClose">✕</div>
+    <div class="dino-card-close" id="dinoModalClose"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></div>
     <div class="dino-card-title">
-      <span style="color:var(--teal)">🦖</span>
+      <span style="color:var(--teal)"></span>
       <span>超級暴龍 · 狀態正常</span>
     </div>
     
     <div class="dino-stage-wrap">
-      <div class="dino-bubble" id="dinoSpeechBubble">快做事！不要一直滑！🦖</div>
+      <div class="dino-bubble" id="dinoSpeechBubble">快做事！不要一直滑！</div>
       <div class="dino-ground"></div>
       
       <div class="dino-actor" id="dinoActor" title="點我跳一下！">
@@ -2344,9 +2603,207 @@
       </div>
     </div>
     
-    <button class="dino-action-btn" id="dinoJumpBtn">讓恐龍跳一下！🐾</button>
+    <button class="dino-action-btn" id="dinoJumpBtn">讓恐龍跳一下！</button>
   </div>
 </div>
+
+
+<!-- ========================================================
+     1. 全域設定中樞 Modal (Global Management Hub)
+     ======================================================== -->
+<div class="modal-overlay" id="globalHubModal">
+  <div class="modal hub-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 2px;">
+      <h3 style="margin:0; font-size:16.5px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+        <span id="iconHubHeader"></span> 錢包全域設定中樞
+      </h3>
+      <button type="button" class="cancel" id="btnHubClose" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; padding:4px;" title="關閉">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- 中樞分頁標籤 -->
+    <div class="hub-nav-pills">
+      <button type="button" class="hub-pill active" data-hub-tab="carrier">條碼載具</button>
+      <button type="button" class="hub-pill" data-hub-tab="loyalty">商家會員庫</button>
+      <button type="button" class="hub-pill" data-hub-tab="credentials">數位憑證</button>
+      <button type="button" class="hub-pill" data-hub-tab="preferences">進階偏好</button>
+    </div>
+
+    <div class="modal-body-content" style="padding:4px 0; overflow-y:auto;">
+      <!-- Tab 1: 手機條碼載具 (合法 Code 39 Canvas 條碼) -->
+      <div class="hub-section active" id="hubTabCarrier">
+        <span class="field-label">主要手機發票載具條碼</span>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input id="inputCarrierCode" placeholder="/AB12345" maxlength="8" style="text-transform:uppercase; font-family:ui-monospace,monospace; font-weight:700; font-size:16px;">
+          <button type="button" class="confirm" id="btnSaveCarrier" style="padding:0 16px; border-radius:10px; font-weight:700; background:var(--gold); border:none; color:#1A1202; cursor:pointer;">更新</button>
+        </div>
+
+        <div class="barcode-preview-box">
+          <div class="barcode-svg-wrap">
+            <canvas id="carrierBarcodeCanvas" style="display:block; margin:0 auto; max-width:100%; border-radius:6px;"></canvas>
+          </div>
+          <div class="barcode-num-text" id="carrierBarcodeNum">/AB12345</div>
+        </div>
+
+        <div class="settings-row" style="margin-top:10px;">
+          <div style="flex:1;">
+            <div class="settings-label">條碼亮度自動最大化</div>
+            <div style="font-size:11px; color:var(--text-muted);">感應刷碼時自動提高螢幕亮度，加速掃描鏡頭識別</div>
+          </div>
+          <button type="button" class="toggle active on" id="toggleCarrierBright"><span class="toggle-knob"></span></button>
+        </div>
+      </div>
+
+      <!-- Tab 2: 商家會員卡庫 -->
+      <div class="hub-section" id="hubTabLoyalty">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+          <span class="field-label" style="margin:0;">各大實體通路會員卡</span>
+          <span style="font-size:11px; color:var(--gold);">自動比對三合一</span>
+        </div>
+        <div class="loyalty-grid" id="loyaltyHubList"></div>
+      </div>
+
+      <!-- Tab 3: 數位憑證 (Digital Credentials) -->
+      <div class="hub-section" id="hubTabCredentials">
+        <span class="field-label">簽發微隱私數位身分與安全通行憑證</span>
+        <div class="cred-cards-grid">
+          <!-- 零知識證明年齡卡 -->
+          <div class="cred-card-choice" id="choiceAgeCred">
+            <div>
+              <div class="cred-choice-top">
+                <span class="cred-choice-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="14" x="3" y="5" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 10h2"/><path d="M15 14h2"/><path d="M6 16a3 3 0 0 1 6 0"/></svg></span>
+                <span class="cred-choice-badge">零知識證明</span>
+              </div>
+              <div class="cred-choice-title">成年身分憑證</div>
+              <div class="cred-choice-desc">夜間場所、酒類結帳專用。僅驗證並出示「已滿 18 歲」，絕不洩漏姓名或證號隱私。</div>
+            </div>
+            <button type="button" class="cred-issue-btn" id="btnIssueAgeCred">+ 簽發並加入錢包</button>
+          </div>
+
+          <!-- 臨時訪客通行門禁 -->
+          <div class="cred-card-choice" id="choiceGuestCred">
+            <div>
+              <div class="cred-choice-top">
+                <span class="cred-choice-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 21 9.6-9.6"/><path d="m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19"/><circle cx="15.5" cy="7.5" r="5.5"/></svg></span>
+                <span class="cred-choice-badge">臨時通行</span>
+              </div>
+              <div class="cred-choice-title">訪客門禁金鑰</div>
+              <div class="cred-choice-desc">生成 2 小時有效之安全加密訪客鑰匙，支援 NFC 輕觸過閘，過期自動作廢。</div>
+            </div>
+            <button type="button" class="cred-issue-btn" id="btnIssueGuestCred">+ 簽發並加入錢包</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: 進階偏好設定 -->
+      <div class="hub-section" id="hubTabPreferences">
+        <div class="settings-row">
+          <div style="flex:1;">
+            <div class="settings-label">本機隱私保護</div>
+            <div style="font-size:11px; color:var(--text-muted);">鎖定狀態下於感應預覽隱藏卡面細節與卡號後四碼</div>
+          </div>
+          <button type="button" class="toggle active on" id="togglePrivacyProtect"><span class="toggle-knob"></span></button>
+        </div>
+        <div class="settings-row">
+          <div style="flex:1;">
+            <div class="settings-label">NFC 高靈敏模式</div>
+            <div style="font-size:11px; color:var(--text-muted);">強化厚卡套穿透力，擴大天線感應半徑</div>
+          </div>
+          <button type="button" class="toggle active on" id="toggleNfcHighSens"><span class="toggle-knob"></span></button>
+        </div>
+        <div class="settings-row">
+          <div style="flex:1;">
+            <div class="settings-label">觸覺回饋振動 (Haptics)</div>
+            <div style="font-size:11px; color:var(--text-muted);">感應成功瞬間提供 Apple Taptic Engine 擬真震感</div>
+          </div>
+          <button type="button" class="toggle active on" id="toggleHaptics"><span class="toggle-knob"></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     2. 金鑰轉移說明小窗 (Device Migration)
+     ======================================================== -->
+<div class="modal-overlay" id="migrationModal">
+  <div class="modal flow-modal">
+    <!-- 上方動態圖解 -->
+    <div class="flow-modal-icon">
+      <div class="radar-ripple"></div>
+      <div class="radar-ripple delay"></div>
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </div>
+    <h3 style="margin:0 0 6px; font-size:17px; font-weight:800; color:var(--text);" id="migModalTitle">轉移數位鑰匙至新裝置</h3>
+    <p style="font-size:12px; color:var(--text-muted); margin:0 0 16px; line-height:1.45;" id="migModalSub">
+      依照 Apple 安全晶片規範，金鑰僅能在單一安全元件中持有。完成後原機授權將自動銷毀。
+    </p>
+
+    <!-- 下方說明文字步驟 -->
+    <div class="flow-step-list">
+      <div class="flow-step-item">
+        <div class="flow-step-num">1</div>
+        <div><b>Face ID 生物識別確認</b>：以臉部確認持卡人身分。</div>
+      </div>
+      <div class="flow-step-item">
+        <div class="flow-step-num">2</div>
+        <div><b>兩台裝置頂部靠近感應</b>：透過超寬頻 (UWB) 與 AirDrop 安全配對傳輸。</div>
+      </div>
+      <div class="flow-step-item">
+        <div class="flow-step-num">3</div>
+        <div><b>安全晶片銷毀本機金鑰</b>：新裝置註冊成功，本機安全鎖定。</div>
+      </div>
+    </div>
+
+    <!-- 動態進度狀態 -->
+    <div id="migStatusWrap" style="display:none; background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:14px;">
+      <div style="font-size:13px; font-weight:700; color:var(--gold); display:flex; align-items:center; justify-content:center; gap:8px;" id="migStatusText">
+        <svg class="apple-spinner" viewBox="0 0 32 32" width="16" height="16"><line x1="16" y1="2" x2="16" y2="7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="5" x2="19.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="11" x2="22" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="30" y1="16" x2="25" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="21" x2="22" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="27" x2="19.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="30" x2="16" y2="25" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="27" x2="12.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="21" x2="10" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="2" y1="16" x2="7" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="11" x2="10" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="5" x2="12.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>Face ID 驗證中...</span>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;" id="migStatusSub">PROVISIONING SECURE KEY MIGRATION</div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:10px;">
+      <button type="button" class="cancel" id="btnCancelMigrate">取消</button>
+      <button type="button" class="confirm" id="btnConfirmMigrate" style="background:var(--gold); color:#1A1202; font-weight:800;">立即啟動轉移</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     3. 鑰匙副本拷貝說明小窗 (Clone / Secondary Key)
+     ======================================================== -->
+<div class="modal-overlay" id="cloneModal">
+  <div class="modal flow-modal">
+    <!-- 上方動態圖解 -->
+    <div class="flow-modal-icon" id="cloneRadarIcon">
+      <div class="radar-ripple"></div>
+      <div class="radar-ripple delay"></div>
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </div>
+    <h3 style="margin:0 0 6px; font-size:17px; font-weight:800; color:var(--text);" id="cloneModalTitle">製作安全副鑰匙 / 拷貝副本</h3>
+    <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px; line-height:1.45;" id="cloneModalSub">
+      請將手機背面頂部貼齊實體門禁卡或車輛中控感應區，以讀取並將防拷金鑰寫入 Secure Element。
+    </p>
+
+    <!-- 下方說明與動態進度指示 -->
+    <div id="cloneStatusWrap" style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:16px;">
+      <div style="font-size:13px; font-weight:700; color:var(--gold); display:flex; align-items:center; justify-content:center; gap:8px;" id="cloneStatusText">
+        <svg class="apple-spinner" id="cloneSpinnerIcon" style="display:none;" viewBox="0 0 32 32" width="16" height="16"><line x1="16" y1="2" x2="16" y2="7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="5" x2="19.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="11" x2="22" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="30" y1="16" x2="25" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="21" x2="22" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="27" x2="19.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="30" x2="16" y2="25" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="27" x2="12.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="21" x2="10" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="2" y1="16" x2="7" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="11" x2="10" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="5" x2="12.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span id="cloneStatusLabel">等待靠近感應區...</span>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;" id="cloneStatusSub">NFC FIELD DETECTING (13.56 MHz)</div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="cancel" id="btnCancelClone">取消</button>
+      <button type="button" class="confirm" id="btnSimulateClone" style="background:var(--gold); color:#1A1202; font-weight:800;">貼齊感應</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 (function(){
@@ -2354,6 +2811,16 @@
 
   // ---- Lucide 圖示 ----
   var ICONS = {
+    'check':'<polyline points="20 6 9 17 4 12"/>',
+    'arrow-right':'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    'x':'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    'settings':'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    'id-card':'<rect width="18" height="14" x="3" y="5" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M15 10h2"/><path d="M15 14h2"/><path d="M6 16a3 3 0 0 1 6 0"/>',
+    'car':'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.2 1 12 1 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+    'trunk':'<path d="m21 16-2-7H5L3 16"/><path d="M4 16h16"/><path d="M7 16v3"/><path d="M17 16v3"/><circle cx="12" cy="12" r="1"/>',
+    'lightbulb':'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    'unlink':'<path d="m18.84 12.25 1.72-1.71a4.5 4.5 0 0 0-6.36-6.36l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a4.5 4.5 0 0 0 6.36 6.36l1.71-1.72"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/>',
+    'loader-2':'<path d="M21 12a9 9 0 1 1-6.219-8.56"/>',
     'layout-dashboard':'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
     'clipboard':'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
     'zap':'<path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"/>',
@@ -2380,6 +2847,65 @@
     'plane':'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
     'qr-code':'<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>'
   };
+  
+  // ==================== 財政部標準 Code 39 手機載具條碼繪製 (Canvas) ====================
+  var CODE39_MAP = {
+    '0':'000110100','1':'100100001','2':'001100001','3':'101100000','4':'000110001',
+    '5':'100110000','6':'001110000','7':'000100101','8':'100100100','9':'001100100',
+    'A':'100001001','B':'001001001','C':'101001000','D':'000011001','E':'100011000',
+    'F':'001011000','G':'000001101','H':'100001100','I':'001001100','J':'000011100',
+    'K':'100000011','L':'001000011','M':'101000010','N':'000010011','O':'100010010',
+    'P':'001010010','Q':'000000111','R':'100000110','S':'001000110','T':'000010110',
+    'U':'110000001','V':'011000001','W':'111000000','X':'010010001','Y':'110010000',
+    'Z':'011010000','-':'010000101','.':'110000100',' ':'011000100','$':'010101000',
+    '/':'010100010','+':'010001010','%':'000101010','*':'010010100'
+  };
+
+  function drawCarrierBarcode(code){
+    var canvas = document.getElementById('carrierBarcodeCanvas');
+    if(!canvas) return;
+    var raw = (code || '/AB12345').toUpperCase().trim();
+    var str = '*' + raw + '*';
+    var narrow = 2.2;
+    var wide = 5.5;
+    var barHeight = 68;
+    var gap = narrow;
+
+    var totalW = 0;
+    for(var i=0; i<str.length; i++){
+      var ch = str[i];
+      var pat = CODE39_MAP[ch] || CODE39_MAP['*'];
+      for(var j=0; j<9; j++){
+        totalW += (pat[j] === '1' ? wide : narrow);
+      }
+      if(i < str.length - 1) totalW += gap;
+    }
+
+    var quietZone = 24;
+    canvas.width = Math.ceil(totalW + quietZone * 2);
+    canvas.height = barHeight;
+
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var x = quietZone;
+    ctx.fillStyle = '#000000';
+    for(var i=0; i<str.length; i++){
+      var ch = str[i];
+      var pat = CODE39_MAP[ch] || CODE39_MAP['*'];
+      for(var j=0; j<9; j++){
+        var isBar = (j % 2 === 0);
+        var w = (pat[j] === '1' ? wide : narrow);
+        if(isBar){
+          ctx.fillRect(Math.round(x), 0, Math.ceil(w), barHeight);
+        }
+        x += w;
+      }
+      x += gap;
+    }
+  }
+
   function icon(name, cls){
     return '<svg class="icon' + (cls ? (' ' + cls) : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
   }
@@ -2860,7 +3386,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   document.getElementById('tabIconWallet').innerHTML = icon('credit-card');
   document.getElementById('tabIconP1').innerHTML = icon('ellipsis');
   var wb = document.getElementById('walletBadge'); if(wb) wb.innerHTML = icon('sparkles') + ' 新功能';
-  document.getElementById('walletEmptyIcon').innerHTML = icon('credit-card');
+  var wei = document.getElementById('walletEmptyIcon'); if(wei) wei.innerHTML = icon('credit-card');
   document.getElementById('iconAddCardEmpty').innerHTML = icon('plus','plus-icon-sm');
   document.getElementById('iconChevLeft').innerHTML = icon('chevron-left');
   document.getElementById('iconChevRight').innerHTML = icon('chevron-right');
@@ -3226,7 +3752,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var cls = t.amount >= 0 ? 'tx-pos' : 'tx-neg';
         amtHtml = '<span class="fin-row-amount ' + cls + '">' + (t.amount >= 0 ? '+' : '-') + formatMoney(Math.abs(t.amount)) + '</span>';
       } else {
-        amtHtml = '<span style="font-size:11px;color:var(--good);font-weight:700;">✓ 已完成</span>';
+        amtHtml = '<span style="font-size:11px;color:var(--good);font-weight:700;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> 已完成</span>';
       }
       row.innerHTML = '<span class="fin-row-name">' + escapeHtml(t.label) + '<span class="tx-time">' + formatTime(t.time) + '</span></span>' + amtHtml;
       list.appendChild(row);
@@ -3345,7 +3871,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             card.expressTransit = !card.expressTransit;
             saveData();
             updateWalletFunctionalArea();
-            showToast(card.expressTransit ? '已啟用快速交通卡模式 ⚡' : '已關閉快速交通卡模式');
+            showToast(card.expressTransit ? '已啟用快速交通卡模式 ' : '已關閉快速交通卡模式');
           };
         }
       }
@@ -3374,7 +3900,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           var isBound = (card.boundCar === bName);
           pBtn.classList.toggle('bound', isBound);
           var txt = pBtn.querySelector('.pair-text');
-          if(txt) txt.textContent = isBound ? '已綁定您的車輛 ✓' : '綁定';
+          if(txt) txt.textContent = isBound ? '已綁定您的車輛 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>' : '綁定';
 
           pBtn.onclick = function(){
             if(card.boundCar === bName){
@@ -3400,7 +3926,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
                 card.boundCar = bName;
                 saveData();
                 renderWallet();
-                showToast('已成功綁定您的 ' + bName + ' 車輛！🚗');
+                showToast('已成功綁定您的 ' + bName + ' 車輛！');
               }
             }, 1000);
           };
@@ -3430,8 +3956,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function renderWallet(){
     var cards = visibleCards();
     var hasCards = cards.length > 0;
-    document.getElementById('walletEmpty').style.display = hasCards ? 'none' : '';
-    document.getElementById('walletStageWrap').style.display = hasCards ? '' : 'none';
+    var emptyEl = document.getElementById('walletEmpty');
+    var stageEl = document.getElementById('walletStageWrap');
+    var histEl = document.getElementById('walletHistorySection');
+
+    if(emptyEl) emptyEl.style.display = hasCards ? 'none' : 'block';
+    if(stageEl) stageEl.style.display = hasCards ? 'block' : 'none';
+    if(histEl) histEl.style.display = hasCards ? 'block' : 'none';
 
     if(!hasCards){ renderCardTxList(null); return; }
 
@@ -3454,8 +3985,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '<div class="v-card-shine"></div>' +
           renderCardContent(card) +
           '<div class="v-card-delete-overlay" style="display:' + (state.editMode ? 'flex' : 'none') + ';">' +
-            '<span class="row-trash-icon-lg" data-action="delete" data-id="' + card.id + '">🗑️</span>' +
-            '<div class="edit-pencil card-pencil" data-action="edit" data-id="' + card.id + '">✏️</div>' +
+            '<span class="row-trash-icon-lg" data-action="delete" data-id="' + card.id + '"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></span>' +
+            '<div class="edit-pencil card-pencil" data-action="edit" data-id="' + card.id + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -3887,7 +4418,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       preview.style.backgroundPosition = 'center';
     }
     var sub = document.getElementById('customCardMiniSub');
-    if(sub) sub.textContent = '已套用自訂圖片 ✓';
+    if(sub) sub.textContent = '已套用自訂圖片 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>';
   }
 
   var customFileInput = document.getElementById('customCardFileInput');
@@ -4179,7 +4710,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         successCheck.style.animation = 'popCheck 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
         statusTitle.style.color = 'var(--good)';
         statusTitle.style.fontSize = '18px';
-        statusTitle.innerHTML = '已新增『' + escapeHtml(cardName) + '』 ✓';
+        statusTitle.innerHTML = '已新增『' + escapeHtml(cardName) + '』 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>';
         statusSub.textContent = '卡片已成功加入您的超級卡包';
 
         // 停留 1.3 秒讓使用者欣賞打勾完成動畫
@@ -4205,8 +4736,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
 
     var val = modalInput.value.trim();
-    if(!val) return;
     var type = modalMode === 'edit' ? editContext.type : modalTarget;
+
+    // 若未填寫卡片名稱，自動以該卡片類型預設命名
+    if(type === 'card' && !val){
+      if(modalCategory === 'transit') val = '大眾交通悠遊卡';
+      else if(modalCategory === 'car') val = '數位車鑰匙';
+      else if(modalCategory === 'access') val = '門禁門卡';
+      else if(modalCategory === 'boarding') val = '星宇航空登機證';
+      else if(selectedCardTheme === 'theme-titanium') val = '賽博鈦銀卡';
+      else if(selectedCardTheme === 'theme-aurora') val = '星幻極光卡';
+      else if(selectedCardTheme === 'theme-carbon') val = '赤焰碳纖卡';
+      else if(selectedCardTheme === 'theme-emerald') val = '帝王翡翠卡';
+      else if(selectedCardTheme === 'theme-copper') val = '工控黃銅卡';
+      else if(selectedCardTheme === 'theme-sakura') val = '和風櫻雪卡';
+      else if(selectedCardTheme === 'theme-custom') val = '自訂相片卡';
+      else val = '黑曜金尊榮卡';
+    } else if(!val){
+      return;
+    }
 
     if(type === 'copy'){
       if(modalMode === 'edit'){
@@ -4286,10 +4834,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (dinoTrashIcon) { dinoTrashIcon.innerHTML = icon('trash-2'); }
 
     var quotes = [
-      '快做事！不要一直滑！🦖',
+      '快做事！不要一直滑！',
       '嗷嗚！超級儀錶板運作正常！',
       '今天的事項完成了嗎？',
-      '再跳一次！跳跳跳！🐾',
+      '再跳一次！跳跳跳！',
       '保持專注，持續升級！'
     ];
     var qIdx = 0;
@@ -4327,7 +4875,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           dinoBall.style.display = 'flex';
           dinoBall.classList.remove('deleted');
           localStorage.removeItem('super_dino_deleted');
-          showToast('浮動球已復原！🦖');
+          showToast('浮動球已復原！');
         }
       });
     }
@@ -4538,7 +5086,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '</div>' +
         '</div>' +
         '<button type="button" class="loyalty-bind-btn' + (item.bound ? ' bound' : '') + '" data-loyalty-id="' + item.id + '">' +
-          (item.bound ? '已綁定 ✓' : '+ 綁定') +
+          (item.bound ? '已綁定 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>' : '+ 綁定') +
         '</button>' +
       '</div>';
     }).join('');
@@ -4562,14 +5110,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var hub = document.getElementById('globalHubModal');
     if(!hub) return;
     var inp = document.getElementById('inputCarrierCode');
-    if(inp) inp.value = state.globalSettings.carrierCode || '/AB12345';
-    var bSvg = document.getElementById('carrierBarcodeSvg');
-    if(bSvg) bSvg.innerHTML = renderBarcodeSvg(inp.value);
+    var code = (state.globalSettings && state.globalSettings.carrierCode) ? state.globalSettings.carrierCode : '/AB12345';
+    if(inp) inp.value = code;
     var bNum = document.getElementById('carrierBarcodeNum');
-    if(bNum) bNum.textContent = inp.value;
+    if(bNum) bNum.textContent = code;
 
     renderLoyaltyList();
     hub.classList.add('show');
+    setTimeout(function(){
+      drawCarrierBarcode(code);
+    }, 40);
   }
 
   function closeGlobalHub(){
@@ -4603,10 +5153,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       var val = inp.value.trim().toUpperCase();
       if(!val.startsWith('/')) val = '/' + val;
       state.globalSettings.carrierCode = val;
-      var bSvg = document.getElementById('carrierBarcodeSvg');
-      if(bSvg) bSvg.innerHTML = renderBarcodeSvg(val);
       var bNum = document.getElementById('carrierBarcodeNum');
       if(bNum) bNum.textContent = val;
+      drawCarrierBarcode(val);
       saveData();
       updateWalletFunctionalArea();
       showToast('發票載具已更新為 ' + val);
@@ -4659,23 +5208,38 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var btnConfirmMigrate = document.getElementById('btnConfirmMigrate');
 
   if(btnKeyMigrate){
-    btnKeyMigrate.addEventListener('click', function(){
+    btnKeyMigrate.addEventListener('click', function(e){
+      e.stopPropagation();
       if(migrationModal) migrationModal.classList.add('show');
     });
   }
   if(btnCancelMigrate){
-    btnCancelMigrate.addEventListener('click', function(){
+    btnCancelMigrate.addEventListener('click', function(e){
+      e.stopPropagation();
       if(migrationModal) migrationModal.classList.remove('show');
     });
   }
   if(btnConfirmMigrate){
-    btnConfirmMigrate.addEventListener('click', function(){
-      btnConfirmMigrate.textContent = 'Face ID 授權中...';
+    btnConfirmMigrate.addEventListener('click', function(e){
+      e.stopPropagation();
+      var wrap = document.getElementById('migStatusWrap');
+      var statusTxt = document.getElementById('migStatusText');
+      var statusSub = document.getElementById('migStatusSub');
+      if(wrap) wrap.style.display = 'block';
+
       btnConfirmMigrate.disabled = true;
+      btnConfirmMigrate.style.opacity = '0.5';
+
+      if(statusTxt) statusTxt.innerHTML = '<svg class="apple-spinner" viewBox="0 0 32 32" width="16" height="16"><line x1="16" y1="2" x2="16" y2="7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="5" x2="19.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="11" x2="22" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="30" y1="16" x2="25" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="21" x2="22" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="27" x2="19.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="30" x2="16" y2="25" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="27" x2="12.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="21" x2="10" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="2" y1="16" x2="7" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="11" x2="10" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="5" x2="12.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>正在進行 Face ID 授權...</span>';
+      if(statusSub) statusSub.textContent = 'BIOMETRIC AUTHENTICATION';
+
       setTimeout(function(){
-        btnConfirmMigrate.textContent = 'UWB 兩台靠近配對中...';
+        if(statusTxt) statusTxt.innerHTML = '<svg class="apple-spinner" viewBox="0 0 32 32" width="16" height="16"><line x1="16" y1="2" x2="16" y2="7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="5" x2="19.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="11" x2="22" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="30" y1="16" x2="25" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="27" y1="21" x2="22" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="23" y1="27" x2="19.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="30" x2="16" y2="25" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="27" x2="12.5" y2="22.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="21" x2="10" y2="19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="2" y1="16" x2="7" y2="16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="5" y1="11" x2="10" y2="13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><line x1="9" y1="5" x2="12.5" y2="9.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>兩台裝置靠近，超寬頻安全傳輸中...</span>';
+        if(statusSub) statusSub.textContent = 'UWB PAIRED TRANSMISSION (SECURE ELEMENT)';
+
         setTimeout(function(){
-          btnConfirmMigrate.textContent = '金鑰銷毀完成 ✓';
+          if(statusTxt) statusTxt.innerHTML = '<span style="color:var(--good); font-weight:800;">✓ 金鑰轉移成功，原機已安全銷毀</span>';
+          if(statusSub) statusSub.textContent = 'HARDWARE KEY ZEROIZATION COMPLETED';
           var curCard = visibleCards()[activeCardIndex];
           if(curCard){
             curCard.migrated = true;
@@ -4683,14 +5247,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           }
           saveData();
           renderWallet();
+
           setTimeout(function(){
             if(migrationModal) migrationModal.classList.remove('show');
-            btnConfirmMigrate.textContent = '立即啟動轉移';
+            if(wrap) wrap.style.display = 'none';
             btnConfirmMigrate.disabled = false;
-            showToast('金鑰已轉移至新 iPhone，原機權限已銷毀！');
-          }, 600);
-        }, 1200);
-      }, 1000);
+            btnConfirmMigrate.style.opacity = '';
+            showToast('金鑰已安全轉移至新 iPhone，原機權限已銷毀！');
+          }, 800);
+        }, 1300);
+      }, 900);
     });
   }
 
@@ -4701,239 +5267,92 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var btnSimulateClone = document.getElementById('btnSimulateClone');
 
   if(btnKeyClone){
-    btnKeyClone.addEventListener('click', function(){
+    btnKeyClone.addEventListener('click', function(e){
+      e.stopPropagation();
       var curCard = visibleCards()[activeCardIndex];
       var isCar = (curCard && curCard.type === 'car');
       var title = document.getElementById('cloneModalTitle');
       var sub = document.getElementById('cloneModalSub');
       if(title) title.textContent = isCar ? '配對車輛副鑰匙 (Secondary Key)' : '拷貝實體門禁卡至 Secure Element';
       if(sub) sub.textContent = isCar ? '請靠近車內中央扶手或感應標誌處，系統將加密寫入限制型副鑰匙。' : '請將實體門禁卡緊貼手機背面頂部，讀取卡片 UID 並寫入安全晶片。';
-      var status = document.getElementById('cloneStatusText');
-      if(status) status.textContent = '等待靠近感應區...';
+      var statusLbl = document.getElementById('cloneStatusLabel');
+      var spinner = document.getElementById('cloneSpinnerIcon');
+      if(spinner) spinner.style.display = 'none';
+      if(statusLbl) statusLbl.textContent = '等待靠近感應區...';
       if(cloneModal) cloneModal.classList.add('show');
     });
   }
   if(btnCancelClone){
-    btnCancelClone.addEventListener('click', function(){
+    btnCancelClone.addEventListener('click', function(e){
+      e.stopPropagation();
       if(cloneModal) cloneModal.classList.remove('show');
     });
   }
   if(btnSimulateClone){
-    btnSimulateClone.addEventListener('click', function(){
-      var status = document.getElementById('cloneStatusText');
+    btnSimulateClone.addEventListener('click', function(e){
+      e.stopPropagation();
+      var statusLbl = document.getElementById('cloneStatusLabel');
+      var spinner = document.getElementById('cloneSpinnerIcon');
       var sub = document.getElementById('cloneStatusSub');
-      if(status) status.textContent = '讀取安全晶片加密協定...';
-      if(sub) sub.textContent = 'HANDSHAKING WITH NFC TRANSPONDER';
+
+      if(spinner) spinner.style.display = 'inline-block';
+      if(statusLbl) statusLbl.textContent = '讀取實體卡晶片協定中...';
+      if(sub) sub.textContent = 'HANDSHAKING WITH NFC TRANSPONDER (13.56 MHz)';
       btnSimulateClone.disabled = true;
+      btnSimulateClone.style.opacity = '0.5';
 
       setTimeout(function(){
-        if(status) status.textContent = '正在寫入 Secure Element...';
-        if(sub) sub.textContent = 'WRITING ENCRYPTED CREDENTIALS';
+        if(statusLbl) statusLbl.textContent = '正在加密寫入 Secure Element...';
+        if(sub) sub.textContent = 'PROVISIONING RESTRICTED SECONDARY KEY';
+
         setTimeout(function(){
-          if(status) status.textContent = '拷貝成功！已寫入副鑰匙 ✓';
-          if(sub) sub.textContent = 'PROVISIONED SUCCESSFULLY';
+          if(spinner) spinner.style.display = 'none';
+          if(statusLbl) statusLbl.innerHTML = '<span style="color:var(--good); font-weight:800;">✓ 拷貝成功！已寫入安全元件</span>';
+          if(sub) sub.textContent = 'HARDWARE CREDENTIAL ACTIVE';
           var curCard = visibleCards()[activeCardIndex];
           if(curCard){
-            logCardTx(curCard.id, '安全副本已成功寫入晶片', null);
+            logCardTx(curCard.id, '安全副鑰匙已成功寫入晶片', null);
           }
           saveData();
           renderWallet();
+
           setTimeout(function(){
             if(cloneModal) cloneModal.classList.remove('show');
             btnSimulateClone.disabled = false;
+            btnSimulateClone.style.opacity = '';
             showToast('副本已成功寫入 iPhone 安全元件！');
-          }, 700);
-        }, 1100);
-      }, 900);
+          }, 800);
+        }, 1200);
+      }, 1000);
     });
   }
 
-        renderEverything();
+  // 點擊遮罩空白處關閉各個 Modal
+  var globalHubModal = document.getElementById('globalHubModal');
+  [globalHubModal, migrationModal, cloneModal].forEach(function(m){
+    if(m){
+      m.addEventListener('click', function(e){
+        if(e.target === m) m.classList.remove('show');
+      });
+    }
+  });
+
+  renderEverything();
   })();
+
+  
+  var expToggleModal = document.getElementById('expressTransitToggle');
+  if(expToggleModal){
+    expToggleModal.addEventListener('click', function(e){
+      e.stopPropagation();
+      var isOn = expToggleModal.classList.toggle('active');
+      expToggleModal.classList.toggle('on', isOn);
+    });
+  }
 
   initDinoFloatingBall();
 
 })();
 </script>
-
-<!-- ========================================================
-     1. 全域設定中樞 Modal (Global Management Hub)
-     ======================================================== -->
-<div class="modal-overlay" id="globalHubModal">
-  <div class="modal hub-modal">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h3 style="margin:0; font-size:17px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
-        <span style="color:var(--gold);">⚙️</span> 錢包全域設定中樞
-      </h3>
-      <button type="button" class="cancel" id="btnHubClose" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; padding:4px;">✕</button>
-    </div>
-
-    <!-- 中樞分頁標籤 -->
-    <div class="hub-nav-pills">
-      <button type="button" class="hub-pill active" data-hub-tab="carrier">條碼載具</button>
-      <button type="button" class="hub-pill" data-hub-tab="loyalty">商家會員庫</button>
-      <button type="button" class="hub-pill" data-hub-tab="credentials">數位憑證</button>
-      <button type="button" class="hub-pill" data-hub-tab="preferences">進階偏好</button>
-    </div>
-
-    <div class="modal-body-content" style="padding:4px 0; overflow-y:auto;">
-      <!-- Tab 1: 手機條碼載具 -->
-      <div class="hub-section active" id="hubTabCarrier">
-        <span class="field-label">主要手機發票載具條碼</span>
-        <div style="display:flex; gap:8px; margin-bottom:10px;">
-          <input id="inputCarrierCode" placeholder="/AB12345" maxlength="8" style="text-transform:uppercase; font-family:ui-monospace,monospace; font-weight:700; font-size:16px;">
-          <button type="button" class="confirm" id="btnSaveCarrier" style="padding:0 16px; border-radius:10px; font-weight:700; background:var(--gold); border:none; color:#1A1202; cursor:pointer;">更新</button>
-        </div>
-
-        <div class="barcode-preview-box">
-          <div class="barcode-svg-wrap" id="carrierBarcodeSvg"></div>
-          <div class="barcode-num-text" id="carrierBarcodeNum">/AB12345</div>
-        </div>
-
-        <div class="settings-row" style="margin-top:10px;">
-          <div style="flex:1;">
-            <div class="settings-label">條碼亮度自動最大化</div>
-            <div style="font-size:11px; color:var(--text-muted);">感應刷碼時自動提高螢幕亮度，加速掃描鏡頭識別</div>
-          </div>
-          <button type="button" class="toggle active on" id="toggleCarrierBright"><span class="toggle-knob"></span></button>
-        </div>
-      </div>
-
-      <!-- Tab 2: 商家會員卡庫 -->
-      <div class="hub-section" id="hubTabLoyalty">
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-          <span class="field-label" style="margin:0;">各大實體通路會員卡</span>
-          <span style="font-size:11px; color:var(--gold);">自動比對三合一</span>
-        </div>
-        <div class="loyalty-grid" id="loyaltyHubList">
-          <!-- 由 JS 動態渲染通路會員卡項目 -->
-        </div>
-      </div>
-
-      <!-- Tab 3: 數位憑證 (Digital Credentials) -->
-      <div class="hub-section" id="hubTabCredentials">
-        <span class="field-label">簽發微隱私數位身分與安全通行憑證</span>
-        <div class="cred-cards-grid">
-          <!-- 零知識證明年齡卡 -->
-          <div class="cred-card-choice" id="choiceAgeCred">
-            <div>
-              <div class="cred-choice-top">
-                <span class="cred-choice-icon">🪪</span>
-                <span class="cred-choice-badge">零知識證明</span>
-              </div>
-              <div class="cred-choice-title">成年身分憑證</div>
-              <div class="cred-choice-desc">夜間場所、酒類結帳專用。僅驗證並出示「已滿 18 歲 ✓」，絕不洩漏姓名或證號隱私。</div>
-            </div>
-            <button type="button" class="cred-issue-btn" id="btnIssueAgeCred">+ 簽發並加入錢包</button>
-          </div>
-
-          <!-- 臨時訪客通行門禁 -->
-          <div class="cred-card-choice" id="choiceGuestCred">
-            <div>
-              <div class="cred-choice-top">
-                <span class="cred-choice-icon">🔑</span>
-                <span class="cred-choice-badge">臨時通行</span>
-              </div>
-              <div class="cred-choice-title">訪客門禁金鑰</div>
-              <div class="cred-choice-desc">生成 2 小時有效之安全加密訪客鑰匙，支援 NFC 輕觸過閘，過期自動作廢。</div>
-            </div>
-            <button type="button" class="cred-issue-btn" id="btnIssueGuestCred">+ 簽發並加入錢包</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab 4: 進階偏好設定 -->
-      <div class="hub-section" id="hubTabPreferences">
-        <div class="settings-row">
-          <div style="flex:1;">
-            <div class="settings-label">本機隱私保護</div>
-            <div style="font-size:11px; color:var(--text-muted);">鎖定狀態下於感應預覽隱藏卡面細節與卡號後四碼</div>
-          </div>
-          <button type="button" class="toggle active on" id="togglePrivacyProtect"><span class="toggle-knob"></span></button>
-        </div>
-        <div class="settings-row">
-          <div style="flex:1;">
-            <div class="settings-label">NFC 高靈敏模式</div>
-            <div style="font-size:11px; color:var(--text-muted);">強化厚卡套穿透力，擴大天線感應半徑</div>
-          </div>
-          <button type="button" class="toggle active on" id="toggleNfcHighSens"><span class="toggle-knob"></span></button>
-        </div>
-        <div class="settings-row">
-          <div style="flex:1;">
-            <div class="settings-label">觸覺回饋振動 (Haptics)</div>
-            <div style="font-size:11px; color:var(--text-muted);">感應成功瞬間提供 Apple Taptic Engine 擬真震感</div>
-          </div>
-          <button type="button" class="toggle active on" id="toggleHaptics"><span class="toggle-knob"></span></button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================
-     2. 金鑰轉移 Modal (Device Migration)
-     ======================================================== -->
-<div class="modal-overlay" id="migrationModal">
-  <div class="modal flow-modal">
-    <div class="flow-modal-icon">
-      <div class="radar-ripple"></div>
-      <div class="radar-ripple delay"></div>
-      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-    </div>
-    <h3 style="margin:0 0 6px; font-size:17px; font-weight:800; color:var(--text);" id="migModalTitle">轉移數位鑰匙至新裝置</h3>
-    <p style="font-size:12px; color:var(--text-muted); margin:0 0 16px; line-height:1.45;" id="migModalSub">
-      依照 Apple 安全晶片規範，金鑰僅能在單一安全元件中持有。完成後原機授權將自動銷毀。
-    </p>
-
-    <div class="flow-step-list">
-      <div class="flow-step-item">
-        <div class="flow-step-num">1</div>
-        <div><b>Face ID 生物識別確認</b>：以臉部或密碼確認持卡人身分。</div>
-      </div>
-      <div class="flow-step-item">
-        <div class="flow-step-num">2</div>
-        <div><b>兩台裝置頂部靠近感應</b>：透過超寬頻 (UWB) 與 AirDrop 安全配對傳輸。</div>
-      </div>
-      <div class="flow-step-item">
-        <div class="flow-step-num">3</div>
-        <div><b>安全晶片銷毀本機金鑰</b>：新裝置註冊成功，本機安全鎖定。</div>
-      </div>
-    </div>
-
-    <div class="modal-actions" style="margin-top:10px;">
-      <button type="button" class="cancel" id="btnCancelMigrate">取消</button>
-      <button type="button" class="confirm" id="btnConfirmMigrate" style="background:var(--gold); color:#1A1202; font-weight:800;">立即啟動轉移</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================
-     3. 鑰匙副本拷貝 Modal (Clone / Secondary Key)
-     ======================================================== -->
-<div class="modal-overlay" id="cloneModal">
-  <div class="modal flow-modal">
-    <div class="flow-modal-icon" id="cloneRadarIcon">
-      <div class="radar-ripple"></div>
-      <div class="radar-ripple delay"></div>
-      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-    </div>
-    <h3 style="margin:0 0 6px; font-size:17px; font-weight:800; color:var(--text);" id="cloneModalTitle">製作安全副鑰匙 / 拷貝副本</h3>
-    <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px; line-height:1.45;" id="cloneModalSub">
-      請將手機背面頂部貼齊實體門禁卡或車輛中控感應區，以讀取並將防拷金鑰寫入 Secure Element。
-    </p>
-
-    <!-- 動態進度指示 -->
-    <div id="cloneStatusWrap" style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:16px;">
-      <div style="font-size:13px; font-weight:700; color:var(--gold);" id="cloneStatusText">等待靠近感應區...</div>
-      <div style="font-size:11px; color:var(--text-muted); margin-top:3px;" id="cloneStatusSub">NFC FIELD DETECTING (13.56 MHz)</div>
-    </div>
-
-    <div class="modal-actions">
-      <button type="button" class="cancel" id="btnCancelClone">取消</button>
-      <button type="button" class="confirm" id="btnSimulateClone" style="background:var(--gold); color:#1A1202; font-weight:800;">貼齊感應</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
