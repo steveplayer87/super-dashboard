@@ -2802,11 +2802,81 @@
     </div>
   </div>
 
+  
+    <!-- ===== 頁面四: 更多 (阿鵝資料庫 & 擴充模組) ===== -->
+    <div class="page" id="page-more" style="display:none;">
+      <div class="sec-head">
+        <div class="title"><span class="section-icon teal">🪿</span>阿鵝資料庫 <span style="font-size:12px;color:var(--text-muted);font-weight:normal;margin-left:6px;">Ah-Goose Hub</span></div>
+        <div class="action"><button class="btn btn-sm btn-glass" id="btnPetGoose">摸摸阿鵝 ❤️</button></div>
+      </div>
+
+      <!-- 阿鵝身分檔案卡 -->
+      <div class="asset-card" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(15, 23, 42, 0.7)); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; position:relative; overflow:hidden;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div id="gooseAvatar" style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg, #14b8a6, #06b6d4); display:flex; align-items:center; justify-content:center; font-size:38px; box-shadow:0 8px 24px rgba(20,184,166,0.3); cursor:pointer; transition:transform 0.2s ease;">🪿</div>
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="margin:0; font-size:20px; font-weight:700; color:var(--text-primary, #fff);">阿鵝 (Ah-Goose)</h3>
+              <span style="background:rgba(20,184,166,0.25); color:#2dd4bf; font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; border:1px solid rgba(45,212,191,0.3);">總部吉祥物</span>
+            </div>
+            <p style="margin:4px 0 0 0; font-size:13px; color:var(--text-muted, #94a3b8);">恐龍的精神支柱 · 宇宙守護鵝</p>
+            <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#愛乾淨</span>
+              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#怕冷</span>
+              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#超親人</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阿鵝生活指標 (對齊明月光日記的洗阿鵝打卡) -->
+      <div class="grid grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+        <!-- 洗澡計時器 -->
+        <div class="stat-card" style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px;">
+          <div style="font-size:12px; color:var(--text-muted, #94a3b8); display:flex; justify-content:space-between; align-items:center;">
+            <span>🚿 距離上次洗澡</span>
+            <span id="bathStatusBadge" style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(34,197,94,0.2); color:#4ade80;">香噴噴</span>
+          </div>
+          <div style="font-size:26px; font-weight:800; color:var(--text-primary, #fff); margin:8px 0 4px 0;" id="daysSinceBath">0 <span style="font-size:14px; font-weight:normal;">天前</span></div>
+          <button class="btn btn-sm" id="btnLogBath" style="width:100%; margin-top:8px; font-size:12px; background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:8px; padding:6px 0; cursor:pointer;">今天洗阿鵝 🪿</button>
+        </div>
+
+        <!-- 摸摸計數器 -->
+        <div class="stat-card" style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px;">
+          <div style="font-size:12px; color:var(--text-muted, #94a3b8); display:flex; justify-content:space-between; align-items:center;">
+            <span>❤️ 累計摸摸能量</span>
+            <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(236,72,153,0.2); color:#f472b6;">心情大好</span>
+          </div>
+          <div style="font-size:26px; font-weight:800; color:var(--text-primary, #fff); margin:8px 0 4px 0;" id="petCount">87 <span style="font-size:14px; font-weight:normal;">次</span></div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:8px;">點擊頭像或右上角摸摸</div>
+        </div>
+      </div>
+
+      <!-- 耗材與日常紀錄 -->
+      <div class="sec-head" style="margin-top:10px;">
+        <div class="title"><span class="section-icon amber">📦</span>耗材與生活紀錄</div>
+      </div>
+      <div class="fin-list" style="background:rgba(30,41,59,0.4); border:1px solid rgba(255,255,255,0.06); border-radius:16px; overflow:hidden;">
+        <div style="padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+          <div><div style="font-weight:600; font-size:14px; color:#fff;">專用無淚低敏沐浴露</div><div style="font-size:12px; color:#94a3b8;">預估可用：45 次</div></div>
+          <span style="color:#4ade80; font-size:12px; font-weight:600;">充足</span>
+        </div>
+        <div style="padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+          <div><div style="font-weight:600; font-size:14px; color:#fff;">烘乾毛巾 ＆ 梳毛器</div><div style="font-size:12px; color:#94a3b8;">狀態：已消毒備妥</div></div>
+          <span style="color:#4ade80; font-size:12px; font-weight:600;">良好</span>
+        </div>
+        <div style="padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+          <div><div style="font-weight:600; font-size:14px; color:#fff;">日常喜愛食物：新鮮菜葉</div><div style="font-size:12px; color:#94a3b8;">上次投餵：今日</div></div>
+          <span style="color:#38bdf8; font-size:12px; font-weight:600;">開心</span>
+        </div>
+      </div>
+    </div>
+
   <nav class="tabbar">
     <button class="tab active" data-tab="dashboard"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
     <button class="tab" data-tab="finance"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
     <button class="tab" data-tab="wallet"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
-    <button class="tab placeholder"><span class="icon" id="tabIconP1"></span><span class="txt">敬請期待</span></button>
+    <button class="tab" data-tab="more" id="tabBtnMore"><span class="icon" id="tabIconMore"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg></span><span class="txt">更多</span></button>
   </nav>
 </div>
 
@@ -5308,6 +5378,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     document.getElementById('page-dashboard').style.display = page === 'dashboard' ? '' : 'none';
     document.getElementById('page-finance').style.display = page === 'finance' ? '' : 'none';
     document.getElementById('page-wallet').style.display = page === 'wallet' ? '' : 'none';
+    if(document.getElementById('page-more')) document.getElementById('page-more').style.display = page === 'more' ? '' : 'none';
     document.querySelectorAll('.tab[data-tab]').forEach(function(t){
       t.classList.toggle('active', t.dataset.tab === page);
     });
@@ -6401,6 +6472,74 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   initDinoFloatingBall();
 
 })();
+
+  // ==================== 阿鵝資料庫互動邏輯 ====================
+  function initGooseHub() {
+    var lastBath = localStorage.getItem('ah_goose_last_bath');
+    var petCount = parseInt(localStorage.getItem('ah_goose_pet_count') || '87', 10);
+    
+    function updateBathDisplay() {
+      var daysEl = document.getElementById('daysSinceBath');
+      var badgeEl = document.getElementById('bathStatusBadge');
+      if (!daysEl) return;
+      if (!lastBath) {
+        lastBath = new Date().toISOString();
+        localStorage.setItem('ah_goose_last_bath', lastBath);
+      }
+      var diffDays = Math.floor((new Date() - new Date(lastBath)) / (1000 * 60 * 60 * 24));
+      daysEl.innerHTML = diffDays + ' <span style="font-size:14px; font-weight:normal;">天前</span>';
+      if (diffDays <= 2) {
+        badgeEl.textContent = '香噴噴 ✨';
+        badgeEl.style.background = 'rgba(34,197,94,0.2)';
+        badgeEl.style.color = '#4ade80';
+      } else if (diffDays <= 5) {
+        badgeEl.textContent = '可洗澡 🛁';
+        badgeEl.style.background = 'rgba(234,179,8,0.2)';
+        badgeEl.style.color = '#facc15';
+      } else {
+        badgeEl.textContent = '該洗囉 🧼';
+        badgeEl.style.background = 'rgba(239,68,68,0.2)';
+        badgeEl.style.color = '#f87171';
+      }
+    }
+
+    function petGoose() {
+      petCount++;
+      localStorage.setItem('ah_goose_pet_count', petCount.toString());
+      var countEl = document.getElementById('petCount');
+      if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:14px; font-weight:normal;">次</span>';
+      
+      var avatar = document.getElementById('gooseAvatar');
+      if (avatar) {
+        avatar.style.transform = 'scale(1.25) rotate(10deg)';
+        setTimeout(function() { avatar.style.transform = 'scale(1) rotate(0deg)'; }, 200);
+      }
+      if (typeof showToast === 'function') {
+        showToast('🪿 阿鵝：嘎嘎嘎！(開心摸摸 +1)');
+      }
+    }
+
+    updateBathDisplay();
+    var countEl = document.getElementById('petCount');
+    if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:14px; font-weight:normal;">次</span>';
+
+    var btnBath = document.getElementById('btnLogBath');
+    if (btnBath) {
+      btnBath.onclick = function() {
+        lastBath = new Date().toISOString();
+        localStorage.setItem('ah_goose_last_bath', lastBath);
+        updateBathDisplay();
+        if (typeof showToast === 'function') showToast('🛁 已打卡！阿鵝今天洗得乾乾淨淨！');
+      };
+    }
+
+    var btnPet = document.getElementById('btnPetGoose');
+    if (btnPet) btnPet.onclick = petGoose;
+    var avatar = document.getElementById('gooseAvatar');
+    if (avatar) avatar.onclick = petGoose;
+  }
+  setTimeout(initGooseHub, 100);
+
 </script>
 </body>
 </html>
