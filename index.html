@@ -2800,9 +2800,7 @@
         <div class="fin-list" id="cardTxList"></div>
       </div>
     </div>
-  </div>
 
-  
     <!-- ===== 頁面四: 更多 (阿鵝資料庫 & 擴充模組) ===== -->
     <div class="page" id="page-more" style="display:none;">
       <div class="sec-head">
@@ -2871,12 +2869,16 @@
         </div>
       </div>
     </div>
+  </div>
+
+  
+    
 
   <nav class="tabbar">
     <button class="tab active" data-tab="dashboard"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
     <button class="tab" data-tab="finance"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
     <button class="tab" data-tab="wallet"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
-    <button class="tab" data-tab="more" id="tabBtnMore"><span class="icon" id="tabIconMore"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg></span><span class="txt">更多</span></button>
+    <button class="tab" data-tab="more" id="tabBtnMore"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
   </nav>
 </div>
 
@@ -4273,7 +4275,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   document.getElementById('tabIconDashboard').innerHTML = icon('house');
   document.getElementById('tabIconFinance').innerHTML = icon('wallet');
   document.getElementById('tabIconWallet').innerHTML = icon('credit-card');
-  document.getElementById('tabIconP1').innerHTML = icon('ellipsis');
+  var _tp1 = document.getElementById('tabIconP1'); if(_tp1) _tp1.innerHTML = icon('ellipsis');
   var wb = document.getElementById('walletBadge'); if(wb) wb.innerHTML = icon('sparkles') + ' 新功能';
   var wei = document.getElementById('walletEmptyIcon'); if(wei) wei.innerHTML = icon('credit-card');
   document.getElementById('iconAddCardEmpty').innerHTML = icon('plus','plus-icon-sm');
