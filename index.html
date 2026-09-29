@@ -2801,80 +2801,147 @@
       </div>
     </div>
 
-    <!-- ===== 頁面四: 更多 (阿鵝資料庫 & 擴充模組) ===== -->
+    <!-- ===== 頁面四: 更多 (功能總覽中樞與阿鵝管家子頁面) ===== -->
     <div class="page" id="page-more" style="display:none;">
-      <div class="sec-head">
-        <div class="title"><span class="section-icon teal">🪿</span>阿鵝資料庫 <span style="font-size:12px;color:var(--text-muted);font-weight:normal;margin-left:6px;">Ah-Goose Hub</span></div>
-        <div class="action"><button class="btn btn-sm btn-glass" id="btnPetGoose">摸摸阿鵝 ❤️</button></div>
-      </div>
-
-      <!-- 阿鵝身分檔案卡 -->
-      <div class="asset-card" style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(15, 23, 42, 0.7)); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: 20px; padding: 20px; margin-bottom: 20px; position:relative; overflow:hidden;">
-        <div style="display:flex; align-items:center; gap:16px;">
-          <div id="gooseAvatar" style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg, #14b8a6, #06b6d4); display:flex; align-items:center; justify-content:center; font-size:38px; box-shadow:0 8px 24px rgba(20,184,166,0.3); cursor:pointer; transition:transform 0.2s ease;">🪿</div>
-          <div style="flex:1;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <h3 style="margin:0; font-size:20px; font-weight:700; color:var(--text-primary, #fff);">阿鵝 (Ah-Goose)</h3>
-              <span style="background:rgba(20,184,166,0.25); color:#2dd4bf; font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; border:1px solid rgba(45,212,191,0.3);">總部吉祥物</span>
-            </div>
-            <p style="margin:4px 0 0 0; font-size:13px; color:var(--text-muted, #94a3b8);">恐龍的精神支柱 · 宇宙守護鵝</p>
-            <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#愛乾淨</span>
-              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#怕冷</span>
-              <span style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.06); border-radius:8px; color:#cbd5e1;">#超親人</span>
+      <!-- 更多首頁 (功能總覽中樞) -->
+      <div id="moreHubView">
+        <div class="section">
+          <div class="section-title"><span class="section-icon teal" id="iconMoreServices"></span>擴充功能與夥伴</div>
+          <div class="fin-list">
+            <div class="fin-row" id="entryGooseHub" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:4px;" id="iconGooseEntry"></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">阿鵝管家</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">總部守護夥伴 · 生活日常指標與照護紀錄</div>
+              </div>
+              <span id="moreGooseBadge" style="font-size:11px; padding:3px 8px; border-radius:10px; background:rgba(63,169,164,0.15); color:var(--teal); margin-right:8px; font-weight:600;">香氛純淨</span>
+              <span class="icon" style="color:var(--text-muted); font-size:14px;" id="iconChevronGoose"></span>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 阿鵝生活指標 (對齊明月光日記的洗阿鵝打卡) -->
-      <div class="grid grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
-        <!-- 洗澡計時器 -->
-        <div class="stat-card" style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted, #94a3b8); display:flex; justify-content:space-between; align-items:center;">
-            <span>🚿 距離上次洗澡</span>
-            <span id="bathStatusBadge" style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(34,197,94,0.2); color:#4ade80;">香噴噴</span>
+        <div class="section">
+          <div class="section-title"><span class="section-icon amber" id="iconMoreData"></span>資料與系統管理</div>
+          <div class="fin-list">
+            <div class="fin-row" id="btnExportData" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--amber); font-size:16px; margin-right:4px;" id="iconExportData"></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">匯出完整備份</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">下載包含捷徑、帳戶、卡片之 JSON 檔案</div>
+              </div>
+              <span class="icon" style="color:var(--text-muted); font-size:14px;" id="iconChevronExport"></span>
+            </div>
+            <div class="fin-row" id="btnImportDataTrigger" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--text-muted); font-size:16px; margin-right:4px;" id="iconImportData"></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">匯入還原資料</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">還原歷史備份檔並自動同步介面</div>
+              </div>
+              <input type="file" id="moreFileInput" accept=".json" style="display:none;" />
+              <span class="icon" style="color:var(--text-muted); font-size:14px;" id="iconChevronImport"></span>
+            </div>
           </div>
-          <div style="font-size:26px; font-weight:800; color:var(--text-primary, #fff); margin:8px 0 4px 0;" id="daysSinceBath">0 <span style="font-size:14px; font-weight:normal;">天前</span></div>
-          <button class="btn btn-sm" id="btnLogBath" style="width:100%; margin-top:8px; font-size:12px; background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:8px; padding:6px 0; cursor:pointer;">今天洗阿鵝 🪿</button>
         </div>
 
-        <!-- 摸摸計數器 -->
-        <div class="stat-card" style="background:rgba(30,41,59,0.5); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:16px;">
-          <div style="font-size:12px; color:var(--text-muted, #94a3b8); display:flex; justify-content:space-between; align-items:center;">
-            <span>❤️ 累計摸摸能量</span>
-            <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(236,72,153,0.2); color:#f472b6;">心情大好</span>
+        <div class="section">
+          <div class="section-title"><span class="section-icon" style="color:var(--text-muted);" id="iconMoreAbout"></span>系統資訊</div>
+          <div class="fin-list">
+            <div class="fin-row" style="display:flex; align-items:center;">
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v2.5 · 極致離線 PWA 核心架構</div>
+              </div>
+              <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
+            </div>
           </div>
-          <div style="font-size:26px; font-weight:800; color:var(--text-primary, #fff); margin:8px 0 4px 0;" id="petCount">87 <span style="font-size:14px; font-weight:normal;">次</span></div>
-          <div style="font-size:11px; color:#94a3b8; margin-top:8px;">點擊頭像或右上角摸摸</div>
         </div>
       </div>
 
-      <!-- 耗材與日常紀錄 -->
-      <div class="sec-head" style="margin-top:10px;">
-        <div class="title"><span class="section-icon amber">📦</span>耗材與生活紀錄</div>
-      </div>
-      <div class="fin-list" style="background:rgba(30,41,59,0.4); border:1px solid rgba(255,255,255,0.06); border-radius:16px; overflow:hidden;">
-        <div style="padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
-          <div><div style="font-weight:600; font-size:14px; color:#fff;">專用無淚低敏沐浴露</div><div style="font-size:12px; color:#94a3b8;">預估可用：45 次</div></div>
-          <span style="color:#4ade80; font-size:12px; font-weight:600;">充足</span>
+      <!-- 阿鵝管家 專屬子頁面 -->
+      <div id="gooseSubView" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <button class="btn" id="btnBackToMore" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; font-size:12.5px; cursor:pointer; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted); border-radius:20px;">
+            <span class="icon" id="iconGooseBack"></span>返回更多
+          </button>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:500;">守護夥伴中樞</span>
         </div>
-        <div style="padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
-          <div><div style="font-weight:600; font-size:14px; color:#fff;">烘乾毛巾 ＆ 梳毛器</div><div style="font-size:12px; color:#94a3b8;">狀態：已消毒備妥</div></div>
-          <span style="color:#4ade80; font-size:12px; font-weight:600;">良好</span>
+
+        <!-- 阿鵝身分卡 (高質感深色向量徽章，無 emoji) -->
+        <div class="wallet-banner" style="background:linear-gradient(135deg, rgba(63,169,164,0.15) 0%, rgba(14,12,9,0.95) 60%, #162422 100%); border:1px solid rgba(63,169,164,0.3); padding:16px; border-radius:16px; margin-bottom:14px;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div id="gooseAvatar" style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, rgba(63,169,164,0.25), rgba(63,169,164,0.05)); border:1.5px solid var(--teal); display:flex; align-items:center; justify-content:center; color:var(--teal); cursor:pointer; transition:transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow:0 4px 16px rgba(63,169,164,0.2);">
+              <span class="icon" id="iconGooseAvatar" style="width:26px; height:26px;"></span>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="font-size:16px; font-weight:700; color:var(--text);">阿鵝管家</div>
+                <span class="fin-tag cat-insurance" style="padding:2px 8px; border-radius:6px; font-size:10.5px;">總部夥伴</span>
+              </div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">宇宙守護夥伴 · 日常照護指標</div>
+              <div style="display:flex; gap:6px; margin-top:8px;">
+                <span style="font-size:10px; padding:2px 6px; background:var(--panel-raised-2); border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">愛潔淨</span>
+                <span style="font-size:10px; padding:2px 6px; background:var(--panel-raised-2); border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">溫暖守護</span>
+                <span style="font-size:10px; padding:2px 6px; background:var(--panel-raised-2); border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">互動充能</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
-          <div><div style="font-weight:600; font-size:14px; color:#fff;">日常喜愛食物：新鮮菜葉</div><div style="font-size:12px; color:#94a3b8;">上次投餵：今日</div></div>
-          <span style="color:#38bdf8; font-size:12px; font-weight:600;">開心</span>
+
+        <!-- 狀態雙卡 (距離洗澡 & 摸摸能量) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+          <!-- 洗澡計時器 -->
+          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span class="icon" id="iconBathCard"></span>沐浴間隔</span>
+              <span id="bathStatusBadge" style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">香氛純淨</span>
+            </div>
+            <div style="font-size:24px; font-weight:700; color:var(--text); margin:8px 0 6px;" id="daysSinceBath">0 <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span></div>
+            <button class="btn" id="btnLogBath" style="width:100%; font-size:12px; padding:7px 0; background:rgba(63,169,164,0.15); border:1px solid rgba(63,169,164,0.3); color:var(--teal); border-radius:8px; cursor:pointer;">記錄今日沐浴</button>
+          </div>
+
+          <!-- 摸摸能量 -->
+          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span style="display:inline-flex; align-items:center; gap:4px;"><span class="icon" id="iconPetCard"></span>撫摸能量</span>
+              <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(255,159,28,0.15); color:var(--amber); font-weight:600;">活力充沛</span>
+            </div>
+            <div style="font-size:24px; font-weight:700; color:var(--text); margin:8px 0 6px;" id="petCount">87 <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">次</span></div>
+            <button class="btn" id="btnPetGoose" style="width:100%; font-size:12px; padding:7px 0; background:rgba(255,159,28,0.15); border:1px solid rgba(255,159,28,0.3); color:var(--amber); border-radius:8px; cursor:pointer;">撫摸互動 +1</button>
+          </div>
+        </div>
+
+        <!-- 耗材與日常備忘清單 -->
+        <div class="section">
+          <div class="section-title"><span class="section-icon amber" id="iconSupplySection"></span>生活備忘與耗材存量</div>
+          <div class="fin-list">
+            <div class="fin-row" style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="fin-row-name">
+                <div>低敏清潔沐浴露</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">預估可用：45 次</div>
+              </div>
+              <span style="color:var(--good); font-size:12px; font-weight:600;">存量充足</span>
+            </div>
+            <div class="fin-row" style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="fin-row-name">
+                <div>專用烘乾毛巾與梳具</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">狀態：清潔消毒完畢</div>
+              </div>
+              <span style="color:var(--good); font-size:12px; font-weight:600;">良好備妥</span>
+            </div>
+            <div class="fin-row" style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="fin-row-name">
+                <div>日常喜愛新鮮葉菜</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">餵食紀錄：今日已補充</div>
+              </div>
+              <span style="color:var(--teal); font-size:12px; font-weight:600;">狀態極佳</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  
-    
-
-  <nav class="tabbar">
+    <nav class="tabbar">
     <button class="tab active" data-tab="dashboard"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
     <button class="tab" data-tab="finance"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
     <button class="tab" data-tab="wallet"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
@@ -3191,7 +3258,7 @@
                 </div>
                 <div class="ticket-route-row">
                   <div class="ticket-city-col"><span>TKY</span><b>東京全線</b></div>
-                  <div class="ticket-arrow">★</div>
+                  <div class="ticket-arrow">→</div>
                   <div class="ticket-city-col"><span>ALL</span><b>無限搭乘</b></div>
                 </div>
                 <div class="ticket-meta-row">
@@ -3213,7 +3280,7 @@
                 </div>
                 <div class="ticket-route-row">
                   <div class="ticket-city-col"><span>CITY CAFE</span><b>特大熱拿鐵</b></div>
-                  <div class="ticket-arrow">☕</div>
+                  <div class="ticket-arrow">→</div>
                   <div class="ticket-city-col"><span>數量</span><b>1 杯</b></div>
                 </div>
                 <div class="ticket-meta-row">
@@ -3235,7 +3302,7 @@
                 </div>
                 <div class="ticket-route-row">
                   <div class="ticket-city-col"><span>ORDER</span><b>#SB-8924</b></div>
-                  <div class="ticket-arrow">✓</div>
+                  <div class="ticket-arrow">→</div>
                   <div class="ticket-city-col"><span>門市</span><b>信義微風</b></div>
                 </div>
                 <div class="ticket-meta-row">
@@ -3730,7 +3797,15 @@
     'chevron-left':'<path d="m15 18-6-6 6-6"/>',
     'chevron-right':'<path d="m9 18 6-6-6-6"/>',
     'plane':'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
-    'qr-code':'<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>'
+    'qr-code':'<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+    'feather':'<path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>',
+    'heart':'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    'droplet':'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+    'package':'<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    'download':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    'upload':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    'info':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+    'database':'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>'
   };
   
   // ==================== 財政部標準 Code 39 手機載具條碼繪製 (Canvas) ====================
@@ -4276,6 +4351,20 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   document.getElementById('tabIconFinance').innerHTML = icon('wallet');
   document.getElementById('tabIconWallet').innerHTML = icon('credit-card');
   var _tp1 = document.getElementById('tabIconP1'); if(_tp1) _tp1.innerHTML = icon('ellipsis');
+  var _igm = document.getElementById('iconMoreServices'); if(_igm) _igm.innerHTML = icon('feather');
+  var _ige = document.getElementById('iconGooseEntry'); if(_ige) _ige.innerHTML = icon('feather');
+  var _icg = document.getElementById('iconChevronGoose'); if(_icg) _icg.innerHTML = icon('chevron-right');
+  var _imd = document.getElementById('iconMoreData'); if(_imd) _imd.innerHTML = icon('database');
+  var _ied = document.getElementById('iconExportData'); if(_ied) _ied.innerHTML = icon('download');
+  var _ice = document.getElementById('iconChevronExport'); if(_ice) _ice.innerHTML = icon('chevron-right');
+  var _iid = document.getElementById('iconImportData'); if(_iid) _iid.innerHTML = icon('upload');
+  var _ici = document.getElementById('iconChevronImport'); if(_ici) _ici.innerHTML = icon('chevron-right');
+  var _ima = document.getElementById('iconMoreAbout'); if(_ima) _ima.innerHTML = icon('info');
+  var _igb = document.getElementById('iconGooseBack'); if(_igb) _igb.innerHTML = icon('chevron-left');
+  var _iga = document.getElementById('iconGooseAvatar'); if(_iga) _iga.innerHTML = icon('feather');
+  var _ibc = document.getElementById('iconBathCard'); if(_ibc) _ibc.innerHTML = icon('droplet');
+  var _ipc = document.getElementById('iconPetCard'); if(_ipc) _ipc.innerHTML = icon('heart');
+  var _iss = document.getElementById('iconSupplySection'); if(_iss) _iss.innerHTML = icon('package');
   var wb = document.getElementById('walletBadge'); if(wb) wb.innerHTML = icon('sparkles') + ' 新功能';
   var wei = document.getElementById('walletEmptyIcon'); if(wei) wei.innerHTML = icon('credit-card');
   document.getElementById('iconAddCardEmpty').innerHTML = icon('plus','plus-icon-sm');
@@ -5361,6 +5450,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(isWallet){
         // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
         editBtn.style.display = (!state.editMode && hasCards) ? 'inline-block' : 'none';
+      } else if(currentPage === 'more'){
+        // 在更多頁面：隱藏編輯按鈕
+        editBtn.style.display = 'none';
       } else {
         // 在儀表板或財務頁面：正常顯示編輯按鈕
         editBtn.style.display = state.editMode ? 'none' : 'inline-block';
@@ -5380,7 +5472,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     document.getElementById('page-dashboard').style.display = page === 'dashboard' ? '' : 'none';
     document.getElementById('page-finance').style.display = page === 'finance' ? '' : 'none';
     document.getElementById('page-wallet').style.display = page === 'wallet' ? '' : 'none';
-    if(document.getElementById('page-more')) document.getElementById('page-more').style.display = page === 'more' ? '' : 'none';
+    if(document.getElementById('page-more')){
+      document.getElementById('page-more').style.display = page === 'more' ? '' : 'none';
+      if(page === 'more' && typeof window.showMoreSubView === 'function'){
+        window.showMoreSubView('hub');
+      }
+    }
     document.querySelectorAll('.tab[data-tab]').forEach(function(t){
       t.classList.toggle('active', t.dataset.tab === page);
     });
@@ -6475,33 +6572,118 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
 })();
 
-  // ==================== 阿鵝資料庫互動邏輯 ====================
-  function initGooseHub() {
+  // ==================== 更多中樞與阿鵝管家互動邏輯 ====================
+  function initMorePageAndGooseButler() {
+    var moreHubView = document.getElementById('moreHubView');
+    var gooseSubView = document.getElementById('gooseSubView');
+    var entryGoose = document.getElementById('entryGooseHub');
+    var btnBack = document.getElementById('btnBackToMore');
+
+    window.showMoreSubView = function(view) {
+      if (view === 'goose') {
+        if (moreHubView) moreHubView.style.display = 'none';
+        if (gooseSubView) gooseSubView.style.display = '';
+      } else {
+        if (moreHubView) moreHubView.style.display = '';
+        if (gooseSubView) gooseSubView.style.display = 'none';
+      }
+    };
+
+    if (entryGoose) {
+      entryGoose.onclick = function() { window.showMoreSubView('goose'); };
+    }
+    if (btnBack) {
+      btnBack.onclick = function() { window.showMoreSubView('hub'); };
+    }
+
+    // 備份匯出與匯入功能
+    var btnExport = document.getElementById('btnExportData');
+    if (btnExport) {
+      btnExport.onclick = function() {
+        try {
+          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+          var dlAnchor = document.createElement('a');
+          dlAnchor.setAttribute("href", dataStr);
+          dlAnchor.setAttribute("download", "superdashboard-backup-" + new Date().toISOString().slice(0, 10) + ".json");
+          document.body.appendChild(dlAnchor);
+          dlAnchor.click();
+          dlAnchor.remove();
+          if (typeof showToast === 'function') showToast('已匯出備份檔案');
+        } catch (e) {
+          if (typeof showToast === 'function') showToast('匯出失敗：' + e.message);
+        }
+      };
+    }
+
+    var btnImportTrigger = document.getElementById('btnImportDataTrigger');
+    var moreFileInput = document.getElementById('moreFileInput');
+    if (btnImportTrigger && moreFileInput) {
+      btnImportTrigger.onclick = function() { moreFileInput.click(); };
+      moreFileInput.onchange = function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            var imported = JSON.parse(evt.target.result);
+            if (imported && (imported.copyItems || imported.cards || imported.accounts)) {
+              Object.assign(state, imported);
+              saveState();
+              renderEverything();
+              if (typeof showToast === 'function') showToast('備份資料已順利還原');
+            } else {
+              alert('無效的備份檔案格式');
+            }
+          } catch (err) {
+            alert('解析備份檔案失敗：' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+    }
+
+    // 阿鵝管家 生活指標狀態
     var lastBath = localStorage.getItem('ah_goose_last_bath');
     var petCount = parseInt(localStorage.getItem('ah_goose_pet_count') || '87', 10);
     
     function updateBathDisplay() {
       var daysEl = document.getElementById('daysSinceBath');
       var badgeEl = document.getElementById('bathStatusBadge');
+      var hubBadgeEl = document.getElementById('moreGooseBadge');
       if (!daysEl) return;
       if (!lastBath) {
         lastBath = new Date().toISOString();
         localStorage.setItem('ah_goose_last_bath', lastBath);
       }
       var diffDays = Math.floor((new Date() - new Date(lastBath)) / (1000 * 60 * 60 * 24));
-      daysEl.innerHTML = diffDays + ' <span style="font-size:14px; font-weight:normal;">天前</span>';
+      daysEl.innerHTML = diffDays + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span>';
       if (diffDays <= 2) {
-        badgeEl.textContent = '香噴噴 ✨';
-        badgeEl.style.background = 'rgba(34,197,94,0.2)';
-        badgeEl.style.color = '#4ade80';
+        badgeEl.textContent = '香氛純淨';
+        badgeEl.style.background = 'rgba(92,214,138,0.15)';
+        badgeEl.style.color = 'var(--good)';
+        if (hubBadgeEl) {
+          hubBadgeEl.textContent = '香氛純淨';
+          hubBadgeEl.style.background = 'rgba(92,214,138,0.15)';
+          hubBadgeEl.style.color = 'var(--good)';
+        }
       } else if (diffDays <= 5) {
-        badgeEl.textContent = '可洗澡 🛁';
-        badgeEl.style.background = 'rgba(234,179,8,0.2)';
-        badgeEl.style.color = '#facc15';
+        badgeEl.textContent = '建議沐浴';
+        badgeEl.style.background = 'rgba(255,159,28,0.15)';
+        badgeEl.style.color = 'var(--amber)';
+        if (hubBadgeEl) {
+          hubBadgeEl.textContent = '建議沐浴';
+          hubBadgeEl.style.background = 'rgba(255,159,28,0.15)';
+          hubBadgeEl.style.color = 'var(--amber)';
+        }
       } else {
-        badgeEl.textContent = '該洗囉 🧼';
-        badgeEl.style.background = 'rgba(239,68,68,0.2)';
-        badgeEl.style.color = '#f87171';
+        badgeEl.textContent = '安排清洗';
+        badgeEl.style.background = 'rgba(217,86,75,0.15)';
+        badgeEl.style.color = 'var(--danger)';
+        if (hubBadgeEl) {
+          hubBadgeEl.textContent = '安排清洗';
+          hubBadgeEl.style.background = 'rgba(217,86,75,0.15)';
+          hubBadgeEl.style.color = 'var(--danger)';
+        }
       }
     }
 
@@ -6509,21 +6691,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       petCount++;
       localStorage.setItem('ah_goose_pet_count', petCount.toString());
       var countEl = document.getElementById('petCount');
-      if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:14px; font-weight:normal;">次</span>';
+      if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">次</span>';
       
       var avatar = document.getElementById('gooseAvatar');
       if (avatar) {
-        avatar.style.transform = 'scale(1.25) rotate(10deg)';
+        avatar.style.transform = 'scale(1.2) rotate(6deg)';
         setTimeout(function() { avatar.style.transform = 'scale(1) rotate(0deg)'; }, 200);
       }
       if (typeof showToast === 'function') {
-        showToast('🪿 阿鵝：嘎嘎嘎！(開心摸摸 +1)');
+        showToast('已記錄撫摸能量 +1');
       }
     }
 
     updateBathDisplay();
     var countEl = document.getElementById('petCount');
-    if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:14px; font-weight:normal;">次</span>';
+    if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">次</span>';
 
     var btnBath = document.getElementById('btnLogBath');
     if (btnBath) {
@@ -6531,7 +6713,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         lastBath = new Date().toISOString();
         localStorage.setItem('ah_goose_last_bath', lastBath);
         updateBathDisplay();
-        if (typeof showToast === 'function') showToast('🛁 已打卡！阿鵝今天洗得乾乾淨淨！');
+        if (typeof showToast === 'function') showToast('已記錄今日完成沐浴');
       };
     }
 
@@ -6540,7 +6722,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var avatar = document.getElementById('gooseAvatar');
     if (avatar) avatar.onclick = petGoose;
   }
-  setTimeout(initGooseHub, 100);
+  setTimeout(initMorePageAndGooseButler, 100);
 
 </script>
 </body>
