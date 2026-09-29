@@ -2808,7 +2808,7 @@
         <div class="section">
           <div class="section-title"><span class="section-icon teal" id="iconMoreServices"></span>擴充功能與夥伴</div>
           <div class="fin-list">
-            <div class="fin-row" id="entryGooseHub" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" id="entryGooseHub" onclick="window.showMoreSubView('goose')" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:4px;" id="iconGooseEntry"></span>
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">阿鵝管家</div>
@@ -2860,7 +2860,7 @@
       <!-- 阿鵝管家 專屬子頁面 -->
       <div id="gooseSubView" style="display:none;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-          <button class="btn" id="btnBackToMore" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; font-size:12.5px; cursor:pointer; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted); border-radius:20px;">
+          <button class="btn" id="btnBackToMore" onclick="window.showMoreSubView('hub')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; font-size:12.5px; cursor:pointer; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted); border-radius:20px;">
             <span class="icon" id="iconGooseBack"></span>返回更多
           </button>
           <span style="font-size:12px; color:var(--text-muted); font-weight:500;">守護夥伴中樞</span>
@@ -2942,10 +2942,10 @@
   </div>
 
     <nav class="tabbar">
-    <button class="tab active" data-tab="dashboard"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
-    <button class="tab" data-tab="finance"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
-    <button class="tab" data-tab="wallet"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
-    <button class="tab" data-tab="more" id="tabBtnMore"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
+    <button type="button" class="tab active" data-tab="dashboard" id="tabBtnDashboard" onclick="window.switchPage('dashboard')"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
+    <button type="button" class="tab" data-tab="finance" id="tabBtnFinance" onclick="window.switchPage('finance')"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
+    <button type="button" class="tab" data-tab="wallet" id="tabBtnWallet" onclick="window.switchPage('wallet')"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
+    <button type="button" class="tab" data-tab="more" id="tabBtnMore" onclick="window.switchPage('more')"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
   </nav>
 </div>
 
@@ -3758,6 +3758,52 @@
 
 
 <script>
+// ==================== 全域安全導航與防崩潰初始化 ====================
+window.showMoreSubView = function(view) {
+  try {
+    var moreHubView = document.getElementById('moreHubView');
+    var gooseSubView = document.getElementById('gooseSubView');
+    if (view === 'goose') {
+      if (moreHubView) moreHubView.style.display = 'none';
+      if (gooseSubView) gooseSubView.style.display = '';
+    } else {
+      if (moreHubView) moreHubView.style.display = '';
+      if (gooseSubView) gooseSubView.style.display = 'none';
+    }
+  } catch(e) { console.error('showMoreSubView error', e); }
+};
+
+window.switchPage = function(page) {
+  try {
+    if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
+    window.currentPage = page;
+    var pages = ['dashboard', 'finance', 'wallet', 'more'];
+    pages.forEach(function(p) {
+      var el = document.getElementById('page-' + p);
+      if (el) el.style.display = (p === page) ? '' : 'none';
+    });
+    if (page === 'more') {
+      window.showMoreSubView('hub');
+    }
+    document.querySelectorAll('.tab[data-tab]').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.tab === page);
+    });
+    if (typeof window._updateAddCardBtnVisibility === 'function') {
+      window._updateAddCardBtnVisibility();
+    }
+  } catch(e) { console.error('switchPage error', e); }
+};
+window.switchTab = window.switchPage;
+
+function safeSetIcon(id, name, cls) {
+  try {
+    var el = document.getElementById(id);
+    if (el && typeof icon === 'function') {
+      el.innerHTML = icon(name, cls);
+    }
+  } catch(e) {}
+}
+
 (function(){
   document.addEventListener('touchstart', function(){}, false);
 
@@ -4340,41 +4386,41 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var btnSuccessConfirm = document.getElementById('btnSuccessConfirm');
   var successPreviewQr = document.getElementById('successPreviewQr');
 
-  document.getElementById('brandIcon').innerHTML = icon('layout-dashboard');
-  document.getElementById('iconCopySection').innerHTML = icon('clipboard');
-  document.getElementById('iconShortcutSection').innerHTML = icon('zap');
-  document.getElementById('iconGauge').innerHTML = icon('gauge');
-  document.getElementById('iconBudgetPencil').innerHTML = icon('pencil');
-  document.getElementById('iconAccountSection').innerHTML = icon('landmark');
-  document.getElementById('iconExpenseSection').innerHTML = icon('receipt');
-  document.getElementById('tabIconDashboard').innerHTML = icon('house');
-  document.getElementById('tabIconFinance').innerHTML = icon('wallet');
-  document.getElementById('tabIconWallet').innerHTML = icon('credit-card');
-  var _tp1 = document.getElementById('tabIconP1'); if(_tp1) _tp1.innerHTML = icon('ellipsis');
-  var _igm = document.getElementById('iconMoreServices'); if(_igm) _igm.innerHTML = icon('feather');
-  var _ige = document.getElementById('iconGooseEntry'); if(_ige) _ige.innerHTML = icon('feather');
-  var _icg = document.getElementById('iconChevronGoose'); if(_icg) _icg.innerHTML = icon('chevron-right');
-  var _imd = document.getElementById('iconMoreData'); if(_imd) _imd.innerHTML = icon('database');
-  var _ied = document.getElementById('iconExportData'); if(_ied) _ied.innerHTML = icon('download');
-  var _ice = document.getElementById('iconChevronExport'); if(_ice) _ice.innerHTML = icon('chevron-right');
-  var _iid = document.getElementById('iconImportData'); if(_iid) _iid.innerHTML = icon('upload');
-  var _ici = document.getElementById('iconChevronImport'); if(_ici) _ici.innerHTML = icon('chevron-right');
-  var _ima = document.getElementById('iconMoreAbout'); if(_ima) _ima.innerHTML = icon('info');
-  var _igb = document.getElementById('iconGooseBack'); if(_igb) _igb.innerHTML = icon('chevron-left');
-  var _iga = document.getElementById('iconGooseAvatar'); if(_iga) _iga.innerHTML = icon('feather');
-  var _ibc = document.getElementById('iconBathCard'); if(_ibc) _ibc.innerHTML = icon('droplet');
-  var _ipc = document.getElementById('iconPetCard'); if(_ipc) _ipc.innerHTML = icon('heart');
-  var _iss = document.getElementById('iconSupplySection'); if(_iss) _iss.innerHTML = icon('package');
-  var wb = document.getElementById('walletBadge'); if(wb) wb.innerHTML = icon('sparkles') + ' 新功能';
-  var wei = document.getElementById('walletEmptyIcon'); if(wei) wei.innerHTML = icon('credit-card');
-  document.getElementById('iconAddCardEmpty').innerHTML = icon('plus','plus-icon-sm');
-  document.getElementById('iconChevLeft').innerHTML = icon('chevron-left');
-  document.getElementById('iconChevRight').innerHTML = icon('chevron-right');
-  document.getElementById('iconAddCardHeader').innerHTML = icon('plus','plus-icon-sm');
-  var _ict = document.getElementById('iconCardTrash'); if(_ict) _ict.innerHTML = icon('trash-2');
-  var _icp = document.getElementById('iconCardPencil'); if(_icp) _icp.innerHTML = icon('pencil');
-  document.getElementById('iconApproachWifi').innerHTML = icon('wifi');
-  document.getElementById('iconHistorySection').innerHTML = icon('clock');
+  safeSetIcon('brandIcon', 'layout-dashboard');
+  safeSetIcon('iconCopySection', 'clipboard');
+  safeSetIcon('iconShortcutSection', 'zap');
+  safeSetIcon('iconGauge', 'gauge');
+  safeSetIcon('iconBudgetPencil', 'pencil');
+  safeSetIcon('iconAccountSection', 'landmark');
+  safeSetIcon('iconExpenseSection', 'receipt');
+  safeSetIcon('tabIconDashboard', 'house');
+  safeSetIcon('tabIconFinance', 'wallet');
+  safeSetIcon('tabIconWallet', 'credit-card');
+  safeSetIcon('tabIconP1', 'ellipsis');
+  safeSetIcon('iconMoreServices', 'feather');
+  safeSetIcon('iconGooseEntry', 'feather');
+  safeSetIcon('iconChevronGoose', 'chevron-right');
+  safeSetIcon('iconMoreData', 'database');
+  safeSetIcon('iconExportData', 'download');
+  safeSetIcon('iconChevronExport', 'chevron-right');
+  safeSetIcon('iconImportData', 'upload');
+  safeSetIcon('iconChevronImport', 'chevron-right');
+  safeSetIcon('iconMoreAbout', 'info');
+  safeSetIcon('iconGooseBack', 'chevron-left');
+  safeSetIcon('iconGooseAvatar', 'feather');
+  safeSetIcon('iconBathCard', 'droplet');
+  safeSetIcon('iconPetCard', 'heart');
+  safeSetIcon('iconSupplySection', 'package');
+  safeSetIcon('walletBadge', 'sparkles');
+  safeSetIcon('walletEmptyIcon', 'credit-card');
+  safeSetIcon('iconAddCardEmpty', 'plus', 'plus-icon-sm');
+  safeSetIcon('iconChevLeft', 'chevron-left');
+  safeSetIcon('iconChevRight', 'chevron-right');
+  safeSetIcon('iconAddCardHeader', 'plus', 'plus-icon-sm');
+  safeSetIcon('iconCardTrash', 'trash-2');
+  safeSetIcon('iconCardPencil', 'pencil');
+  safeSetIcon('iconApproachWifi', 'wifi');
+  safeSetIcon('iconHistorySection', 'clock');
 
   function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
   function escapeHtml(s){
@@ -5466,22 +5512,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   window.switchTab = function(tab){ switchPage(tab); };
 
+  window._cancelEditMode = function() { if (state.editMode) cancelEdit(); };
+  window._updateAddCardBtnVisibility = updateAddCardBtnVisibility;
+
   function switchPage(page){
-    if(state.editMode){ cancelEdit(); }
-    currentPage = page;
-    document.getElementById('page-dashboard').style.display = page === 'dashboard' ? '' : 'none';
-    document.getElementById('page-finance').style.display = page === 'finance' ? '' : 'none';
-    document.getElementById('page-wallet').style.display = page === 'wallet' ? '' : 'none';
-    if(document.getElementById('page-more')){
-      document.getElementById('page-more').style.display = page === 'more' ? '' : 'none';
-      if(page === 'more' && typeof window.showMoreSubView === 'function'){
-        window.showMoreSubView('hub');
-      }
-    }
-    document.querySelectorAll('.tab[data-tab]').forEach(function(t){
-      t.classList.toggle('active', t.dataset.tab === page);
-    });
-    updateAddCardBtnVisibility();
+    window.switchPage(page);
   }
   document.querySelectorAll('.tab[data-tab]').forEach(function(t){
     t.addEventListener('click', function(){ switchPage(t.dataset.tab); });
@@ -6570,7 +6605,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   initDinoFloatingBall();
 
-})();
 
   // ==================== 更多中樞與阿鵝管家互動邏輯 ====================
   function initMorePageAndGooseButler() {
@@ -6628,7 +6662,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             var imported = JSON.parse(evt.target.result);
             if (imported && (imported.copyItems || imported.cards || imported.accounts)) {
               Object.assign(state, imported);
-              saveState();
+              saveData();
               renderEverything();
               if (typeof showToast === 'function') showToast('備份資料已順利還原');
             } else {
@@ -6722,7 +6756,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var avatar = document.getElementById('gooseAvatar');
     if (avatar) avatar.onclick = petGoose;
   }
-  setTimeout(initMorePageAndGooseButler, 100);
+  initMorePageAndGooseButler();
+})();
 
 </script>
 </body>
