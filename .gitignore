@@ -6,3 +6,8 @@
 my-dashboard-data.json
 *-data.json
 
+node_modules/
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/

@@ -1,0 +1,8 @@
+{
+  "appId": "com.steveplayer87.superdashboard",
+  "appName": "SuperDashboard",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

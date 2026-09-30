@@ -1,0 +1,26 @@
+{
+  "name": "super-dashboard",
+  "version": "1.0.0",
+  "description": "> 個人專屬深色奢華質感儀錶板與 Apple Wallet 風格數位卡夾 PWA。   > 採用 **純原生單檔架構 (Zero Dependencies, Local-First)**，無需建置工具即可秒開運作，支援 iOS、iPadOS 與 macOS 沉浸全螢幕體驗。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steveplayer87/super-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/steveplayer87/super-dashboard/issues"
+  },
+  "homepage": "https://github.com/steveplayer87/super-dashboard#readme",
+  "dependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  }
+}
