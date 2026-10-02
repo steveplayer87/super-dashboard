@@ -3007,7 +3007,15 @@
                 <div style="font-weight:600; color:var(--text);">啟動桃園捷運搭乘動態島</div>
                 <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">Live Activity · A12 機場一航 → A18 高鐵桃園 → A21 環北</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(139,47,232,0.15); color:#a855f7; font-weight:600;">即刻啟動</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(139,47,232,0.15); color:#a855f7; font-weight:600;">捷運進度</span>
+            </div>
+            <div class="fin-row" onclick="window.syncQuickCopyLiveActivity()" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">啟動「前五常用項目」動態島</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">退回桌面或鎖定螢幕即可直接點擊複製前 5 個常用內容</div>
+              </div>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">即刻常駐</span>
             </div>
             <div class="fin-row" onclick="window.triggerSceneNotification()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--good); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
@@ -3408,6 +3416,22 @@
         <div class="field-group" id="modalField3" style="display:none;">
           <span class="field-label">分類</span>
           <div class="segmented" id="categorySeg"></div>
+        </div>
+
+        <!-- 常用項目專屬：這是一個連結開關 -->
+        <div class="field-group" id="copyLinkToggleGroup" style="display:none; margin-top:10px; padding:10px 14px; background:rgba(63,169,164,0.08); border-radius:12px; border:1px solid rgba(63,169,164,0.25);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="field-label" style="margin:0; font-size:13.5px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                這是一個網頁連結
+              </span>
+            </div>
+            <button type="button" class="toggle" id="copyIsLinkToggle"><span class="toggle-knob"></span></button>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.4;">
+            開啟後點擊方塊將直接前往開啟網頁；長按方塊才會執行文字複製
+          </div>
         </div>
 
         <!-- 快速交通卡選項 (選中交通卡時出現) -->
@@ -4891,14 +4915,50 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           });
         } else {
           var mono = type === 'copy' && isNumericCode(label);
-          cap.className = 'keycap';
+          var isLink = (type === 'copy' && !!item.isLink);
+          cap.className = 'keycap' + (isLink ? ' is-link-tile' : '');
+          var linkIconHtml = isLink ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="var(--gold)" stroke-width="2.5" style="display:inline-block; vertical-align:-1px; margin-right:3px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' : '';
           cap.innerHTML =
             '<div class="led ' + color + '"></div>' +
-            '<div class="label' + (mono ? ' mono' : '') + '">' + escapeHtml(label) + '</div>';
-          cap.addEventListener('click', function(){
-            if(type === 'copy'){ doCopy(item, cap.querySelector('.led')); }
-            else { doOpenShortcut(item); }
-          });
+            '<div class="label' + (mono ? ' mono' : '') + '">' + linkIconHtml + escapeHtml(label) + '</div>';
+
+          if(type === 'copy' && isLink){
+            // 連結模式：短按直接開啟，長按 500ms 複製文字
+            var longPressTimer = null;
+            var isLongPressed = false;
+
+            cap.addEventListener('touchstart', function(e){
+              isLongPressed = false;
+              longPressTimer = setTimeout(function(){
+                isLongPressed = true;
+                doCopy(item, cap.querySelector('.led'));
+                if(navigator.vibrate) navigator.vibrate(50);
+              }, 500);
+            }, { passive: true });
+
+            cap.addEventListener('touchmove', function(){
+              clearTimeout(longPressTimer);
+            }, { passive: true });
+
+            cap.addEventListener('touchend', function(){
+              clearTimeout(longPressTimer);
+            }, { passive: true });
+
+            cap.addEventListener('click', function(e){
+              if(isLongPressed){ isLongPressed = false; return; }
+              var rawUrl = item.text.trim();
+              if(!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')){
+                rawUrl = 'https://' + rawUrl;
+              }
+              window.open(rawUrl, '_blank');
+              showToast('已開啟外部連結');
+            });
+          } else {
+            cap.addEventListener('click', function(){
+              if(type === 'copy'){ doCopy(item, cap.querySelector('.led')); }
+              else { doOpenShortcut(item); }
+            });
+          }
         }
       }
       container.appendChild(cap);
@@ -5002,7 +5062,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
-  function renderAll(){ renderGrid(copyGrid, 'copy'); renderGrid(shortcutGrid, 'shortcut'); }
+  function renderAll(){ renderGrid(copyGrid, 'copy'); renderGrid(shortcutGrid, 'shortcut'); if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false); }
 
   // ==================== 錢包(虛擬卡)頁 ====================
   var cardViewportEl = document.getElementById('cardViewport');
@@ -6414,6 +6474,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var expressGroup = document.getElementById('expressTransitGroup');
     if(expressGroup) expressGroup.style.display = (isCard && modalCategory === 'transit') ? 'block' : 'none';
 
+    var copyLinkGroup = document.getElementById('copyLinkToggleGroup');
+    if(copyLinkGroup) copyLinkGroup.style.display = (type === 'copy') ? 'block' : 'none';
+
     if(isExpense || isCard) buildCategorySeg(type);
 
     if(type === 'copy'){
@@ -6446,6 +6509,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
+  
+  var copyIsLinkBtn = document.getElementById('copyIsLinkToggle');
+  if(copyIsLinkBtn){
+    copyIsLinkBtn.addEventListener('click', function(){
+      copyIsLinkBtn.classList.toggle('active');
+      copyIsLinkBtn.classList.toggle('on');
+    });
+  }
+
   function openAddModal(type){
     modalMode = 'add';
     modalTarget = type;
@@ -6464,6 +6536,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalConfirm.textContent = '新增';
     modalInput.value = '';
     modalInput2.value = '';
+    var linkToggle = document.getElementById('copyIsLinkToggle');
+    if(linkToggle){
+      linkToggle.classList.remove('active', 'on');
+    }
     setCategory(type === 'card' ? 'transit' : 'other');
     setTheme('theme-gold');
     modalOverlay.classList.add('show');
@@ -6486,7 +6562,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalTitle.textContent = titles[type] || '編輯項目';
     modalHint.textContent = hints[type] || '';
 
-    if(type === 'copy'){ modalInput.value = item.text; }
+    if(type === 'copy'){
+      modalInput.value = item.text;
+      var linkToggle = document.getElementById('copyIsLinkToggle');
+      if(linkToggle){
+        linkToggle.classList.toggle('active', !!item.isLink);
+        linkToggle.classList.toggle('on', !!item.isLink);
+      }
+    }
     else if(type === 'shortcut'){ modalInput.value = item.name; modalInput2.value = item.input || ''; }
     else if(type === 'account'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; }
     else if(type === 'expense'){ modalInput.value = item.name; modalInput2.value = item.amount || ''; setCategory(item.category || 'other'); }
@@ -6565,10 +6648,22 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
 
     if(type === 'copy'){
+      var linkToggle = document.getElementById('copyIsLinkToggle');
+      var isLinkVal = linkToggle ? linkToggle.classList.contains('active') : false;
+      // 若文字以 http:// 或 https:// 開頭，自動推斷為連結
+      if(!isLinkVal && (val.startsWith('http://') || val.startsWith('https://'))){
+        isLinkVal = true;
+      }
       if(modalMode === 'edit'){
         var t = state.copyItems.find(function(i){ return i.id === editContext.id; });
-        if(t) t.text = val;
-      } else { state.copyItems.push({ id: uid('c'), text: val }); }
+        if(t){
+          t.text = val;
+          t.isLink = isLinkVal;
+        }
+      } else {
+        state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal });
+      }
+      if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false);
     } else if(type === 'shortcut'){
       var inputVal = modalInput2.value.trim();
       if(modalMode === 'edit'){

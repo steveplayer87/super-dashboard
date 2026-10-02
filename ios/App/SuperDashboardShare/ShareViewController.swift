@@ -93,19 +93,35 @@ class ShareViewController: UIViewController {
         guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "superdashboard://add-copy?text=\(encoded)") else { return }
 
+        // 多重響應者回溯觸發 openURL
         var responder: UIResponder? = self
         let selector = sel_registerName("openURL:")
+        var didOpen = false
         while let r = responder {
             if r.responds(to: selector) {
                 r.perform(selector, with: url)
+                didOpen = true
                 break
             }
             responder = r.next
         }
+        
+        // 若找不到響應者，使用 UIApplication 私有方法兜底
+        if !didOpen {
+            if let sharedAppClass = NSClassFromString("UIApplication"),
+               let sharedApp = sharedAppClass.value(forKey: "sharedApplication") as? NSObject {
+                let openSelector = sel_registerName("openURL:options:completionHandler:")
+                if sharedApp.responds(to: openSelector) {
+                    typealias OpenMethod = @convention(c) (NSObject, Selector, URL, [String: Any], (@convention(block) (Bool) -> Void)?) -> Void
+                    let method = unsafeBitCast(sharedApp.method(for: openSelector), to: OpenMethod.self)
+                    method(sharedApp, openSelector, url, [:], nil)
+                }
+            }
+        }
     }
 
     private func completeShare() {
-        DispatchQueue.main.async { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
         }
     }

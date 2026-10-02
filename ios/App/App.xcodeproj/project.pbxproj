@@ -217,7 +217,7 @@
 			productReference = E5C718C3306D49FF00A673DB /* SuperDashboardWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-				E5C728C2306D49FF00A673DB /* SuperDashboardShareExtension */ = {
+		E5C728C2306D49FF00A673DB /* SuperDashboardShareExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E5C728DC306D4A0000A673DB /* Build configuration list for PBXNativeTarget "SuperDashboardShareExtension" */;
 			buildPhases = (
@@ -253,13 +253,13 @@
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
 					};
-					E5C728C2306D49FF00A673DB = {
-					CreatedOnToolsVersion = 16.0;
-					DevelopmentTeam = KVQ2KCRGLG;
-					ProvisioningStyle = Automatic;
-				};
-				E5C718C2306D49FF00A673DB = {
+					E5C718C2306D49FF00A673DB = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					E5C728C2306D49FF00A673DB = {
+						CreatedOnToolsVersion = 16.0;
+						DevelopmentTeam = KVQ2KCRGLG;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -284,7 +284,6 @@
 				E5C728C2306D49FF00A673DB /* SuperDashboardShareExtension */,
 			);
 		};
-				/* End Target Attributes */
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */

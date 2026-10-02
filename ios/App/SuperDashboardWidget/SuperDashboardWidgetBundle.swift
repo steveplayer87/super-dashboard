@@ -6,5 +6,6 @@ struct SuperDashboardWidgetBundle: WidgetBundle {
     var body: some Widget {
         SuperDashboardWidget()
         SuperDashboardWidgetLiveActivity()
+        QuickCopyLiveActivity()
     }
 }

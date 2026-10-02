@@ -35,6 +35,41 @@ public struct TaoyuanMetroAttributes: ActivityAttributes {
     }
 }
 
+// MARK: - Quick Copy Live Activity Data Model
+public struct QuickCopyItemData: Codable, Hashable {
+    public var id: String
+    public var label: String
+    public var text: String
+    public var isLink: Bool
+    
+    public init(id: String, label: String, text: String, isLink: Bool = false) {
+        self.id = id
+        self.label = label
+        self.text = text
+        self.isLink = isLink
+    }
+}
+
+public struct QuickCopyAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        public var items: [QuickCopyItemData]
+        public var lastCopiedText: String?
+        public var updateTimestamp: Double
+        
+        public init(items: [QuickCopyItemData], lastCopiedText: String? = nil, updateTimestamp: Double = Date().timeIntervalSince1970) {
+            self.items = items
+            self.lastCopiedText = lastCopiedText
+            self.updateTimestamp = updateTimestamp
+        }
+    }
+
+    public var title: String
+    
+    public init(title: String = "常用速貼庫") {
+        self.title = title
+    }
+}
+
 // MARK: - Live Activity 管理器 (桃園捷運搭乘即時動態)
 @available(iOS 16.2, *)
 class LiveActivityManager {
@@ -78,6 +113,57 @@ class LiveActivityManager {
         Task {
             for activity in Activity<TaoyuanMetroAttributes>.activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
+    }
+}
+
+// MARK: - QuickCopy Live Activity 管理器 (常用項目動態島)
+@available(iOS 16.2, *)
+class QuickCopyManager {
+    static var currentActivity: Activity<QuickCopyAttributes>?
+
+    static func startOrUpdateQuickCopy(items: [QuickCopyItemData]) {
+        let attributes = QuickCopyAttributes(title: "常用速貼庫")
+        let contentState = QuickCopyAttributes.ContentState(
+            items: Array(items.prefix(5)),
+            lastCopiedText: nil,
+            updateTimestamp: Date().timeIntervalSince1970
+        )
+
+        // 若已有活動則更新內容，若無則啟動
+        if let existing = Activity<QuickCopyAttributes>.activities.first {
+            Task {
+                await existing.update(
+                    ActivityContent(state: contentState, staleDate: nil),
+                    alertConfiguration: nil
+                )
+            }
+            currentActivity = existing
+            print("QuickCopy Live Activity updated with \(items.count) items")
+        } else {
+            do {
+                currentActivity = try Activity.request(
+                    attributes: attributes,
+                    content: .init(state: contentState, staleDate: nil)
+                )
+                print("QuickCopy Live Activity started successfully!")
+            } catch {
+                print("Failed to start QuickCopy Live Activity: \(error)")
+            }
+        }
+    }
+
+    static func notifyItemCopied(text: String) {
+        if let existing = Activity<QuickCopyAttributes>.activities.first {
+            var updatedState = existing.content.state
+            updatedState.lastCopiedText = text
+            updatedState.updateTimestamp = Date().timeIntervalSince1970
+            Task {
+                await existing.update(
+                    ActivityContent(state: updatedState, staleDate: nil),
+                    alertConfiguration: nil
+                )
             }
         }
     }
@@ -138,9 +224,12 @@ class NotificationManager {
     }
 
     private static func evaluateNotificationFeedback(_ msg: String) {
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = scene.windows.first?.rootViewController as? CAPBridgeViewController {
-            rootVC.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('\(msg)');", completionHandler: nil)
+        DispatchQueue.main.async {
+            let escaped = msg.replacingOccurrences(of: "'", with: "\\'")
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let sceneDelegate = scene.delegate as? SceneDelegate {
+                sceneDelegate.evaluateJS("if(typeof showToast==='function') showToast('\(escaped)');")
+            }
         }
     }
 }
@@ -150,6 +239,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.bridge?.webView?.configuration.userContentController.add(self, name: "startLiveActivity")
+        self.bridge?.webView?.configuration.userContentController.add(self, name: "updateQuickCopyActivity")
         self.bridge?.webView?.configuration.userContentController.add(self, name: "scheduleSceneNotification")
         self.bridge?.webView?.configuration.userContentController.add(self, name: "saveImageToPhotos")
     }
@@ -158,6 +248,19 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         if message.name == "startLiveActivity" {
             if #available(iOS 16.2, *) {
                 LiveActivityManager.startTaoyuanMetroActivity()
+            }
+        } else if message.name == "updateQuickCopyActivity" {
+            if #available(iOS 16.2, *) {
+                if let rawList = message.body as? [[String: Any]] {
+                    let items = rawList.map { dict -> QuickCopyItemData in
+                        let id = dict["id"] as? String ?? UUID().uuidString
+                        let text = dict["text"] as? String ?? ""
+                        let label = dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                        let isLink = dict["isLink"] as? Bool ?? false
+                        return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
+                    }
+                    QuickCopyManager.startOrUpdateQuickCopy(items: items)
+                }
             }
         } else if message.name == "scheduleSceneNotification" {
             NotificationManager.scheduleSceneNotification()
@@ -269,6 +372,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             return
         }
 
+        if urlStr.contains("copy?text=") {
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let textParam = components.queryItems?.first(where: { $0.name == "text" })?.value {
+                UIPasteboard.general.string = textParam
+                showCopiedToast(textParam)
+                if #available(iOS 16.2, *) {
+                    QuickCopyManager.notifyItemCopied(text: textParam)
+                }
+            }
+        }
+
         // 使用 URL 參數安全編碼注入 JavaScript
         if let encoded = urlStr.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
             evaluateJS("if(typeof window.handleDeepLink==='function'){ window.handleDeepLink(decodeURIComponent('\(encoded)')); }")
@@ -329,7 +443,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         completionHandler()
     }
 
-    private func evaluateJS(_ js: String) {
+    func evaluateJS(_ js: String) {
         let exec = { [weak self] in
             guard let self = self else { return }
             var webView: WKWebView? = nil
