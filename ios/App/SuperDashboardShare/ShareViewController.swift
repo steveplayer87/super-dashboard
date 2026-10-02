@@ -43,8 +43,9 @@ class ShareViewController: UIViewController {
                         self?.openHostApp(withText: url.absoluteString)
                     } else if let str = item as? String {
                         self?.openHostApp(withText: str)
+                    } else {
+                        self?.completeShare()
                     }
-                    self?.completeShare()
                 }
                 return
             }
@@ -57,8 +58,9 @@ class ShareViewController: UIViewController {
                 itemProvider.loadItem(forTypeIdentifier: itemProvider.registeredTypeIdentifiers.first ?? UTType.text.identifier, options: nil) { [weak self] (item, error) in
                     if let text = item as? String {
                         self?.openHostApp(withText: text)
+                    } else {
+                        self?.completeShare()
                     }
-                    self?.completeShare()
                 }
                 return
             }
@@ -68,7 +70,6 @@ class ShareViewController: UIViewController {
     }
 
     private func processAndShareImage(_ image: UIImage) {
-        // 壓縮圖片為較小尺寸並轉換為 Base64 Data URI
         let maxDimension: CGFloat = 800
         var scaledImage = image
         if image.size.width > maxDimension || image.size.height > maxDimension {
@@ -82,46 +83,51 @@ class ShareViewController: UIViewController {
             UIGraphicsEndImageContext()
         }
 
-        if let jpegData = scaledImage.jpegData(compressionQuality: 0.6) {
-            let base64 = "data:image/jpeg;base64," + jpegData.base64EncodedString()
-            openHostApp(withText: base64)
+        // 寫入剪貼簿，避免 URL 長度限制造成失敗
+        UIPasteboard.general.image = scaledImage
+        if let url = URL(string: "superdashboard://add-copy-pasteboard") {
+            self.extensionContext?.open(url, completionHandler: { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.completeShare()
+                }
+            })
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                self?.completeShare()
+            }
+        } else {
+            completeShare()
         }
-        completeShare()
     }
 
     private func openHostApp(withText text: String) {
-        guard let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "superdashboard://add-copy?text=\(encoded)") else { return }
+        // 同步寫入通用剪貼簿作為多重兜底保證
+        UIPasteboard.general.string = text
 
-        // 多重響應者回溯觸發 openURL
-        var responder: UIResponder? = self
-        let selector = sel_registerName("openURL:")
-        var didOpen = false
-        while let r = responder {
-            if r.responds(to: selector) {
-                r.perform(selector, with: url)
-                didOpen = true
-                break
-            }
-            responder = r.next
+        var comp = URLComponents()
+        comp.scheme = "superdashboard"
+        comp.host = "add-copy"
+        comp.queryItems = [URLQueryItem(name: "text", value: text)]
+
+        guard let url = comp.url else {
+            completeShare()
+            return
         }
-        
-        // 若找不到響應者，使用 UIApplication 私有方法兜底
-        if !didOpen {
-            if let sharedAppClass = NSClassFromString("UIApplication"),
-               let sharedApp = sharedAppClass.value(forKey: "sharedApplication") as? NSObject {
-                let openSelector = sel_registerName("openURL:options:completionHandler:")
-                if sharedApp.responds(to: openSelector) {
-                    typealias OpenMethod = @convention(c) (NSObject, Selector, URL, [String: Any], (@convention(block) (Bool) -> Void)?) -> Void
-                    let method = unsafeBitCast(sharedApp.method(for: openSelector), to: OpenMethod.self)
-                    method(sharedApp, openSelector, url, [:], nil)
-                }
+
+        // 1. 標準且官方支援的 extensionContext.open
+        self.extensionContext?.open(url, completionHandler: { [weak self] success in
+            DispatchQueue.main.async {
+                self?.completeShare()
             }
+        })
+
+        // 2. 超時保護，避免介面停滯
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.completeShare()
         }
     }
 
     private func completeShare() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+        DispatchQueue.main.async { [weak self] in
             self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
         }
     }

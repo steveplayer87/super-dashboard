@@ -124,6 +124,11 @@ class QuickCopyManager {
     static var currentActivity: Activity<QuickCopyAttributes>?
 
     static func startOrUpdateQuickCopy(items: [QuickCopyItemData]) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            NotificationManager.evaluateNotificationFeedback("請至 iPhone「設定 > Super Dashboard > 即時動態」開啟權限")
+            return
+        }
+
         let attributes = QuickCopyAttributes(title: "常用速貼庫")
         let contentState = QuickCopyAttributes.ContentState(
             items: Array(items.prefix(5)),
@@ -138,18 +143,24 @@ class QuickCopyManager {
                     ActivityContent(state: contentState, staleDate: nil),
                     alertConfiguration: nil
                 )
+                DispatchQueue.main.async {
+                    NotificationManager.evaluateNotificationFeedback("常用速貼動態島已更新！")
+                }
             }
             currentActivity = existing
-            print("QuickCopy Live Activity updated with \(items.count) items")
         } else {
             do {
                 currentActivity = try Activity.request(
                     attributes: attributes,
                     content: .init(state: contentState, staleDate: nil)
                 )
-                print("QuickCopy Live Activity started successfully!")
+                DispatchQueue.main.async {
+                    NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面或長按島嶼即可點擊複製")
+                }
             } catch {
-                print("Failed to start QuickCopy Live Activity: \(error)")
+                DispatchQueue.main.async {
+                    NotificationManager.evaluateNotificationFeedback("啟動動態島失敗：\(error.localizedDescription)")
+                }
             }
         }
     }
@@ -181,8 +192,7 @@ class NotificationManager {
             content.sound = .default
             content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
-            // 0.2 秒後立即彈出通知
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.2, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1.0, repeats: false)
             let req = UNNotificationRequest(identifier: "sceneAlert_\(UUID().uuidString)", content: content, trigger: trigger)
             
             center.add(req) { err in
@@ -192,7 +202,7 @@ class NotificationManager {
                         evaluateNotificationFeedback("通知排程失敗：\(err.localizedDescription)")
                     } else {
                         print("Scene notification successfully added!")
-                        evaluateNotificationFeedback("場景感知通知已成功發送！")
+                        evaluateNotificationFeedback("場景感知通知已成功發送！將於 1 秒內彈出")
                     }
                 }
             }
@@ -223,12 +233,17 @@ class NotificationManager {
         }
     }
 
-    private static func evaluateNotificationFeedback(_ msg: String) {
+    public static func evaluateNotificationFeedback(_ msg: String) {
         DispatchQueue.main.async {
             let escaped = msg.replacingOccurrences(of: "'", with: "\\'")
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let sceneDelegate = scene.delegate as? SceneDelegate {
-                sceneDelegate.evaluateJS("if(typeof showToast==='function') showToast('\(escaped)');")
+            for scene in UIApplication.shared.connectedScenes {
+                if let winScene = scene as? UIWindowScene {
+                    if let mainVC = winScene.windows.first?.rootViewController as? MainViewController {
+                        mainVC.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('\(escaped)');", completionHandler: nil)
+                    } else if let bridgeVC = winScene.windows.first?.rootViewController as? CAPBridgeViewController {
+                        bridgeVC.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('\(escaped)');", completionHandler: nil)
+                    }
+                }
             }
         }
     }
@@ -236,12 +251,26 @@ class NotificationManager {
 
 // MARK: - 自訂 Bridge ViewController (支援 JavaScript MessageHandler 與原生照片儲存)
 class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        setupMessageHandlers()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.bridge?.webView?.configuration.userContentController.add(self, name: "startLiveActivity")
-        self.bridge?.webView?.configuration.userContentController.add(self, name: "updateQuickCopyActivity")
-        self.bridge?.webView?.configuration.userContentController.add(self, name: "scheduleSceneNotification")
-        self.bridge?.webView?.configuration.userContentController.add(self, name: "saveImageToPhotos")
+        setupMessageHandlers()
+    }
+
+    private func setupMessageHandlers() {
+        let ucc = self.webView?.configuration.userContentController ?? self.bridge?.webView?.configuration.userContentController
+        ucc?.removeScriptMessageHandler(forName: "startLiveActivity")
+        ucc?.removeScriptMessageHandler(forName: "updateQuickCopyActivity")
+        ucc?.removeScriptMessageHandler(forName: "scheduleSceneNotification")
+        ucc?.removeScriptMessageHandler(forName: "saveImageToPhotos")
+        ucc?.add(self, name: "startLiveActivity")
+        ucc?.add(self, name: "updateQuickCopyActivity")
+        ucc?.add(self, name: "scheduleSceneNotification")
+        ucc?.add(self, name: "saveImageToPhotos")
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -372,6 +401,32 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             return
         }
 
+        if urlStr.contains("sync-quick-copy") {
+            if #available(iOS 16.2, *) {
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                   let itemsParam = components.queryItems?.first(where: { $0.name == "items" })?.value,
+                   let data = itemsParam.data(using: .utf8),
+                   let list = try? JSONDecoder().decode([QuickCopyItemData].self, from: data) {
+                    QuickCopyManager.startOrUpdateQuickCopy(items: list)
+                }
+            }
+            return
+        }
+
+        if urlStr.contains("add-copy-pasteboard") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                if let img = UIPasteboard.general.image, let jpegData = img.jpegData(compressionQuality: 0.6) {
+                    let base64 = "data:image/jpeg;base64," + jpegData.base64EncodedString()
+                    self?.evaluateJS("if(typeof window.handleSharedPasteboard==='function'){ window.handleSharedPasteboard('\(base64)'); }")
+                } else if let txt = UIPasteboard.general.string {
+                    if let jsonData = try? JSONSerialization.data(withJSONObject: ["payload": txt]),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        self?.evaluateJS("if(typeof window.handleSharedPasteboardJson==='function'){ window.handleSharedPasteboardJson(\(jsonString)); }")
+                    }
+                }
+            }
+            return
+        }
         if urlStr.contains("copy?text=") {
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let textParam = components.queryItems?.first(where: { $0.name == "text" })?.value {
