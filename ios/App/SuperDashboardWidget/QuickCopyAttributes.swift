@@ -13,6 +13,29 @@ public struct QuickCopyItemData: Codable, Hashable {
         self.text = text
         self.isLink = isLink
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id, label, name, text, isLink
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = (try? container.decodeIfPresent(String.self, forKey: .id)) ?? UUID().uuidString
+        let textVal = (try? container.decodeIfPresent(String.self, forKey: .text)) ?? ""
+        self.text = textVal
+        let lbl = (try? container.decodeIfPresent(String.self, forKey: .label))
+        let nm = (try? container.decodeIfPresent(String.self, forKey: .name))
+        self.label = lbl ?? nm ?? (textVal.isEmpty ? "項目" : String(textVal.prefix(12)))
+        self.isLink = (try? container.decodeIfPresent(Bool.self, forKey: .isLink)) ?? false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(label, forKey: .label)
+        try container.encode(text, forKey: .text)
+        try container.encode(isLink, forKey: .isLink)
+    }
 }
 
 public struct QuickCopyAttributes: ActivityAttributes {

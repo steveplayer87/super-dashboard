@@ -50,6 +50,29 @@ public struct QuickCopyItemData: Codable, Hashable {
         self.text = text
         self.isLink = isLink
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id, label, name, text, isLink
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = (try? container.decodeIfPresent(String.self, forKey: .id)) ?? UUID().uuidString
+        let textVal = (try? container.decodeIfPresent(String.self, forKey: .text)) ?? ""
+        self.text = textVal
+        let lbl = (try? container.decodeIfPresent(String.self, forKey: .label))
+        let nm = (try? container.decodeIfPresent(String.self, forKey: .name))
+        self.label = lbl ?? nm ?? (textVal.isEmpty ? "項目" : String(textVal.prefix(12)))
+        self.isLink = (try? container.decodeIfPresent(Bool.self, forKey: .isLink)) ?? false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(label, forKey: .label)
+        try container.encode(text, forKey: .text)
+        try container.encode(isLink, forKey: .isLink)
+    }
 }
 
 public struct QuickCopyAttributes: ActivityAttributes {
@@ -130,9 +153,17 @@ class QuickCopyManager {
             return
         }
 
+        var activeItems = items
+        if activeItems.isEmpty {
+            activeItems = [
+                QuickCopyItemData(id: "c1", label: "三山羊長老", text: "三山羊長老", isLink: false),
+                QuickCopyItemData(id: "c2", label: "我屁股好痛", text: "我屁股好痛", isLink: false),
+                QuickCopyItemData(id: "c3", label: "9879-2456", text: "9879-2456", isLink: false)
+            ]
+        }
         let attributes = QuickCopyAttributes(title: "常用速貼庫")
         let contentState = QuickCopyAttributes.ContentState(
-            items: Array(items.prefix(5)),
+            items: Array(activeItems.prefix(5)),
             lastCopiedText: nil,
             updateTimestamp: Date().timeIntervalSince1970
         )
@@ -182,7 +213,7 @@ class QuickCopyManager {
 
 // MARK: - 原生真實 Face ID 生物辨識管理器
 class BiometricManager {
-    static func authenticate(reason: String = "靠近掃碼器或讀卡機以解鎖卡片", completion: @escaping (Bool, String?) -> Void) {
+    static func authenticate(reason: String = "靠近掃碼器或讀卡機", completion: @escaping (Bool, String?) -> Void) {
         let context = LAContext()
         context.localizedCancelTitle = "取消"
         context.localizedFallbackTitle = "使用密碼"
@@ -504,25 +535,28 @@ class NotificationManager {
 }
 
 // MARK: - 自訂 Bridge ViewController (支援 JavaScript MessageHandler、URL Scheme 與原生 Face ID)
-class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
+class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
-        setupMessageHandlers()
+        setupDelegatesAndHandlers()
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupMessageHandlers()
+        setupDelegatesAndHandlers()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        setupMessageHandlers()
+        setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
     }
 
-    private func setupMessageHandlers() {
+    private func setupDelegatesAndHandlers() {
         guard let wv = self.webView else { return }
+        wv.navigationDelegate = self
+        wv.uiDelegate = self
+
         let ucc = wv.configuration.userContentController
         let handlers = [
             "startLiveActivity",
@@ -534,30 +568,52 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
             "checkNotificationStatus",
             "authenticateFaceID",
             "syncDynamicShortcuts",
-            "saveImageToPhotos"
+            "saveImageToPhotos",
+            "superdashboard"
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
         handlers.forEach { ucc.add(self, name: $0) }
     }
 
-    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        if message.name == "startLiveActivity" {
-            if #available(iOS 16.2, *) {
-                LiveActivityManager.startTaoyuanMetroActivity()
+    // 核心攔截：當 JavaScript 導航或請求 superdashboard:// 時，100% 捕獲並轉發給 handleDeepLink
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let url = navigationAction.request.url, url.scheme == "superdashboard" {
+            decisionHandler(.cancel)
+            DispatchQueue.main.async {
+                (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.handleDeepLink(url: url)
             }
-        } else if message.name == "updateQuickCopyActivity" {
-            if #available(iOS 16.2, *) {
-                if let rawList = message.body as? [[String: Any]] {
-                    let items = rawList.map { dict -> QuickCopyItemData in
-                        let id = dict["id"] as? String ?? UUID().uuidString
-                        let text = dict["text"] as? String ?? ""
-                        let label = dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
-                        let isLink = dict["isLink"] as? Bool ?? false
-                        return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
-                    }
-                    QuickCopyManager.startOrUpdateQuickCopy(items: items)
+            return
+        }
+        decisionHandler(.allow)
+    }
+
+    // 備援通道：攔截 window.prompt("superdashboard:...")
+    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+        if prompt.hasPrefix("superdashboard:") {
+            let command = String(prompt.dropFirst("superdashboard:".count))
+            DispatchQueue.main.async {
+                if let url = URL(string: "superdashboard://" + command) {
+                    (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.handleDeepLink(url: url)
                 }
             }
+            completionHandler("OK")
+            return
+        }
+        completionHandler(defaultText)
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "superdashboard" {
+            if let body = message.body as? [String: Any], let action = body["action"] as? String {
+                handleUnifiedAction(action: action, params: body["params"])
+            }
+            return
+        }
+
+        if message.name == "startLiveActivity" {
+            handleUnifiedAction(action: "start-mrt", params: nil)
+        } else if message.name == "updateQuickCopyActivity" {
+            handleUnifiedAction(action: "sync-quick-copy", params: message.body)
         } else if message.name == "scheduleSceneNotification" || message.name == "scheduleCardActionNotification" {
             let delay = (message.body as? [String: Any])?["delay"] as? Double ?? 0.0
             NotificationManager.scheduleCardActionNotification(delay: delay)
@@ -569,20 +625,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         } else if message.name == "checkNotificationStatus" {
             NotificationManager.checkAndReportStatus()
         } else if message.name == "authenticateFaceID" {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機以解鎖卡片") { [weak self] success, err in
-                if success {
-                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();", completionHandler: nil)
-                } else {
-                    let msg = (err ?? "驗證失敗").replacingOccurrences(of: "'", with: "\\'")
-                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDFailure==='function') window.onFaceIDFailure('\(msg)');", completionHandler: nil)
-                }
-            }
+            handleUnifiedAction(action: "auth-faceid", params: nil)
         } else if message.name == "syncDynamicShortcuts" {
             if let rawList = message.body as? [[String: Any]] {
                 let items = rawList.map { dict -> QuickCopyItemData in
                     let id = dict["id"] as? String ?? UUID().uuidString
                     let text = dict["text"] as? String ?? ""
-                    let label = dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
                     let isLink = dict["isLink"] as? Bool ?? false
                     return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
@@ -594,6 +643,80 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
             if let base64Str = message.body as? String {
                 saveBase64ToPhotos(base64Str)
             }
+        }
+    }
+
+    private func handleUnifiedAction(action: String, params: Any?) {
+        let act = action.lowercased()
+        if act == "auth-faceid" || act == "authfaceid" {
+            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
+                if success {
+                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();", completionHandler: nil)
+                } else {
+                    let msg = (err ?? "驗證未通過").replacingOccurrences(of: "'", with: "\'")
+                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDFailure==='function') window.onFaceIDFailure('\(msg)');", completionHandler: nil)
+                }
+            }
+            return
+        }
+
+        if act == "start-mrt" || act == "startmrt" {
+            if #available(iOS 16.2, *) {
+                LiveActivityManager.startTaoyuanMetroActivity()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    UIApplication.shared.perform(Selector(("suspend")))
+                }
+            }
+            return
+        }
+
+        if act == "sync-quick-copy" || act == "syncquickcopy" {
+            if #available(iOS 16.2, *) {
+                var list: [QuickCopyItemData] = []
+                if let rawList = params as? [[String: Any]] {
+                    list = rawList.map { dict in
+                        let id = dict["id"] as? String ?? UUID().uuidString
+                        let text = dict["text"] as? String ?? ""
+                        let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                        let isLink = dict["isLink"] as? Bool ?? false
+                        return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
+                    }
+                }
+                QuickCopyManager.startOrUpdateQuickCopy(items: list)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    UIApplication.shared.perform(Selector(("suspend")))
+                }
+            }
+            return
+        }
+
+        if act == "suspend" || act == "suspend-app" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                UIApplication.shared.perform(Selector(("suspend")))
+            }
+            return
+        }
+
+        if act == "schedule-card-action" {
+            let delay = (params as? [String: Any])?["delay"] as? Double ?? 0.0
+            NotificationManager.scheduleCardActionNotification(delay: delay)
+            return
+        }
+
+        if act == "schedule-reply-notification" {
+            let delay = (params as? [String: Any])?["delay"] as? Double ?? 0.0
+            NotificationManager.scheduleReplyWithStickerNotification(delay: delay)
+            return
+        }
+
+        if act == "open-settings" {
+            NotificationManager.openSystemSettings()
+            return
+        }
+
+        if act == "check-status" || act == "checknotificationstatus" {
+            NotificationManager.checkAndReportStatus()
+            return
         }
     }
 
@@ -730,7 +853,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         if urlStr.contains("start-mrt") {
             if #available(iOS 16.2, *) {
                 LiveActivityManager.startTaoyuanMetroActivity()
-                showCopiedToast("桃園捷運搭乘動態島已開啟！請退回桌面查看")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    UIApplication.shared.perform(Selector(("suspend")))
+                }
             }
             return
         }
@@ -753,7 +878,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if urlStr.contains("auth-faceid") {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機以解鎖卡片") { [weak self] success, err in
+            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
                 if success {
                     self?.evaluateJS("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();")
                 } else {
@@ -771,12 +896,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
         if urlStr.contains("sync-quick-copy") {
             if #available(iOS 16.2, *) {
+                var list: [QuickCopyItemData] = []
                 if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                    let itemsParam = components.queryItems?.first(where: { $0.name == "items" })?.value,
-                   let data = itemsParam.data(using: .utf8),
-                   let list = try? JSONDecoder().decode([QuickCopyItemData].self, from: data) {
-                    QuickCopyManager.startOrUpdateQuickCopy(items: list)
+                   let data = itemsParam.data(using: .utf8) {
+                    list = (try? JSONDecoder().decode([QuickCopyItemData].self, from: data)) ?? []
                 }
+                QuickCopyManager.startOrUpdateQuickCopy(items: list)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    UIApplication.shared.perform(Selector(("suspend")))
+                }
+            }
+            return
+        }
+
+        if urlStr.contains("suspend") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                UIApplication.shared.perform(Selector(("suspend")))
             }
             return
         }
