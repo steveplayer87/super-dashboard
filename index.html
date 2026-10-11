@@ -3273,13 +3273,29 @@
               </div>
               <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">即刻常駐</span>
             </div>
-            <div class="fin-row" onclick="window.triggerSceneNotification()" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" onclick="window.triggerCardActionNotification()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--good); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">觸發模擬「場景卡片」通知</div>
-                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">模擬高鐵站／捷運閘門場景提示與一鍵喚起悠遊卡</div>
+                <div style="font-weight:600; color:var(--text);">測試 1：長按展開選項卡片通知</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">收到通知長按可選擇「出示卡片」、「開啟錢包」、「忽略」</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">推送通知</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">長按測試</span>
+            </div>
+            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification()" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">測試 2：貼圖帶圖回覆訊息通知</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">通知自帶阿鵝貼圖圖片，可長按直接輸入回覆文字傳送</div>
+              </div>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">貼圖回覆</span>
+            </div>
+            <div class="fin-row" onclick="window.openNotificationSettings()" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--gold); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">通知權限檢測與系統設定</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">若無橫幅彈出，點此直達 iPhone「設定 > Super Dashboard > 通知」開啟允許</div>
+              </div>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600;">系統設定</span>
             </div>
             <div class="fin-row" onclick="window.openShareExtensionModal()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
@@ -4503,13 +4519,52 @@ window.safeSetIcon = safeSetIcon;
     if(m) m.style.display = 'flex';
   };
 
-  window.triggerSceneNotification = function(){
-    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scheduleSceneNotification){
-      window.webkit.messageHandlers.scheduleSceneNotification.postMessage({});
+  window.triggerCardActionNotification = function(){
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scheduleCardActionNotification){
+      window.webkit.messageHandlers.scheduleCardActionNotification.postMessage({});
     } else {
-      window.location.href = "superdashboard://schedule-notification";
+      window.location.href = "superdashboard://schedule-card-action";
     }
-    if(typeof showToast === "function") showToast("模擬場景通知已排程（即將於頂部彈出）");
+  };
+
+  window.triggerReplyWithStickerNotification = function(){
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scheduleReplyNotification){
+      window.webkit.messageHandlers.scheduleReplyNotification.postMessage({});
+    } else {
+      window.location.href = "superdashboard://schedule-reply-notification";
+    }
+  };
+
+  window.triggerSceneNotification = window.triggerCardActionNotification;
+
+  window.openNotificationSettings = function(){
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openSystemSettings){
+      window.webkit.messageHandlers.openSystemSettings.postMessage({});
+    } else {
+      window.location.href = "superdashboard://open-settings";
+    }
+    if(typeof showToast === "function") showToast("正在前往 iPhone 系統設定開啟通知...");
+  };
+
+  window.onNotificationReply = function(replyText){
+    if(typeof showToast === "function"){
+      showToast("阿鵝管家收到通知回覆：「" + replyText + "」");
+    }
+  };
+
+  window.syncDynamicShortcuts = function(){
+    if(!state || !state.copyItems) return;
+    var top3 = (state.copyItems || []).slice(0, 3).map(function(item){
+      return {
+        id: item.id,
+        name: item.name || item.text.substring(0, 12),
+        text: item.text,
+        isLink: !!item.isLink
+      };
+    });
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.syncDynamicShortcuts){
+      window.webkit.messageHandlers.syncDynamicShortcuts.postMessage(top3);
+    }
   };
 
 
@@ -5195,6 +5250,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         cards: state.cards, cardTx: state.cardTx
       }));
     }catch(e){ console.error('儲存失敗', e); }
+    if(window.syncDynamicShortcuts) window.syncDynamicShortcuts();
+    if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false);
   }
 
   function showToast(msg){
@@ -8129,6 +8186,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (avatar) avatar.onclick = petGoose;
   }
   initMorePageAndGooseButler();
+  setTimeout(function(){
+    if(window.syncDynamicShortcuts) window.syncDynamicShortcuts();
+  }, 600);
 })();
 
 </script>
