@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="超級儀錶板">
+<meta name="theme-color" content="#1A1815">
+<title>超級儀錶板</title>
+<style>
+  :root{
+    --panel:#1A1815;
+    --panel-raised:#221F19;
+    --panel-raised-2:#17140F;
+    --border:#37312A;
+    --text:#EDE6D6;
+    --text-muted:#8A8377;
+    --amber:#FF9F1C;
+    --teal:#3FA9A4;
+    --danger:#C1443C;
+    --gold:#D4AF37;
+    --good:#5CD68A;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  html,body{
+    height:100%; margin:0; overscroll-behavior:none; background:var(--panel);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Helvetica Neue",sans-serif;
+    color:var(--text);
+  }
+  #app{
+    height:100dvh; display:flex; flex-direction:column; overflow:hidden;
+    padding-top:env(safe-area-inset-top);
+  }
+
+  .icon{ width:1em; height:1em; display:inline-block; vertical-align:-0.125em; flex-shrink:0; }
+
+  /* ---- header ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px 12px; border-bottom:1px solid var(--border);
+    flex-shrink:0; position:relative;
+  }
+  .topbar::before, .topbar::after{
+    content:''; position:absolute; top:8px; width:5px; height:5px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #514A3E, #0E0C09);
+  }
+  .topbar::before{ left:6px; } .topbar::after{ right:6px; }
+  .brand{ display:flex; align-items:center; gap:7px; font-size:16px; font-weight:700; letter-spacing:.5px; }
+  .brand-icon{ font-size:18px; color:var(--amber); }
+  .date-chip{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px;
+    color:var(--text-muted); letter-spacing:1px;
+  }
+
+  /* ---- content ---- */
+  .content{ flex:1; display:flex; flex-direction:column; min-height:0; padding:12px 16px 6px; overflow-y:auto; }
+  .content-header{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:8px; flex-shrink:0; gap:8px; }
+  .btn{
+    background:var(--panel-raised); border:1px solid var(--border); color:var(--text);
+    font-size:13px; padding:6px 14px; border-radius:20px;
+  }
+  .btn.cancel{ background:var(--panel-raised-2); color:var(--text-muted); }
+  .btn.done{ background:var(--amber); border-color:var(--amber); color:#241705; font-weight:700; }
+  .edit-actions{ display:none; gap:8px; }
+  .edit-actions.show{ display:flex; }
+
+  .section{ margin-bottom:14px; }
+  .section-title{
+    font-size:12.5px; font-weight:600; color:var(--text-muted); letter-spacing:1px;
+    text-transform:uppercase; margin:0 0 8px 2px; display:flex; align-items:center; gap:6px;
+  }
+  .section-icon{ font-size:14px; }
+  .section-icon.teal{ color:var(--teal); }
+  .section-icon.amber{ color:var(--amber); }
+  .section-total{
+    margin-left:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+    color:var(--text-muted); text-transform:none; letter-spacing:0;
+  }
+
+  .grid{
+    display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:80px; gap:10px;
+  }
+
+  .keycap{
+    position:relative; border-radius:16px; padding:8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:linear-gradient(180deg, var(--panel-raised) 0%, var(--panel-raised-2) 100%);
+    border:1px solid var(--border);
+    box-shadow:0 3px 0 #0B0906, 0 5px 10px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .keycap:active{ transform:translateY(3px); box-shadow:0 0 0 #0B0906, inset 0 1px 0 rgba(255,255,255,.05); }
+  .keycap .label{ font-size:15px; font-weight:600; text-align:center; line-height:1.3; word-break:break-word; }
+  .keycap .label.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:1px; font-size:16px; }
+
+  .led{ position:absolute; top:9px; right:9px; width:7px; height:7px; border-radius:50%; opacity:.85; }
+  .led.teal{ background:var(--teal); box-shadow:0 0 6px var(--teal); }
+  .led.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .led.flash{ animation:ledFlash .45s ease; }
+  @keyframes ledFlash{ 0%{opacity:.85;} 45%{ box-shadow:0 0 18px 5px currentColor; opacity:1; transform:scale(1.3);} 100%{opacity:.85; transform:scale(1);} }
+
+  .keycap.delete-tile{
+    background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%);
+    border-color:#8f2f28; color:#fff;
+  }
+  .trash-icon{ font-size:22px; }
+  .keycap.delete-tile .label{ color:#FFECEA; font-size:12px; font-weight:500; opacity:.9; }
+  .edit-pencil{
+    position:absolute; top:-8px; right:-8px; width:26px; height:26px; border-radius:50%;
+    background:var(--panel-raised-2); border:2px solid var(--panel); color:var(--text);
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .pencil-icon{ font-size:13px; }
+
+  .add-tile{ border:1.5px dashed var(--border); background:transparent; box-shadow:none; color:var(--text-muted); }
+  .plus-icon{ font-size:22px; }
+  .add-tile .label{ font-weight:500; font-size:13px; color:var(--text-muted); }
+
+  /* ---- finance cards / rows ---- */
+  .fin-card{
+    background:linear-gradient(180deg, var(--panel-raised) 0%, var(--panel-raised-2) 100%);
+    border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px;
+  }
+  .fin-card-head{ display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+  .fin-card-title{ font-size:13px; font-weight:700; flex:1; }
+  .gauge-icon{ font-size:16px; color:var(--amber); }
+  .pencil-btn{ background:none; border:none; color:var(--text-muted); padding:4px; }
+  .budget-bar-track{ height:8px; border-radius:4px; background:var(--panel-raised-2); overflow:hidden; margin-bottom:8px; }
+  .budget-bar-fill{ height:100%; background:var(--teal); border-radius:4px; transition:width .3s ease; width:0%; }
+  .budget-bar-fill.warn{ background:var(--amber); }
+  .budget-bar-fill.over{ background:var(--danger); }
+  .budget-stats{ font-size:12.5px; color:var(--text-muted); line-height:1.6; }
+
+  .fin-list{ background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .fin-row{ display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border); }
+  .fin-row:last-child{ border-bottom:none; }
+  .fin-row-name{ font-size:14.5px; font-weight:600; flex:1; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .fin-row-amount{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14.5px; }
+  .fin-tag{ font-size:10.5px; padding:2px 7px; border-radius:8px; font-weight:600; }
+  .fin-tag.cat-insurance{ background:rgba(63,169,164,.18); color:var(--teal); }
+  .fin-tag.cat-subscription{ background:rgba(255,159,28,.18); color:var(--amber); }
+  .fin-tag.cat-other{ background:rgba(138,131,119,.18); color:var(--text-muted); }
+  .fin-row.add-row{ color:var(--text-muted); border-top:1px dashed var(--border); }
+  .plus-icon-sm{ font-size:16px; }
+  .row-trash-icon{ font-size:18px; }
+  .fin-row.delete-row{ background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%); color:#fff; border-color:#8f2f28; }
+  .fin-row.delete-row .fin-row-name{ color:#FFECEA; }
+  .tx-time{ font-size:11px; color:var(--text-muted); font-weight:400; display:block; }
+  .tx-pos{ color:var(--good); }
+  .tx-neg{ color:#ff9d95; }
+
+  .segmented{ display:flex; gap:6px; flex-wrap:wrap; }
+  .seg-btn{ flex:1; min-width:60px; padding:9px 0; border-radius:9px; border:1px solid var(--border); background:var(--panel-raised-2); color:var(--text-muted); font-size:13px; }
+  .seg-btn.active{ background:var(--amber); border-color:var(--amber); color:#241705; font-weight:700; }
+
+  /* ---- 卡包廣告橫幅(放在儀錶板頁下方,星空虛空背景+立體透視卡片)---- */
+  .promo-banner{
+    position:relative; overflow:hidden; border-radius:16px; padding:16px; margin-top:2px;
+    display:flex; align-items:center; gap:14px; min-height:104px;
+    background:radial-gradient(120% 140% at 72% 22%, #241a3d 0%, #0c081a 55%, #030209 100%);
+    border:1px solid #322850; transition:transform .1s ease;
+  }
+  .promo-banner:active{ transform:scale(.98); }
+  .promo-stars{
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      radial-gradient(1.6px 1.6px at 10% 20%, rgba(255,255,255,.9), transparent 60%),
+      radial-gradient(1.2px 1.2px at 28% 72%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1.6px 1.6px at 48% 14%, rgba(255,255,255,.85), transparent 60%),
+      radial-gradient(1px 1px at 62% 55%, rgba(212,175,55,.85), transparent 60%),
+      radial-gradient(1.3px 1.3px at 80% 28%, rgba(255,255,255,.75), transparent 60%),
+      radial-gradient(1px 1px at 92% 78%, rgba(255,255,255,.6), transparent 60%),
+      radial-gradient(1.4px 1.4px at 16% 86%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(1px 1px at 38% 42%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.2px 1.2px at 74% 90%, rgba(212,175,55,.6), transparent 60%),
+      radial-gradient(1px 1px at 96% 12%, rgba(255,255,255,.65), transparent 60%);
+  }
+  .promo-content{ position:relative; z-index:1; display:flex; align-items:center; gap:14px; width:100%; }
+  .promo-text{ flex:1; min-width:0; }
+  .promo-badge{
+    display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700;
+    color:#241705; background:linear-gradient(135deg,#F5D888,#C89A3B); padding:3px 9px; border-radius:20px; margin-bottom:7px;
+  }
+  .promo-badge .icon{ font-size:11px; }
+  .promo-title{ font-size:15px; font-weight:800; color:#F1E7FF; margin-bottom:3px; line-height:1.3; }
+  .promo-sub{ font-size:11.5px; color:#B7ACD6; line-height:1.4; }
+
+  .promo-hero-stage{ width:96px; flex-shrink:0; perspective:600px; position:relative; }
+  .promo-hero-card{
+    width:100%; aspect-ratio:1.586/1; border-radius:11px; padding:9px;
+    background:
+      radial-gradient(120% 120% at 15% 0%, rgba(255,215,130,.22), transparent 55%),
+      linear-gradient(155deg, #262016 0%, #100D08 55%, #1c160c 100%);
+    border:1px solid #4a3c1f; box-shadow:0 10px 22px rgba(0,0,0,.55);
+    display:flex; flex-direction:column; justify-content:space-between;
+    transform:perspective(600px) rotateY(-20deg) rotateX(9deg);
+    animation:heroFloat 4.6s ease-in-out infinite;
+  }
+  @keyframes heroFloat{
+    0%,100%{ transform:perspective(600px) rotateY(-20deg) rotateX(9deg) translateY(0); }
+    50%{ transform:perspective(600px) rotateY(-13deg) rotateX(5deg) translateY(-5px); }
+  }
+  .promo-hero-chip{ width:18px; height:13px; border-radius:3px; background:linear-gradient(135deg,#F5D888,#B8862E); }
+  .promo-hero-number{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:8.5px; letter-spacing:1.5px; color:#E9D8A6; }
+  .promo-hero-icon{ font-size:11px; color:var(--gold); align-self:flex-end; }
+  .promo-hero-glow{
+    position:absolute; left:50%; bottom:-8px; width:80%; height:16px; transform:translateX(-50%);
+    background:radial-gradient(ellipse, rgba(212,175,55,.35), transparent 70%); filter:blur(2px);
+  }
+
+  .reader-badge{
+    display:flex; align-items:center; justify-content:center; gap:5px; width:fit-content; margin:0 auto 10px;
+    padding:5px 13px; border-radius:20px; border:1px dashed #4a3c1f; color:var(--gold);
+    font-size:11px; font-weight:600; letter-spacing:.5px; background:rgba(212,175,55,.06);
+    transition:background .25s ease, box-shadow .25s ease, color .25s ease;
+  }
+  .reader-badge .icon{ font-size:13px; }
+  .reader-badge.active{ background:rgba(212,175,55,.24); box-shadow:0 0 16px rgba(212,175,55,.45); color:#F5D888; }
+
+  .wallet-stage{ display:flex; align-items:center; justify-content:center; gap:2px; margin-bottom:10px; }
+  .chev-btn{ background:none; border:none; color:var(--text-muted); padding:6px; flex-shrink:0; }
+  .chev-btn .icon{ font-size:20px; }
+  .card-viewport{ width:64%; max-width:230px; perspective:900px; }
+  .card-track{ }
+
+  .v-card{
+    position:relative; width:100%; aspect-ratio:1.586/1; border-radius:16px; padding:13px;
+    background:
+      radial-gradient(120% 120% at 12% 0%, rgba(255,215,130,.22), transparent 55%),
+      linear-gradient(155deg, #262016 0%, #100D08 55%, #1c160c 100%);
+    border:1px solid #4a3c1f;
+    box-shadow:0 8px 20px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+    color:#F3E3B8;
+    transform-style:preserve-3d; will-change:transform; touch-action:none; overflow:hidden;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .v-card-shine{
+    position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background:linear-gradient(115deg, transparent 30%, rgba(255,235,180,.5) 48%, rgba(255,215,120,.12) 52%, transparent 70%);
+    background-size:250% 250%; background-position:50% 50%; mix-blend-mode:overlay;
+  }
+  .v-card-top{ display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; letter-spacing:.3px; }
+  .v-card-top .icon{ font-size:12px; color:var(--gold); }
+  .v-card-chip{ width:28px; height:21px; border-radius:5px; margin:1px 0; background:linear-gradient(135deg,#F5D888,#B8862E); position:relative; }
+  .v-card-chip::before{ content:''; position:absolute; inset:4px; border:1px solid rgba(0,0,0,.35); border-radius:2px; }
+  .v-card-number{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; letter-spacing:1.5px; color:#E9D8A6; }
+  .v-card-bottom{ display:flex; align-items:flex-end; justify-content:space-between; }
+  .v-card-balance{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; font-weight:700; }
+  .v-card-brand{ font-size:13px; color:var(--gold); opacity:.85; }
+  .v-card-brand .icon{ font-size:13px; }
+  .v-card-check{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(10,8,5,.6); opacity:0; pointer-events:none; border-radius:inherit;
+    transform:scale(.6); transition:opacity .28s ease, transform .32s cubic-bezier(.34,1.56,.64,1);
+  }
+  .v-card-check.show{ opacity:1; transform:scale(1); }
+  .v-card-check .icon{ font-size:40px; color:var(--good); filter:drop-shadow(0 0 10px rgba(92,214,138,.6)); }
+  .v-card-delete-overlay{
+    position:absolute; inset:0; border-radius:inherit; display:none; align-items:center; justify-content:center;
+    background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%); z-index:3;
+  }
+  .v-card-delete-overlay .row-trash-icon-lg{ font-size:28px; color:#fff; }
+  .card-pencil{ top:6px; right:6px; }
+
+  .wallet-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:16px; }
+  .wallet-dot{ width:6px; height:6px; border-radius:50%; background:var(--border); border:none; padding:0; }
+  .wallet-dot.active{ background:var(--gold); width:16px; border-radius:4px; }
+
+  .wallet-settings{ background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:4px 14px; margin-bottom:14px; }
+  .settings-row{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border); }
+  .settings-row:last-of-type{ border-bottom:none; }
+  .settings-label{ font-size:14px; font-weight:600; flex:1; }
+  .settings-select{ background:var(--panel-raised-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 8px; font-size:13px; max-width:55%; }
+  .settings-hint{ font-size:11.5px; color:var(--text-muted); padding:8px 0 10px; line-height:1.5; }
+  .toggle{ width:44px; height:26px; border-radius:14px; background:var(--panel-raised-2); border:1px solid var(--border); position:relative; flex-shrink:0; padding:0; }
+  .toggle-knob{ position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:var(--text-muted); transition:left .18s ease, background .18s ease; }
+  .toggle.on{ background:rgba(212,175,55,.25); border-color:var(--gold); }
+  .toggle.on .toggle-knob{ left:20px; background:var(--gold); }
+
+  .wallet-add-btn{
+    width:100%; padding:12px; border-radius:12px; border:1.5px dashed var(--border); background:transparent;
+    color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:6px; font-size:14px; margin-bottom:14px;
+  }
+  .wallet-add-btn .icon{ font-size:16px; }
+
+  .wallet-empty{ text-align:center; padding:30px 10px; color:var(--text-muted); }
+  .wallet-empty-icon{ font-size:34px; color:var(--gold); display:inline-block; margin-bottom:10px; }
+  .wallet-empty-title{ font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+  .wallet-empty-sub{ font-size:12.5px; margin-bottom:16px; }
+
+  /* ---- tab bar ---- */
+  .tabbar{
+    display:flex; border-top:1px solid var(--border); flex-shrink:0;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 6px);
+  }
+  .tab{
+    flex:1; background:none; border:none; color:var(--text-muted);
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    padding:10px 0 4px;
+  }
+  .tab .icon{ font-size:20px; }
+  .tab .txt{ font-size:10.5px; letter-spacing:.5px; }
+  .tab.active{ color:var(--text); }
+  .tab.active .icon{ filter:drop-shadow(0 0 6px var(--amber)); }
+  .tab.placeholder{ opacity:.3; pointer-events:none; }
+
+  /* ---- modal ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;
+    align-items:center; justify-content:center; z-index:10; padding:24px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    width:100%; max-width:320px; background:var(--panel-raised); border:1px solid var(--border);
+    border-radius:18px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.5);
+    max-height:88vh; overflow-y:auto;
+  }
+  .modal h3{ margin:0 0 4px; font-size:16px; }
+  .modal p.hint{ margin:0 0 14px; font-size:12.5px; color:var(--text-muted); }
+  .modal input{
+    width:100%; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text);
+    font-size:16px; padding:12px 12px; border-radius:10px; font-family:inherit;
+    user-select:text; -webkit-user-select:text;
+  }
+  .field-label{ font-size:12px; color:var(--text-muted); margin:0 0 6px 2px; display:block; }
+  .field-group{ margin-top:14px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:16px; }
+  .modal-actions button{ flex:1; padding:11px 0; border-radius:10px; font-size:15px; border:none; }
+  .modal-actions .cancel{ background:var(--panel-raised-2); color:var(--text-muted); }
+  .modal-actions .confirm{ background:var(--amber); color:#241705; font-weight:700; }
+
+  /* ---- toast ---- */
+  .toast{
+    position:fixed; left:50%; bottom:96px; transform:translate(-50%,12px);
+    background:#0E0C09; color:var(--text); border:1px solid var(--border);
+    padding:10px 18px; border-radius:24px; font-size:13.5px; opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease; z-index:20; max-width:80vw; text-align:center;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  /* ---- 全螢幕感應層(點卡片後縮放展開 + Face ID 風格成功動畫)---- */
+  .sense-overlay{
+    position:fixed; inset:0; z-index:50; background:rgba(6,5,3,.94);
+    display:none; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding-top:calc(env(safe-area-inset-top) + 54px);
+  }
+  .sense-overlay.show{ display:flex; animation:senseBackdropIn .22s ease both; }
+  .sense-overlay.closing{ display:flex; animation:senseBackdropOut .26s ease-in both; pointer-events:none; }
+  @keyframes senseBackdropIn{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes senseBackdropOut{ from{ opacity:1; } to{ opacity:0; } }
+
+  .sense-overlay-card-wrap{ position:relative; width:90vw; max-width:440px; perspective:900px; transform:scale(.3); opacity:0; }
+  .sense-overlay.show .sense-overlay-card-wrap{ animation:senseCardZoomIn .38s cubic-bezier(.25,.85,.3,1.2) both; animation-delay:.03s; }
+  .sense-overlay.closing .sense-overlay-card-wrap{ animation:senseCardZoomOut .24s ease-in both; }
+  @keyframes senseCardZoomIn{ 0%{ transform:scale(.3); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+  @keyframes senseCardZoomOut{ 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(.3); opacity:0; } }
+
+  .sense-cancel-btn{
+    position:fixed; left:20px; bottom:calc(env(safe-area-inset-bottom) + 20px); z-index:52;
+    background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted);
+    padding:10px 22px; border-radius:24px; font-size:14px;
+  }
+
+  /* 刷臉動畫:眼睛+嘴巴的臉部圖示,疊在卡片正中央一秒後淡出 */
+  .face-scan-icon{
+    position:absolute; left:50%; top:50%; width:40%; aspect-ratio:1/1; z-index:4;
+    transform:translate(-50%,-50%) scale(.7); opacity:0; pointer-events:none;
+    color:var(--gold); filter:drop-shadow(0 0 10px rgba(212,175,55,.55));
+    transition:opacity .3s ease, transform .3s cubic-bezier(.34,1.4,.6,1);
+  }
+  .face-scan-icon.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .face-scan-icon svg{ width:100%; height:100%; display:block; }
+
+  /* 刷臉成功後顯示的「靠近讀卡機」提示 */
+  .approach-hint{
+    margin:16px auto 0; opacity:0; transform:translateY(6px);
+    transition:opacity .3s ease, transform .3s ease, background .25s ease, box-shadow .25s ease, color .25s ease;
+  }
+  .approach-hint.show{ opacity:1; transform:translateY(0); }
+
+  /* ---- 放大版卡片樣式(全螢幕感應層用)---- */
+  .v-card.big{ padding:24px; border-radius:22px; }
+  .v-card.big .v-card-top{ font-size:16px; gap:8px; }
+  .v-card.big .v-card-top .icon{ font-size:19px; }
+  .v-card.big .v-card-chip{ width:50px; height:37px; border-radius:8px; margin:6px 0; }
+  .v-card.big .v-card-number{ font-size:21px; letter-spacing:3px; }
+  .v-card.big .v-card-balance{ font-size:21px; }
+  .v-card.big .v-card-brand .icon{ font-size:21px; }
+  .v-card.big .v-card-check .icon{ font-size:76px; }
+
+  /* ---- 標頭「新增卡片」按鈕(卡包分頁,編輯鈕左邊)---- */
+  .btn.add-card-header-btn{ display:none; align-items:center; gap:5px; }
+  .btn.add-card-header-btn .icon{ font-size:13px; }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="brand-icon" id="brandIcon"></span>超級儀錶板</div>
+    <div class="date-chip" id="dateChip">--/--（-）</div>
+  </div>
+
+  <div class="content">
+    <div class="content-header">
+      <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
+      <button class="btn" id="editBtn">編輯</button>
+      <div class="edit-actions" id="editActions">
+        <button class="btn cancel" id="cancelBtn">取消</button>
+        <button class="btn done" id="doneBtn">完成</button>
+      </div>
+    </div>
+
+    <!-- ===== 頁面一:儀錶板 ===== -->
+    <div class="page" id="page-dashboard">
+      <div class="section">
+        <div class="section-title"><span class="section-icon teal" id="iconCopySection"></span>常用文字</div>
+        <div class="grid" id="copyGrid"></div>
+      </div>
+      <div class="section">
+        <div class="section-title"><span class="section-icon amber" id="iconShortcutSection"></span>捷徑啟動</div>
+        <div class="grid" id="shortcutGrid"></div>
+      </div>
+
+      <div class="promo-banner" id="promoBanner">
+        <div class="promo-stars"></div>
+        <div class="promo-content">
+          <div class="promo-text">
+            <div class="promo-badge" id="promoBadge"></div>
+            <div class="promo-title">一機在手,卡片全都有</div>
+            <div class="promo-sub">公車 · 門禁 · 車鑰匙,通通收進虛擬卡包 →</div>
+          </div>
+          <div class="promo-hero-stage">
+            <div class="promo-hero-card">
+              <div class="promo-hero-chip"></div>
+              <div class="promo-hero-number">•••• ••••</div>
+              <span class="promo-hero-icon" id="promoHeroIcon"></span>
+            </div>
+            <div class="promo-hero-glow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 頁面二:財務 ===== -->
+    <div class="page" id="page-finance" style="display:none;">
+      <div class="fin-card">
+        <div class="fin-card-head">
+          <span class="gauge-icon" id="iconGauge"></span>
+          <span class="fin-card-title">本月預算</span>
+          <button class="pencil-btn" id="budgetEditBtn"><span class="pencil-icon" id="iconBudgetPencil"></span></button>
+        </div>
+        <div class="budget-bar-track"><div class="budget-bar-fill" id="budgetBarFill"></div></div>
+        <div class="budget-stats" id="budgetStats">尚未設定預算</div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          <span class="section-icon teal" id="iconAccountSection"></span>帳戶 · 電子支付
+          <span class="section-total" id="accountsTotal"></span>
+        </div>
+        <div class="fin-list" id="accountsList"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          <span class="section-icon amber" id="iconExpenseSection"></span>保險 · 訂閱 · 固定支出
+          <span class="section-total" id="expensesTotal"></span>
+        </div>
+        <div class="fin-list" id="expensesList"></div>
+      </div>
+    </div>
+
+    <!-- ===== 頁面三:卡包(虛擬卡)===== -->
+    <div class="page" id="page-wallet" style="display:none;">
+      <div class="wallet-empty" id="walletEmpty">
+        <span class="wallet-empty-icon" id="walletEmptyIcon"></span>
+        <div class="wallet-empty-title">還沒有任何卡片</div>
+        <div class="wallet-empty-sub">新增第一張,體驗拖曳生光跟感應動畫</div>
+        <button class="wallet-add-btn" id="addCardBtnEmpty"><span id="iconAddCardEmpty"></span>新增卡片</button>
+      </div>
+
+      <div id="walletStageWrap" style="display:none;">
+        <div class="wallet-stage">
+          <button class="chev-btn" id="cardPrev"><span class="icon" id="iconChevLeft"></span></button>
+          <div class="card-viewport" id="cardViewport">
+            <div class="card-track" id="cardTrack">
+              <div class="v-card" id="vCard">
+                <div class="v-card-shine"></div>
+                <div class="v-card-top"><span id="vCardTypeIcon"></span><span id="vCardName">卡片名稱</span></div>
+                <div class="v-card-chip"></div>
+                <div class="v-card-number" id="vCardNumber">•••• 0000</div>
+                <div class="v-card-bottom">
+                  <span class="v-card-balance" id="vCardBalance"></span>
+                  <span class="v-card-brand" id="vCardBrandIcon"></span>
+                </div>
+                <div class="v-card-check" id="vCardCheck"><span id="iconCheck"></span></div>
+                <div class="v-card-delete-overlay" id="vCardDeleteOverlay">
+                  <span class="row-trash-icon-lg" id="iconCardTrash"></span>
+                  <div class="edit-pencil card-pencil" id="cardPencilBtn"><span class="pencil-icon" id="iconCardPencil"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="chev-btn" id="cardNext"><span class="icon" id="iconChevRight"></span></button>
+        </div>
+        <div class="wallet-dots" id="walletDots"></div>
+
+        <div class="wallet-settings" id="walletSettings">
+          <div class="settings-row">
+            <span class="settings-label">自動加值</span>
+            <button class="toggle" id="autoTopupToggle"><span class="toggle-knob"></span></button>
+          </div>
+          <div class="settings-row" id="linkedAccountRow" style="display:none;">
+            <span class="settings-label">連結帳戶</span>
+            <select class="settings-select" id="linkedAccountSelect"></select>
+          </div>
+          <div class="settings-hint">餘額低於 NT$100 時,自動從連結帳戶加值 NT$500</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title"><span class="section-icon amber" id="iconHistorySection"></span>交易紀錄</div>
+        <div class="fin-list" id="cardTxList"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-tab="dashboard"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
+    <button class="tab" data-tab="finance"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
+    <button class="tab" data-tab="wallet"><span class="icon" id="tabIconWallet"></span><span class="txt">卡包</span></button>
+    <button class="tab placeholder"><span class="icon" id="tabIconP1"></span><span class="txt">敬請期待</span></button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">新增文字</h3>
+    <p class="hint" id="modalHint">這段文字會同時作為按鈕名稱與複製內容</p>
+    <span class="field-label" id="modalLabel1">內容</span>
+    <input id="modalInput" placeholder="輸入內容" maxlength="60">
+    <div class="field-group" id="modalField2" style="display:none;">
+      <span class="field-label" id="modalLabel2">Input 參數(選填)</span>
+      <input id="modalInput2" placeholder="留空則不帶參數" maxlength="200">
+    </div>
+    <div class="field-group" id="modalField3" style="display:none;">
+      <span class="field-label">分類</span>
+      <div class="segmented" id="categorySeg"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" id="modalCancel">取消</button>
+      <button class="confirm" id="modalConfirm">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="sense-overlay" id="senseOverlay">
+  <div class="sense-overlay-card-wrap">
+    <div class="v-card big" id="senseCard">
+      <div class="v-card-shine"></div>
+      <div class="v-card-top"><span id="senseCardTypeIcon"></span><span id="senseCardName"></span></div>
+      <div class="v-card-chip"></div>
+      <div class="v-card-number" id="senseCardNumber"></div>
+      <div class="v-card-bottom">
+        <span class="v-card-balance" id="senseCardBalance"></span>
+        <span class="v-card-brand" id="senseCardBrandIcon"></span>
+      </div>
+      <div class="v-card-check" id="senseCardCheck"><span id="iconCheck2"></span></div>
+    </div>
+    <div class="face-scan-icon" id="faceScanIcon">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="10" y="10" width="80" height="80" rx="24"/>
+        <circle cx="36" cy="42" r="4.5" fill="currentColor" stroke="none"/>
+        <circle cx="64" cy="42" r="4.5" fill="currentColor" stroke="none"/>
+        <path d="M34 62 Q50 74 66 62"/>
+      </svg>
+    </div>
+  </div>
+  <div class="reader-badge approach-hint" id="approachHint"><span id="iconApproachWifi"></span><span>靠近讀卡機</span></div>
+  <button class="sense-cancel-btn" id="senseCancelBtn">取消</button>
+</div>
+
+
+<script>
+(function(){
+  document.addEventListener('touchstart', function(){}, false);
+
+  // ---- Lucide 圖示(inline SVG,取自 lucide-icons/lucide,ISC License) ----
+  var ICONS = {
+    'layout-dashboard':'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    'clipboard':'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+    'zap':'<path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"/>',
+    'house':'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    'wallet':'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    'receipt':'<path d="M12 17V7"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/>',
+    'pencil':'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+    'trash-2':'<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    'plus':'<path d="M5 12h14"/><path d="M12 5v14"/>',
+    'ellipsis':'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    'gauge':'<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    'landmark':'<path d="M10 18v-7"/><path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/>',
+    'credit-card':'<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/><path d="M6 14h2"/>',
+    'bus':'<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+    'door-open':'<path d="M10 21H2"/><path d="M10 3H7a2 2 0 00-2 2v16"/><path d="M14 12h.01"/><path d="M19 21V5a2 2 0 00-1.675-1.974l-6.163-1.013A1 1 0 0010 3v18a1 1 0 001.124.992z"/><path d="M22 21h-3"/>',
+    'key':'<path d="m2 21 9.6-9.6"/><path d="m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19"/><circle cx="15.5" cy="7.5" r="5.5"/>',
+    'circle-check':'<circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/>',
+    'sparkles':'<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/>',
+    'clock':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    'wifi':'<path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/>',
+    'chevron-left':'<path d="m15 18-6-6 6-6"/>',
+    'chevron-right':'<path d="m9 18 6-6-6-6"/>'
+  };
+  function icon(name, cls){
+    return '<svg class="icon' + (cls ? (' ' + cls) : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+  }
+
+  var DEFAULT_DATA = {
+    copyItems: [
+      { id:'c1', text:'三山羊長老' },
+      { id:'c2', text:'我屁股好痛' },
+      { id:'c3', text:'9879-2456' }
+    ],
+    shortcutItems: [
+      { id:'s1', name:'機車mode', input:'' },
+      { id:'s2', name:'整合行動支付 3.0', input:'' }
+    ],
+    accounts: [],
+    expenses: [],
+    budget: 0,
+    cards: [],
+    cardTx: []
+  };
+
+  var state = { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
+  var activeCardIndex = 0;
+  var modalMode = 'add'; // 'add' | 'edit' | 'budget'
+  var modalTarget = 'copy';
+  var editContext = null; // { type, id }
+  var modalCategory = 'other';
+  var pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
+
+  var CATS = {
+    expense: [['insurance','保險'],['subscription','訂閱'],['other','其他']],
+    card: [['transit','公車'],['access','門禁'],['car','車鑰匙'],['other','其他']]
+  };
+
+  var copyGrid = document.getElementById('copyGrid');
+  var shortcutGrid = document.getElementById('shortcutGrid');
+  var accountsList = document.getElementById('accountsList');
+  var expensesList = document.getElementById('expensesList');
+  var accountsTotalEl = document.getElementById('accountsTotal');
+  var expensesTotalEl = document.getElementById('expensesTotal');
+  var budgetBarFill = document.getElementById('budgetBarFill');
+  var budgetStats = document.getElementById('budgetStats');
+  var editBtn = document.getElementById('editBtn');
+  var editActions = document.getElementById('editActions');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var doneBtn = document.getElementById('doneBtn');
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalHint = document.getElementById('modalHint');
+  var modalLabel1 = document.getElementById('modalLabel1');
+  var modalInput = document.getElementById('modalInput');
+  var modalField2 = document.getElementById('modalField2');
+  var modalLabel2 = document.getElementById('modalLabel2');
+  var modalInput2 = document.getElementById('modalInput2');
+  var modalField3 = document.getElementById('modalField3');
+  var categorySeg = document.getElementById('categorySeg');
+  var modalCancel = document.getElementById('modalCancel');
+  var modalConfirm = document.getElementById('modalConfirm');
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  // ---- 放上所有靜態圖示 ----
+  document.getElementById('brandIcon').innerHTML = icon('layout-dashboard');
+  document.getElementById('iconCopySection').innerHTML = icon('clipboard');
+  document.getElementById('iconShortcutSection').innerHTML = icon('zap');
+  document.getElementById('iconGauge').innerHTML = icon('gauge');
+  document.getElementById('iconBudgetPencil').innerHTML = icon('pencil');
+  document.getElementById('iconAccountSection').innerHTML = icon('landmark');
+  document.getElementById('iconExpenseSection').innerHTML = icon('receipt');
+  document.getElementById('tabIconDashboard').innerHTML = icon('house');
+  document.getElementById('tabIconFinance').innerHTML = icon('wallet');
+  document.getElementById('tabIconWallet').innerHTML = icon('credit-card');
+  document.getElementById('tabIconP1').innerHTML = icon('ellipsis');
+  document.getElementById('promoBadge').innerHTML = icon('sparkles') + ' 新功能';
+  document.getElementById('promoHeroIcon').innerHTML = icon('layout-dashboard');
+  document.getElementById('promoBanner').addEventListener('click', function(){ switchPage('wallet'); });
+  document.getElementById('walletEmptyIcon').innerHTML = icon('credit-card');
+  document.getElementById('iconAddCardEmpty').innerHTML = icon('plus','plus-icon-sm');
+  document.getElementById('iconChevLeft').innerHTML = icon('chevron-left');
+  document.getElementById('iconChevRight').innerHTML = icon('chevron-right');
+  document.getElementById('iconCheck').innerHTML = icon('circle-check');
+  document.getElementById('iconCheck2').innerHTML = icon('circle-check');
+  document.getElementById('iconAddCardHeader').innerHTML = icon('plus','plus-icon-sm');
+  document.getElementById('iconCardTrash').innerHTML = icon('trash-2');
+  document.getElementById('iconCardPencil').innerHTML = icon('pencil');
+  document.getElementById('iconApproachWifi').innerHTML = icon('wifi');
+  document.getElementById('iconHistorySection').innerHTML = icon('clock');
+  document.getElementById('vCardBrandIcon').innerHTML = icon('layout-dashboard');
+  document.getElementById('senseCardBrandIcon').innerHTML = icon('layout-dashboard');
+
+  function uid(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+  function isNumericCode(text){ return /^[0-9\-\s]+$/.test(text); }
+  function formatMoney(n){ return 'NT$' + Math.round(n || 0).toLocaleString(); }
+  function catLabel(cat){
+    return { insurance:'保險', subscription:'訂閱', transit:'公車', access:'門禁', car:'車鑰匙', other:'其他' }[cat] || '其他';
+  }
+  function cardTypeIcon(type){ return { transit:'bus', access:'door-open', car:'key' }[type] || 'credit-card'; }
+  function formatTime(ts){
+    var d = new Date(ts);
+    var p = function(n){ return String(n).padStart(2,'0'); };
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  var STORAGE_KEY = 'super-dashboard-data';
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){ /* 尚無資料,或此瀏覽器停用 localStorage,使用預設值 */ }
+    return null;
+  }
+  function saveData(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        copyItems: state.copyItems, shortcutItems: state.shortcutItems,
+        accounts: state.accounts, expenses: state.expenses, budget: state.budget,
+        cards: state.cards, cardTx: state.cardTx
+      }));
+    }catch(e){ console.error('儲存失敗', e); }
+  }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1400);
+  }
+
+  // ==================== 儀錶板頁 ====================
+  function renderGrid(container, type){
+    var items = type === 'copy' ? state.copyItems : state.shortcutItems;
+    var color = type === 'copy' ? 'teal' : 'amber';
+    container.innerHTML = '';
+
+    items.forEach(function(item){
+      if(state.editMode && pendingRemove[type].has(item.id)) return;
+      var label = type === 'copy' ? item.text : item.name;
+      var cap = document.createElement('div');
+
+      if(state.editMode){
+        cap.className = 'keycap delete-tile';
+        cap.innerHTML =
+          icon('trash-2','trash-icon') +
+          '<div class="label">' + escapeHtml(label) + '</div>' +
+          '<div class="edit-pencil">' + icon('pencil','pencil-icon') + '</div>';
+        cap.addEventListener('click', function(){
+          pendingRemove[type].add(item.id);
+          renderGrid(container, type);
+        });
+        cap.querySelector('.edit-pencil').addEventListener('click', function(e){
+          e.stopPropagation();
+          openEditModal(type, item);
+        });
+      } else {
+        var mono = type === 'copy' && isNumericCode(label);
+        cap.className = 'keycap';
+        cap.innerHTML =
+          '<div class="led ' + color + '"></div>' +
+          '<div class="label' + (mono ? ' mono' : '') + '">' + escapeHtml(label) + '</div>';
+        cap.addEventListener('click', function(){
+          if(type === 'copy'){ doCopy(item, cap.querySelector('.led')); }
+          else { doOpenShortcut(item); }
+        });
+      }
+      container.appendChild(cap);
+    });
+
+    if(!state.editMode){
+      var addTile = document.createElement('div');
+      addTile.className = 'keycap add-tile';
+      addTile.innerHTML = icon('plus','plus-icon') + '<div class="label">新增</div>';
+      addTile.addEventListener('click', function(){ openAddModal(type); });
+      container.appendChild(addTile);
+    }
+  }
+
+  async function doCopy(item, ledEl){
+    try{
+      await navigator.clipboard.writeText(item.text);
+    }catch(e){
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = item.text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }catch(e2){ return; }
+    }
+    if(ledEl){
+      ledEl.classList.add('flash');
+      setTimeout(function(){ ledEl.classList.remove('flash'); }, 450);
+    }
+    showToast('已複製');
+  }
+
+  function doOpenShortcut(item){
+    var url = 'shortcuts://run-shortcut?name=' + encodeURIComponent(item.name);
+    if(item.input){ url += '&input=' + encodeURIComponent(item.input); }
+    var a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // ==================== 財務頁 ====================
+  function renderFinList(container, type){
+    var items = type === 'account' ? state.accounts : state.expenses;
+    container.innerHTML = '';
+
+    items.forEach(function(item){
+      if(state.editMode && pendingRemove[type].has(item.id)) return;
+      var row = document.createElement('div');
+
+      if(state.editMode){
+        row.className = 'fin-row delete-row';
+        row.innerHTML = icon('trash-2','row-trash-icon') + '<span class="fin-row-name">' + escapeHtml(item.name) + '</span>';
+        row.addEventListener('click', function(){
+          pendingRemove[type].add(item.id);
+          renderFinList(container, type);
+        });
+      } else {
+        row.className = 'fin-row';
+        var amountText = type === 'account' ? formatMoney(item.balance) : formatMoney(item.amount);
+        var tag = type === 'expense' ? '<span class="fin-tag cat-' + (item.category || 'other') + '">' + catLabel(item.category) + '</span>' : '';
+        row.innerHTML = '<span class="fin-row-name">' + escapeHtml(item.name) + tag + '</span><span class="fin-row-amount">' + amountText + '</span>';
+        row.addEventListener('click', function(){ openEditModal(type, item); });
+      }
+      container.appendChild(row);
+    });
+
+    if(!state.editMode){
+      var addRow = document.createElement('div');
+      addRow.className = 'fin-row add-row';
+      addRow.innerHTML = icon('plus','plus-icon-sm') + '<span class="fin-row-name">新增' + (type === 'account' ? '帳戶' : '項目') + '</span>';
+      addRow.addEventListener('click', function(){ openAddModal(type); });
+      container.appendChild(addRow);
+    }
+  }
+
+  function renderFinance(){
+    var accTotal = state.accounts.reduce(function(s,a){ return s + (a.balance || 0); }, 0);
+    accountsTotalEl.textContent = state.accounts.length ? ('總資產 ' + formatMoney(accTotal)) : '';
+    renderFinList(accountsList, 'account');
+
+    var expTotal = state.expenses.reduce(function(s,e){ return s + (e.amount || 0); }, 0);
+    expensesTotalEl.textContent = state.expenses.length ? ('每月 ' + formatMoney(expTotal)) : '';
+    renderFinList(expensesList, 'expense');
+
+    var budget = state.budget || 0;
+    var pct = budget > 0 ? Math.min(expTotal / budget * 100, 100) : 0;
+    budgetBarFill.style.width = pct + '%';
+    budgetBarFill.className = 'budget-bar-fill' + (budget > 0 && expTotal > budget ? ' over' : (pct >= 80 ? ' warn' : ''));
+
+    if(budget > 0){
+      var remain = budget - expTotal;
+      budgetStats.innerHTML = '固定支出 ' + formatMoney(expTotal) + ' / 預算 ' + formatMoney(budget) +
+        '<br>' + (remain >= 0 ? ('剩餘 ' + formatMoney(remain)) : ('超支 ' + formatMoney(-remain)));
+    } else {
+      budgetStats.textContent = '目前每月固定支出 ' + formatMoney(expTotal) + '(點右上角鉛筆設定預算)';
+    }
+  }
+
+  function renderAll(){ renderGrid(copyGrid, 'copy'); renderGrid(shortcutGrid, 'shortcut'); }
+
+  // ==================== 卡包(虛擬卡)頁 ====================
+  var vCardEl = document.getElementById('vCard');
+  var vCardShine = vCardEl.querySelector('.v-card-shine');
+  var cardViewportEl = document.getElementById('cardViewport');
+  var cardTrackEl = document.getElementById('cardTrack');
+  var dragState = null;
+  var tapState = null; // { moved }
+
+  cardViewportEl.addEventListener('pointerdown', function(e){
+    if(state.editMode) return;
+    dragState = { startX: e.clientX, startY: e.clientY };
+    tapState = { moved:false, t: Date.now() };
+    vCardEl.style.transition = 'none';
+    try{ cardViewportEl.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  cardViewportEl.addEventListener('pointermove', function(e){
+    if(!dragState) return;
+    var dx = e.clientX - dragState.startX;
+    var dy = e.clientY - dragState.startY;
+    if(tapState && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) tapState.moved = true;
+    var rotY = Math.max(-18, Math.min(18, dx / 4));
+    var rotX = Math.max(-8, Math.min(8, -dy / 8));
+    vCardEl.style.transform = 'perspective(900px) rotateY(' + rotY + 'deg) rotateX(' + rotX + 'deg)';
+    vCardShine.style.backgroundPosition = (50 + rotY * 1.8) + '% 50%';
+  });
+  function endCardDrag(){
+    if(!dragState) return;
+    var wasTap = tapState && !tapState.moved && (Date.now() - tapState.t) < 500;
+    dragState = null;
+    vCardEl.style.transition = 'transform .3s ease';
+    vCardEl.style.transform = 'perspective(900px) rotateY(0deg) rotateX(0deg)';
+    vCardShine.style.transition = 'background-position .3s ease';
+    vCardShine.style.backgroundPosition = '50% 50%';
+    if(wasTap){
+      var card = visibleCards()[activeCardIndex];
+      if(card) openSenseOverlay(card);
+    }
+    tapState = null;
+  }
+  cardViewportEl.addEventListener('pointerup', endCardDrag);
+  cardViewportEl.addEventListener('pointercancel', endCardDrag);
+
+  function visibleCards(){
+    return state.cards.filter(function(c){ return !(state.editMode && pendingRemove.card.has(c.id)); });
+  }
+
+  function renderWallet(){
+    var cards = visibleCards();
+    var hasCards = cards.length > 0;
+    document.getElementById('walletEmpty').style.display = hasCards ? 'none' : '';
+    document.getElementById('walletStageWrap').style.display = hasCards ? '' : 'none';
+
+    if(!hasCards){ renderCardTxList(null); return; }
+
+    if(activeCardIndex >= cards.length) activeCardIndex = cards.length - 1;
+    if(activeCardIndex < 0) activeCardIndex = 0;
+    var card = cards[activeCardIndex];
+
+    document.getElementById('vCardTypeIcon').innerHTML = icon(cardTypeIcon(card.type));
+    document.getElementById('vCardName').textContent = card.name;
+    document.getElementById('vCardNumber').textContent = '•••• ' + (card.last4 || '0000');
+
+    var balanceEl = document.getElementById('vCardBalance');
+    if(card.type === 'transit'){
+      balanceEl.style.display = '';
+      balanceEl.textContent = formatMoney(card.balance);
+    } else {
+      balanceEl.style.display = 'none';
+    }
+
+    document.getElementById('vCardDeleteOverlay').style.display = state.editMode ? 'flex' : 'none';
+
+    var dotsEl = document.getElementById('walletDots');
+    dotsEl.innerHTML = '';
+    cards.forEach(function(c, i){
+      var d = document.createElement('button');
+      d.className = 'wallet-dot' + (i === activeCardIndex ? ' active' : '');
+      d.addEventListener('click', function(){
+        if(i === activeCardIndex) return;
+        goToCard(i, i > activeCardIndex ? 1 : -1);
+      });
+      dotsEl.appendChild(d);
+    });
+    document.getElementById('cardPrev').style.visibility = cards.length > 1 ? 'visible' : 'hidden';
+    document.getElementById('cardNext').style.visibility = cards.length > 1 ? 'visible' : 'hidden';
+
+    var settingsEl = document.getElementById('walletSettings');
+    if(card.type === 'transit'){
+      settingsEl.style.display = '';
+      document.getElementById('autoTopupToggle').classList.toggle('on', !!card.autoTopup);
+      document.getElementById('linkedAccountRow').style.display = card.autoTopup ? '' : 'none';
+      var sel = document.getElementById('linkedAccountSelect');
+      if(state.accounts.length){
+        sel.innerHTML = state.accounts.map(function(a){
+          return '<option value="' + a.id + '"' + (a.id === card.linkedAccountId ? ' selected' : '') + '>' + escapeHtml(a.name) + '</option>';
+        }).join('');
+      } else {
+        sel.innerHTML = '<option value="">(財務頁尚無帳戶)</option>';
+      }
+    } else {
+      settingsEl.style.display = 'none';
+    }
+
+    renderCardTxList(card.id);
+  }
+
+  function renderCardTxList(cardId){
+    var list = document.getElementById('cardTxList');
+    list.innerHTML = '';
+    var txs = cardId ? state.cardTx.filter(function(t){ return t.cardId === cardId; }).slice(0, 8) : [];
+    if(!txs.length){
+      var empty = document.createElement('div');
+      empty.className = 'fin-row';
+      empty.innerHTML = '<span class="fin-row-name" style="color:var(--text-muted);font-weight:500;">尚無交易紀錄</span>';
+      list.appendChild(empty);
+      return;
+    }
+    txs.forEach(function(t){
+      var row = document.createElement('div');
+      row.className = 'fin-row';
+      var amtHtml = '';
+      if(t.amount !== null && t.amount !== undefined){
+        var cls = t.amount >= 0 ? 'tx-pos' : 'tx-neg';
+        amtHtml = '<span class="fin-row-amount ' + cls + '">' + (t.amount >= 0 ? '+' : '-') + formatMoney(Math.abs(t.amount)) + '</span>';
+      }
+      row.innerHTML = '<span class="fin-row-name">' + escapeHtml(t.label) + '<span class="tx-time">' + formatTime(t.time) + '</span></span>' + amtHtml;
+      list.appendChild(row);
+    });
+  }
+
+  function logCardTx(cardId, label, amount){
+    state.cardTx.unshift({ id: uid('t'), cardId: cardId, label: label, amount: (amount === undefined ? null : amount), time: Date.now() });
+    if(state.cardTx.length > 60) state.cardTx.length = 60;
+  }
+
+  function flashCardSuccess(){
+    var chk = document.getElementById('vCardCheck');
+    chk.classList.add('show');
+    setTimeout(function(){ chk.classList.remove('show'); }, 900);
+  }
+
+  function performSense(card){
+    var label, amount;
+    if(card.type === 'transit'){
+      var fares = [15,18,20,25,30];
+      var fare = fares[Math.floor(Math.random() * fares.length)];
+      var deduct = Math.min(fare, card.balance);
+      card.balance = Math.max(0, card.balance - fare);
+      amount = -deduct;
+      label = '刷卡搭乘';
+      if(card.autoTopup && card.linkedAccountId && card.balance < (card.topupThreshold || 100)){
+        var acc = state.accounts.find(function(a){ return a.id === card.linkedAccountId; });
+        if(acc){
+          var topup = card.topupAmount || 500;
+          var take = Math.min(topup, acc.balance);
+          acc.balance -= take;
+          card.balance += topup;
+          logCardTx(card.id, '自動加值', topup);
+        }
+      }
+    } else if(card.type === 'access'){
+      label = '門禁感應通過'; amount = undefined;
+    } else if(card.type === 'car'){
+      label = '車輛解鎖成功'; amount = undefined;
+    } else {
+      label = '感應成功'; amount = undefined;
+    }
+    logCardTx(card.id, label, amount);
+    saveData();
+    renderWallet();
+    renderFinance();
+  }
+
+  var senseOverlayEl = document.getElementById('senseOverlay');
+  var senseCancelBtn = document.getElementById('senseCancelBtn');
+  var faceScanIconEl = document.getElementById('faceScanIcon');
+  var approachHintEl = document.getElementById('approachHint');
+  var senseActiveCard = null;
+  var senseReady = false; // 刷臉動畫播完、可以點空白感應了才是 true
+  var senseTimers = [];
+  function clearSenseTimers(){ senseTimers.forEach(clearTimeout); senseTimers = []; }
+
+  function openSenseOverlay(card){
+    if(state.editMode) return;
+    clearSenseTimers();
+    senseActiveCard = card;
+    senseReady = false;
+    document.getElementById('senseCardTypeIcon').innerHTML = icon(cardTypeIcon(card.type));
+    document.getElementById('senseCardName').textContent = card.name;
+    document.getElementById('senseCardNumber').textContent = '•••• ' + (card.last4 || '0000');
+    var balEl = document.getElementById('senseCardBalance');
+    if(card.type === 'transit'){ balEl.style.display = ''; balEl.textContent = formatMoney(card.balance); }
+    else { balEl.style.display = 'none'; }
+    document.getElementById('senseCardCheck').classList.remove('show');
+    faceScanIconEl.classList.remove('show');
+    approachHintEl.classList.remove('show');
+    senseOverlayEl.classList.remove('closing');
+    senseOverlayEl.classList.add('show');
+
+    // 卡片展開得差不多後,疊上刷臉動畫(眼睛+嘴巴),停留約 1 秒後淡出代表刷臉成功
+    senseTimers.push(setTimeout(function(){ faceScanIconEl.classList.add('show'); }, 260));
+    senseTimers.push(setTimeout(function(){ faceScanIconEl.classList.remove('show'); }, 260 + 1000));
+    senseTimers.push(setTimeout(function(){
+      approachHintEl.classList.add('show');
+      senseReady = true;
+    }, 260 + 1000 + 320));
+  }
+  function closeSenseOverlay(){
+    clearSenseTimers();
+    senseOverlayEl.classList.remove('show');
+    senseOverlayEl.classList.add('closing');
+    setTimeout(function(){
+      senseOverlayEl.classList.remove('closing');
+      senseActiveCard = null;
+      senseReady = false;
+    }, 260);
+  }
+  function completeSense(){
+    var card = senseActiveCard;
+    if(!card) return;
+    clearSenseTimers();
+    senseActiveCard = null; // 防止感應中再被點一次重複觸發
+    senseReady = false;
+    approachHintEl.classList.remove('show');
+    var chk = document.getElementById('senseCardCheck');
+    chk.classList.add('show'); // 打勾進場(縮放+淡入)
+    performSense(card);
+    senseTimers.push(setTimeout(function(){
+      chk.classList.remove('show'); // 打勾退場(縮放+淡出)
+      senseTimers.push(setTimeout(function(){ closeSenseOverlay(); }, 330));
+    }, 550));
+  }
+  senseOverlayEl.addEventListener('click', function(e){
+    if(e.target.closest('#senseCancelBtn')) return;
+    if(!senseActiveCard || !senseReady) return; // 刷臉動畫還沒播完前,點空白先不算數
+    completeSense();
+  });
+  senseCancelBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if(!senseActiveCard) return; // 播放/收尾動畫中不給取消,避免狀態衝突
+    clearSenseTimers();
+    senseActiveCard = null;
+    senseReady = false;
+    closeSenseOverlay();
+  });
+
+  function goToCard(newIndex, direction){
+    cardTrackEl.style.transition = 'transform .18s ease-in, opacity .18s ease-in';
+    cardTrackEl.style.transform = 'translateX(' + (direction > 0 ? '-22px' : '22px') + ')';
+    cardTrackEl.style.opacity = '0';
+    setTimeout(function(){
+      activeCardIndex = newIndex;
+      renderWallet();
+      cardTrackEl.style.transition = 'none';
+      cardTrackEl.style.transform = 'translateX(' + (direction > 0 ? '22px' : '-22px') + ')';
+      cardTrackEl.style.opacity = '0';
+      void cardTrackEl.offsetWidth; // 強制 reflow,確保下面的 transition 會生效
+      cardTrackEl.style.transition = 'transform .2s ease-out, opacity .2s ease-out';
+      cardTrackEl.style.transform = 'translateX(0)';
+      cardTrackEl.style.opacity = '1';
+    }, 190);
+  }
+
+  document.getElementById('cardPrev').addEventListener('click', function(){
+    var n = visibleCards().length;
+    if(!n) return;
+    goToCard((activeCardIndex - 1 + n) % n, -1);
+  });
+  document.getElementById('cardNext').addEventListener('click', function(){
+    var n = visibleCards().length;
+    if(!n) return;
+    goToCard((activeCardIndex + 1) % n, 1);
+  });
+
+  document.getElementById('autoTopupToggle').addEventListener('click', function(){
+    var card = visibleCards()[activeCardIndex];
+    if(!card) return;
+    card.autoTopup = !card.autoTopup;
+    if(card.autoTopup && !card.linkedAccountId && state.accounts.length){
+      card.linkedAccountId = state.accounts[0].id;
+    }
+    saveData();
+    renderWallet();
+  });
+  document.getElementById('linkedAccountSelect').addEventListener('change', function(e){
+    var card = visibleCards()[activeCardIndex];
+    if(card){ card.linkedAccountId = e.target.value; saveData(); }
+  });
+
+  document.getElementById('addCardHeaderBtn').addEventListener('click', function(){ openAddModal('card'); });
+  document.getElementById('addCardBtnEmpty').addEventListener('click', function(){ openAddModal('card'); });
+
+  document.getElementById('vCardDeleteOverlay').addEventListener('click', function(e){
+    var card = visibleCards()[activeCardIndex];
+    if(!card) return;
+    if(e.target.closest('#cardPencilBtn')){
+      e.stopPropagation();
+      openEditModal('card', card);
+      return;
+    }
+    pendingRemove.card.add(card.id);
+    renderWallet();
+  });
+
+  // ==================== 分頁切換 ====================
+  var currentPage = 'dashboard';
+  var addCardHeaderBtn = document.getElementById('addCardHeaderBtn');
+  function updateAddCardBtnVisibility(){
+    addCardHeaderBtn.style.display = (currentPage === 'wallet' && !state.editMode) ? 'inline-flex' : 'none';
+  }
+
+  function switchPage(page){
+    if(state.editMode){ cancelEdit(); }
+    currentPage = page;
+    document.getElementById('page-dashboard').style.display = page === 'dashboard' ? '' : 'none';
+    document.getElementById('page-finance').style.display = page === 'finance' ? '' : 'none';
+    document.getElementById('page-wallet').style.display = page === 'wallet' ? '' : 'none';
+    document.querySelectorAll('.tab[data-tab]').forEach(function(t){
+      t.classList.toggle('active', t.dataset.tab === page);
+    });
+    updateAddCardBtnVisibility();
+  }
+  document.querySelectorAll('.tab[data-tab]').forEach(function(t){
+    t.addEventListener('click', function(){ switchPage(t.dataset.tab); });
+  });
+
+  // ==================== 編輯 / 取消 / 完成 ====================
+  function resetPending(){
+    pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
+  }
+  function renderEverything(){ renderAll(); renderFinance(); renderWallet(); }
+
+  function enterEdit(){
+    state.editMode = true;
+    resetPending();
+    editBtn.style.display = 'none';
+    editActions.classList.add('show');
+    updateAddCardBtnVisibility();
+    renderEverything();
+  }
+  function cancelEdit(){
+    state.editMode = false;
+    resetPending();
+    editBtn.style.display = '';
+    editActions.classList.remove('show');
+    updateAddCardBtnVisibility();
+    renderEverything();
+  }
+  function commitEdit(){
+    state.copyItems = state.copyItems.filter(function(i){ return !pendingRemove.copy.has(i.id); });
+    state.shortcutItems = state.shortcutItems.filter(function(i){ return !pendingRemove.shortcut.has(i.id); });
+    state.accounts = state.accounts.filter(function(i){ return !pendingRemove.account.has(i.id); });
+    state.expenses = state.expenses.filter(function(i){ return !pendingRemove.expense.has(i.id); });
+    state.cards = state.cards.filter(function(i){ return !pendingRemove.card.has(i.id); });
+    var remainingCardIds = {};
+    state.cards.forEach(function(c){ remainingCardIds[c.id] = true; });
+    state.cardTx = state.cardTx.filter(function(t){ return remainingCardIds[t.cardId]; });
+    state.editMode = false;
+    resetPending();
+    editBtn.style.display = '';
+    editActions.classList.remove('show');
+    updateAddCardBtnVisibility();
+    saveData();
+    renderEverything();
+  }
+  editBtn.addEventListener('click', enterEdit);
+  cancelBtn.addEventListener('click', cancelEdit);
+  doneBtn.addEventListener('click', commitEdit);
+
+  // ==================== Modal ====================
+  function setCategory(cat){
+    modalCategory = cat;
+    categorySeg.querySelectorAll('.seg-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.cat === cat);
+    });
+  }
+  function buildCategorySeg(type){
+    var opts = CATS[type] || [];
+    categorySeg.innerHTML = opts.map(function(o){
+      return '<button type="button" class="seg-btn" data-cat="' + o[0] + '">' + o[1] + '</button>';
+    }).join('');
+    categorySeg.querySelectorAll('.seg-btn').forEach(function(b){
+      b.addEventListener('click', function(){ setCategory(b.dataset.cat); });
+    });
+  }
+
+  function configureModalFields(type){
+    modalField2.style.display = (type === 'copy') ? 'none' : 'block';
+    modalField3.style.display = (type === 'expense' || type === 'card') ? 'block' : 'none';
+    if(type === 'expense' || type === 'card') buildCategorySeg(type);
+
+    if(type === 'copy'){
+      modalLabel1.textContent = '內容';
+      modalInput.placeholder = '例如:常用地址、代碼…';
+    } else if(type === 'shortcut'){
+      modalLabel1.textContent = '捷徑名稱';
+      modalInput.placeholder = '例如:機車mode';
+      modalLabel2.textContent = 'Input 參數(選填,傳給捷徑的「輸入」)';
+      modalInput2.placeholder = '留空則不帶參數';
+      modalInput2.setAttribute('inputmode','text');
+    } else if(type === 'account'){
+      modalLabel1.textContent = '帳戶 / 電子支付名稱';
+      modalInput.placeholder = '例如:國泰銀行、LINE Pay';
+      modalLabel2.textContent = '目前餘額';
+      modalInput2.placeholder = '例如:35000';
+      modalInput2.setAttribute('inputmode','decimal');
+    } else if(type === 'expense'){
+      modalLabel1.textContent = '項目名稱';
+      modalInput.placeholder = '例如:機車保險、Netflix';
+      modalLabel2.textContent = '每月金額';
+      modalInput2.placeholder = '例如:299';
+      modalInput2.setAttribute('inputmode','decimal');
+    } else if(type === 'card'){
+      modalLabel1.textContent = '卡片名稱';
+      modalInput.placeholder = '例如:悠遊卡、住家門禁、愛車鑰匙';
+      modalLabel2.textContent = '起始餘額(公車類型才會扣款,其他可留 0)';
+      modalInput2.placeholder = '例如:500';
+      modalInput2.setAttribute('inputmode','decimal');
+    }
+  }
+
+  function openAddModal(type){
+    modalMode = 'add';
+    modalTarget = type;
+    configureModalFields(type);
+    var titles = { copy:'新增文字', shortcut:'新增捷徑', account:'新增帳戶', expense:'新增固定支出', card:'新增卡片' };
+    var hints = {
+      copy:'這段文字會同時作為按鈕名稱與複製內容',
+      shortcut:'請輸入「捷徑」App 中的捷徑名稱,需完全一致',
+      account:'記錄餘額,方便掌握總資產',
+      expense:'保險、訂閱等每月固定要付的錢',
+      card:'公車、門禁、車鑰匙都可以,新增後可設定自動加值'
+    };
+    modalTitle.textContent = titles[type];
+    modalHint.textContent = hints[type];
+    modalConfirm.textContent = '新增';
+    modalInput.value = '';
+    modalInput2.value = '';
+    setCategory(type === 'card' ? 'transit' : 'other');
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); }, 50);
+  }
+
+  function openEditModal(type, item){
+    modalMode = 'edit';
+    editContext = { type:type, id:item.id };
+    configureModalFields(type);
+    var titles = { copy:'編輯文字', shortcut:'編輯捷徑', account:'編輯帳戶', expense:'編輯固定支出', card:'編輯卡片' };
+    var hints = {
+      copy:'這段文字會同時作為按鈕名稱與複製內容',
+      shortcut:'請輸入「捷徑」App 中的捷徑名稱,需完全一致',
+      account:'記錄餘額,方便掌握總資產',
+      expense:'保險、訂閱等每月固定要付的錢',
+      card:'公車、門禁、車鑰匙都可以,新增後可設定自動加值'
+    };
+    modalTitle.textContent = titles[type];
+    modalHint.textContent = hints[type];
+
+    if(type === 'copy'){ modalInput.value = item.text; }
+    else if(type === 'shortcut'){ modalInput.value = item.name; modalInput2.value = item.input || ''; }
+    else if(type === 'account'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; }
+    else if(type === 'expense'){ modalInput.value = item.name; modalInput2.value = item.amount || ''; setCategory(item.category || 'other'); }
+    else if(type === 'card'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; setCategory(item.type || 'other'); }
+
+    modalConfirm.textContent = '儲存';
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
+  }
+
+  function openBudgetModal(){
+    modalMode = 'budget';
+    modalField2.style.display = 'none';
+    modalField3.style.display = 'none';
+    modalTitle.textContent = '設定每月預算';
+    modalHint.textContent = '用來估算固定支出是否超支';
+    modalLabel1.textContent = '每月預算金額';
+    modalInput.placeholder = '例如:20000';
+    modalInput.setAttribute('inputmode','decimal');
+    modalInput.value = state.budget ? String(state.budget) : '';
+    modalConfirm.textContent = '儲存';
+    modalOverlay.classList.add('show');
+    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
+  }
+  document.getElementById('budgetEditBtn').addEventListener('click', openBudgetModal);
+
+  function closeModal(){ modalOverlay.classList.remove('show'); modalInput.removeAttribute('inputmode'); }
+  modalCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function(e){ if(e.target === modalOverlay) closeModal(); });
+
+  function confirmModal(){
+    if(modalMode === 'budget'){
+      var num = parseFloat((modalInput.value || '').replace(/,/g,''));
+      if(isNaN(num) || num < 0) return;
+      state.budget = num;
+      saveData(); closeModal(); renderFinance();
+      return;
+    }
+
+    var val = modalInput.value.trim();
+    if(!val) return;
+    var type = modalMode === 'edit' ? editContext.type : modalTarget;
+
+    if(type === 'copy'){
+      if(modalMode === 'edit'){
+        var t = state.copyItems.find(function(i){ return i.id === editContext.id; });
+        if(t) t.text = val;
+      } else { state.copyItems.push({ id: uid('c'), text: val }); }
+    } else if(type === 'shortcut'){
+      var inputVal = modalInput2.value.trim();
+      if(modalMode === 'edit'){
+        var t2 = state.shortcutItems.find(function(i){ return i.id === editContext.id; });
+        if(t2){ t2.name = val; t2.input = inputVal; }
+      } else { state.shortcutItems.push({ id: uid('s'), name: val, input: inputVal }); }
+    } else if(type === 'account'){
+      var bal = parseFloat((modalInput2.value || '0').replace(/,/g,'')) || 0;
+      if(modalMode === 'edit'){
+        var t3 = state.accounts.find(function(i){ return i.id === editContext.id; });
+        if(t3){ t3.name = val; t3.balance = bal; }
+      } else { state.accounts.push({ id: uid('a'), name: val, balance: bal }); }
+    } else if(type === 'expense'){
+      var amt = parseFloat((modalInput2.value || '0').replace(/,/g,'')) || 0;
+      if(modalMode === 'edit'){
+        var t4 = state.expenses.find(function(i){ return i.id === editContext.id; });
+        if(t4){ t4.name = val; t4.amount = amt; t4.category = modalCategory; }
+      } else { state.expenses.push({ id: uid('e'), name: val, amount: amt, category: modalCategory }); }
+    } else if(type === 'card'){
+      var bal2 = parseFloat((modalInput2.value || '0').replace(/,/g,'')) || 0;
+      if(modalMode === 'edit'){
+        var t5 = state.cards.find(function(i){ return i.id === editContext.id; });
+        if(t5){ t5.name = val; t5.balance = bal2; t5.type = modalCategory; }
+      } else {
+        state.cards.push({
+          id: uid('k'), name: val, type: modalCategory, balance: bal2,
+          last4: String(Math.floor(1000 + Math.random() * 9000)),
+          autoTopup: false, linkedAccountId: '', topupAmount: 500, topupThreshold: 100
+        });
+        activeCardIndex = state.cards.length - 1;
+      }
+    }
+
+    saveData();
+    closeModal();
+    renderEverything();
+  }
+  modalConfirm.addEventListener('click', confirmModal);
+  modalInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') confirmModal(); });
+
+  // ==================== 日期顯示 ====================
+  function updateDate(){
+    var d = new Date();
+    var weekdays = ['日','一','二','三','四','五','六'];
+    var mm = String(d.getMonth() + 1).padStart(2,'0');
+    var dd = String(d.getDate()).padStart(2,'0');
+    document.getElementById('dateChip').textContent = mm + '/' + dd + '（' + weekdays[d.getDay()] + '）';
+  }
+  setInterval(updateDate, 60000);
+  updateDate();
+
+  // ==================== 初始化 ====================
+  (function init(){
+    var data = loadData();
+    if(data){
+      state.copyItems = data.copyItems || DEFAULT_DATA.copyItems.slice();
+      state.shortcutItems = data.shortcutItems || DEFAULT_DATA.shortcutItems.slice();
+      state.accounts = data.accounts || [];
+      state.expenses = data.expenses || [];
+      state.budget = data.budget || 0;
+      state.cards = data.cards || [];
+      state.cardTx = data.cardTx || [];
+    } else {
+      state.copyItems = DEFAULT_DATA.copyItems.slice();
+      state.shortcutItems = DEFAULT_DATA.shortcutItems.slice();
+      state.accounts = [];
+      state.expenses = [];
+      state.budget = 0;
+      state.cards = [];
+      state.cardTx = [];
+      saveData();
+    }
+    renderEverything();
+  })();
+})();
+</script>
+</body>
+</html>

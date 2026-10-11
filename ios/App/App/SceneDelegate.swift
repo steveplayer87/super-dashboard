@@ -3,6 +3,8 @@ import Capacitor
 import ActivityKit
 import UserNotifications
 import WebKit
+import LocalAuthentication
+import AudioToolbox
 
 // MARK: - Taoyuan Metro Live Activity Data Model
 public struct TaoyuanMetroAttributes: ActivityAttributes {
@@ -178,6 +180,45 @@ class QuickCopyManager {
     }
 }
 
+// MARK: - 原生真實 Face ID 生物辨識管理器
+class BiometricManager {
+    static func authenticate(reason: String = "靠近掃碼器或讀卡機以解鎖卡片", completion: @escaping (Bool, String?) -> Void) {
+        let context = LAContext()
+        context.localizedCancelTitle = "取消"
+        context.localizedFallbackTitle = "使用密碼"
+        var error: NSError?
+
+        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        AudioServicesPlaySystemSound(1519) // 輕微成功觸覺震動
+                        completion(true, nil)
+                    } else {
+                        AudioServicesPlaySystemSound(1521) // 錯誤震動
+                        completion(false, authError?.localizedDescription ?? "Face ID 認證未通過")
+                    }
+                }
+            }
+        } else if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, authError in
+                DispatchQueue.main.async {
+                    if success {
+                        AudioServicesPlaySystemSound(1519)
+                        completion(true, nil)
+                    } else {
+                        completion(false, authError?.localizedDescription ?? "密碼驗證未通過")
+                    }
+                }
+            }
+        } else {
+            DispatchQueue.main.async {
+                completion(false, error?.localizedDescription ?? "裝置未啟用 Face ID 或密碼保護")
+            }
+        }
+    }
+}
+
 // MARK: - Notification Manager (完整支援自訂動作選項、圖片貼圖與文字即時回覆)
 class NotificationManager {
     static let cardCategoryIdentifier = "CARD_ACTION_CATEGORY"
@@ -232,26 +273,34 @@ class NotificationManager {
         center.setNotificationCategories([cardCategory, replyCategory])
     }
 
-    // 檢查通知授權狀態與診斷
-    static func checkAndRequestPermission(completion: @escaping (Bool) -> Void) {
+    // 檢查通知授權狀態並同步給前端診斷
+    static func checkAndReportStatus() {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
+            var statusStr = "unknown"
+            var desc = ""
             switch settings.authorizationStatus {
-            case .authorized, .provisional, .ephemeral:
-                completion(true)
-            case .notDetermined:
-                center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-                    DispatchQueue.main.async {
-                        completion(granted)
-                    }
-                }
+            case .authorized:
+                statusStr = "authorized"
+                desc = "已允許通知 (橫幅狀態: \(settings.alertSetting == .enabled ? "開啟" : "關閉"))"
             case .denied:
-                DispatchQueue.main.async {
-                    evaluateNotificationFeedback("⚠️ 通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
-                    completion(false)
-                }
+                statusStr = "denied"
+                desc = "系統權限遭拒，請至 iPhone 設定開啟"
+            case .notDetermined:
+                statusStr = "notDetermined"
+                desc = "尚未請求權限"
+            case .provisional:
+                statusStr = "provisional"
+                desc = "靜音通知模式"
+            case .ephemeral:
+                statusStr = "ephemeral"
+                desc = "臨時授權"
             @unknown default:
-                completion(true)
+                statusStr = "unknown"
+                desc = "未知狀態"
+            }
+            DispatchQueue.main.async {
+                evaluateJS("if(typeof window.updateNotificationStatus==='function') window.updateNotificationStatus('\(statusStr)', '\(desc)');")
             }
         }
     }
@@ -266,69 +315,111 @@ class NotificationManager {
     }
 
     // 測試 1：長按選項卡片通知
-    static func scheduleCardActionNotification() {
-        checkAndRequestPermission { granted in
-            guard granted else { return }
+    static func scheduleCardActionNotification(delay: Double = 0.0) {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            let fireNotification = {
+                let content = UNMutableNotificationContent()
+                content.title = "場景自動感知 · 靠近高鐵桃園站"
+                content.subtitle = "長按此通知可展開快速操作"
+                content.body = "偵測到您在 桃園高鐵捷運閘門，請選擇快速操作："
+                content.sound = .default
+                content.categoryIdentifier = cardCategoryIdentifier
+                content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
-            let center = UNUserNotificationCenter.current()
-            let content = UNMutableNotificationContent()
-            content.title = "場景自動感知 · 靠近高鐵桃園站"
-            content.subtitle = "長按此通知可展開快速操作"
-            content.body = "偵測到您在 桃園高鐵捷運閘門，請選擇快速操作："
-            content.sound = .default
-            content.categoryIdentifier = cardCategoryIdentifier
-            content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
+                let trigger: UNNotificationTrigger? = delay > 0 ? UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false) : nil
+                let req = UNNotificationRequest(identifier: "card_action_\(UUID().uuidString)", content: content, trigger: trigger)
 
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1.0, repeats: false)
-            let req = UNNotificationRequest(identifier: "card_action_\(UUID().uuidString)", content: content, trigger: trigger)
-
-            center.add(req) { err in
-                DispatchQueue.main.async {
-                    if let err = err {
-                        evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
-                    } else {
-                        evaluateNotificationFeedback("「長按展開選項通知」已發送！長按頂部橫幅即可出示卡片或開啟錢包")
+                center.add(req) { err in
+                    DispatchQueue.main.async {
+                        AudioServicesPlaySystemSound(1007) // 播放提示音響
+                        if let err = err {
+                            evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
+                        } else {
+                            if delay > 0 {
+                                evaluateNotificationFeedback("⏰ 已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖定螢幕或退回桌面觀看！")
+                            } else {
+                                evaluateNotificationFeedback("🔔 長按選項通知已發送！頂部將立即下彈橫幅")
+                            }
+                        }
                     }
+                }
+            }
+
+            if settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional {
+                fireNotification()
+            } else if settings.authorizationStatus == .notDetermined {
+                center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                    if granted {
+                        fireNotification()
+                    } else {
+                        DispatchQueue.main.async {
+                            evaluateNotificationFeedback("請在系統彈窗點選允許以接收通知")
+                        }
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    evaluateNotificationFeedback("⚠️ 通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
+                    checkAndReportStatus()
                 }
             }
         }
     }
 
     // 測試 2：帶貼圖圖片 + 可回覆文字通知
-    static func scheduleReplyWithStickerNotification() {
-        checkAndRequestPermission { granted in
-            guard granted else { return }
+    static func scheduleReplyWithStickerNotification(delay: Double = 0.0) {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            let fireNotification = {
+                let content = UNMutableNotificationContent()
+                content.title = "阿鵝管家 💬"
+                content.subtitle = "傳送了一張貼圖給您"
+                content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
+                content.sound = .default
+                content.categoryIdentifier = replyCategoryIdentifier
+                content.userInfo = ["type": "chat_reply"]
 
-            let center = UNUserNotificationCenter.current()
-            let content = UNMutableNotificationContent()
-            content.title = "阿鵝管家 💬"
-            content.subtitle = "傳送了一張貼圖給您"
-            content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
-            content.sound = .default
-            content.categoryIdentifier = replyCategoryIdentifier
-            content.userInfo = ["type": "chat_reply"]
+                if let attachment = createStickerAttachment() {
+                    content.attachments = [attachment]
+                }
 
-            // 附加貼圖圖片
-            if let attachment = createStickerAttachment() {
-                content.attachments = [attachment]
+                let trigger: UNNotificationTrigger? = delay > 0 ? UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false) : nil
+                let req = UNNotificationRequest(identifier: "reply_sticker_\(UUID().uuidString)", content: content, trigger: trigger)
+
+                center.add(req) { err in
+                    DispatchQueue.main.async {
+                        AudioServicesPlaySystemSound(1007)
+                        if let err = err {
+                            evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
+                        } else {
+                            if delay > 0 {
+                                evaluateNotificationFeedback("⏰ 已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖屏或退回桌面觀看！")
+                            } else {
+                                evaluateNotificationFeedback("💬 貼圖回覆通知已發送！長按頂部通知條即可直接回覆輸入")
+                            }
+                        }
+                    }
+                }
             }
 
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1.0, repeats: false)
-            let req = UNNotificationRequest(identifier: "reply_sticker_\(UUID().uuidString)", content: content, trigger: trigger)
-
-            center.add(req) { err in
-                DispatchQueue.main.async {
-                    if let err = err {
-                        evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
-                    } else {
-                        evaluateNotificationFeedback("「貼圖可回覆通知」已發送！下拉或長按通知條即可直接輸入回覆")
+            if settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional {
+                fireNotification()
+            } else if settings.authorizationStatus == .notDetermined {
+                center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                    if granted {
+                        fireNotification()
                     }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    evaluateNotificationFeedback("⚠️ 通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
+                    checkAndReportStatus()
                 }
             }
         }
     }
 
-    // 準備貼圖附件 (複製現有頭像或產生貼圖至暫存區)
     private static func createStickerAttachment() -> UNNotificationAttachment? {
         let fileManager = FileManager.default
         let tempDir = fileManager.temporaryDirectory
@@ -339,7 +430,8 @@ class NotificationManager {
             Bundle.main.url(forResource: "goose_avatar", withExtension: "jpg"),
             Bundle.main.url(forResource: "public/assets/goose_avatar", withExtension: "jpg"),
             Bundle.main.bundleURL.appendingPathComponent("public/assets/goose_avatar.jpg"),
-            Bundle.main.bundleURL.appendingPathComponent("assets/goose_avatar.jpg")
+            Bundle.main.bundleURL.appendingPathComponent("assets/goose_avatar.jpg"),
+            Bundle.main.bundleURL.appendingPathComponent("goose_avatar.jpg")
         ]
         for candidate in candidates {
             if let candidate = candidate, fileManager.fileExists(atPath: candidate.path) {
@@ -355,7 +447,6 @@ class NotificationManager {
                 }
                 try fileManager.copyItem(at: src, to: stickerUrl)
             } else {
-                // 若找不到實體檔案，自繪一張精緻阿鵝貼圖
                 let renderer = UIGraphicsImageRenderer(size: CGSize(width: 320, height: 320))
                 let image = renderer.image { ctx in
                     let bounds = CGRect(x: 0, y: 0, width: 320, height: 320)
@@ -391,12 +482,20 @@ class NotificationManager {
     public static func evaluateNotificationFeedback(_ msg: String) {
         DispatchQueue.main.async {
             let escaped = msg.replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: " ")
+            evaluateJS("if(typeof showToast==='function') showToast('\(escaped)');")
+        }
+    }
+
+    public static func evaluateJS(_ js: String) {
+        DispatchQueue.main.async {
             for scene in UIApplication.shared.connectedScenes {
                 if let winScene = scene as? UIWindowScene {
-                    if let mainVC = winScene.windows.first?.rootViewController as? MainViewController {
-                        mainVC.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('\(escaped)');", completionHandler: nil)
-                    } else if let bridgeVC = winScene.windows.first?.rootViewController as? CAPBridgeViewController {
-                        bridgeVC.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('\(escaped)');", completionHandler: nil)
+                    for win in winScene.windows {
+                        if let bridgeVC = win.rootViewController as? CAPBridgeViewController {
+                            bridgeVC.webView?.evaluateJavaScript(js, completionHandler: nil)
+                        } else if let mainVC = win.rootViewController as? MainViewController {
+                            mainVC.webView?.evaluateJavaScript(js, completionHandler: nil)
+                        }
                     }
                 }
             }
@@ -404,7 +503,7 @@ class NotificationManager {
     }
 }
 
-// MARK: - 自訂 Bridge ViewController (支援 JavaScript MessageHandler 與原生照片儲存)
+// MARK: - 自訂 Bridge ViewController (支援 JavaScript MessageHandler、URL Scheme 與原生 Face ID)
 class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
@@ -416,8 +515,15 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         setupMessageHandlers()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        setupMessageHandlers()
+        NotificationManager.checkAndReportStatus()
+    }
+
     private func setupMessageHandlers() {
-        let ucc = self.webView?.configuration.userContentController ?? self.bridge?.webView?.configuration.userContentController
+        guard let wv = self.webView else { return }
+        let ucc = wv.configuration.userContentController
         let handlers = [
             "startLiveActivity",
             "updateQuickCopyActivity",
@@ -425,11 +531,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
             "scheduleCardActionNotification",
             "scheduleReplyNotification",
             "openSystemSettings",
+            "checkNotificationStatus",
+            "authenticateFaceID",
             "syncDynamicShortcuts",
             "saveImageToPhotos"
         ]
-        handlers.forEach { ucc?.removeScriptMessageHandler(forName: $0) }
-        handlers.forEach { ucc?.add(self, name: $0) }
+        handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
+        handlers.forEach { ucc.add(self, name: $0) }
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -451,11 +559,24 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
                 }
             }
         } else if message.name == "scheduleSceneNotification" || message.name == "scheduleCardActionNotification" {
-            NotificationManager.scheduleCardActionNotification()
+            let delay = (message.body as? [String: Any])?["delay"] as? Double ?? 0.0
+            NotificationManager.scheduleCardActionNotification(delay: delay)
         } else if message.name == "scheduleReplyNotification" {
-            NotificationManager.scheduleReplyWithStickerNotification()
+            let delay = (message.body as? [String: Any])?["delay"] as? Double ?? 0.0
+            NotificationManager.scheduleReplyWithStickerNotification(delay: delay)
         } else if message.name == "openSystemSettings" {
             NotificationManager.openSystemSettings()
+        } else if message.name == "checkNotificationStatus" {
+            NotificationManager.checkAndReportStatus()
+        } else if message.name == "authenticateFaceID" {
+            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機以解鎖卡片") { [weak self] success, err in
+                if success {
+                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();", completionHandler: nil)
+                } else {
+                    let msg = (err ?? "驗證失敗").replacingOccurrences(of: "'", with: "\\'")
+                    self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDFailure==='function') window.onFaceIDFailure('\(msg)');", completionHandler: nil)
+                }
+            }
         } else if message.name == "syncDynamicShortcuts" {
             if let rawList = message.body as? [[String: Any]] {
                 let items = rawList.map { dict -> QuickCopyItemData in
@@ -481,16 +602,16 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         if let data = Data(base64Encoded: cleanStr), let image = UIImage(data: data) {
             UIImageWriteToSavedPhotosAlbum(image, self, #selector(imageSaved(_:didFinishSavingWithError:contextInfo:)), nil)
         } else {
-            self.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('圖片格式解析失敗');", completionHandler: nil)
+            self.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('圖片格式解析失敗');", completionHandler: nil)
         }
     }
 
     @objc func imageSaved(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
         DispatchQueue.main.async {
             if let error = error {
-                self.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('儲存至照片失敗：\(error.localizedDescription)');", completionHandler: nil)
+                self.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('儲存至照片失敗：\(error.localizedDescription)');", completionHandler: nil)
             } else {
-                self.bridge?.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('已成功儲存圖片至系統照片！');", completionHandler: nil)
+                self.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('已成功儲存圖片至系統照片！');", completionHandler: nil)
             }
         }
     }
@@ -502,8 +623,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        // 確保通知代理為 self 或委派給 AppDelegate
-        UNUserNotificationCenter.current().delegate = self
+        // 保證通知代理為 AppDelegate
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+            UNUserNotificationCenter.current().delegate = appDelegate
+        } else {
+            UNUserNotificationCenter.current().delegate = self
+        }
 
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = MainViewController()
@@ -611,12 +736,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if urlStr.contains("schedule-notification") || urlStr.contains("schedule-card-action") {
-            NotificationManager.scheduleCardActionNotification()
+            let delay = urlStr.contains("delay=3") ? 3.0 : 0.0
+            NotificationManager.scheduleCardActionNotification(delay: delay)
             return
         }
 
         if urlStr.contains("schedule-reply-notification") {
-            NotificationManager.scheduleReplyWithStickerNotification()
+            let delay = urlStr.contains("delay=3") ? 3.0 : 0.0
+            NotificationManager.scheduleReplyWithStickerNotification(delay: delay)
+            return
+        }
+
+        if urlStr.contains("check-notification-status") {
+            NotificationManager.checkAndReportStatus()
+            return
+        }
+
+        if urlStr.contains("auth-faceid") {
+            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機以解鎖卡片") { [weak self] success, err in
+                if success {
+                    self?.evaluateJS("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();")
+                } else {
+                    let msg = (err ?? "認證取消").replacingOccurrences(of: "'", with: "\\'")
+                    self?.evaluateJS("if(typeof window.onFaceIDFailure==='function') window.onFaceIDFailure('\(msg)');")
+                }
+            }
             return
         }
 
@@ -668,12 +812,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
     }
 
-    // 前台接收通知時仍然以橫幅彈出
+    // 前台接收通知時仍然以橫幅彈出 (轉發給 AppDelegate 處理)
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        if #available(iOS 14.0, *) {
-            completionHandler([.banner, .sound, .badge, .list])
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+            appDelegate.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
         } else {
-            completionHandler([.alert, .sound, .badge])
+            if #available(iOS 14.0, *) {
+                completionHandler([.banner, .list, .sound, .badge])
+            } else {
+                completionHandler([.alert, .sound, .badge])
+            }
         }
     }
 
@@ -690,33 +838,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     }
 
     func evaluateJS(_ js: String) {
-        let exec = { [weak self] in
-            guard let self = self else { return }
-            var webView: WKWebView? = nil
-            if let bridgeVC = self.window?.rootViewController as? CAPBridgeViewController {
-                webView = bridgeVC.bridge?.webView
-            } else if let mainVC = self.window?.rootViewController as? MainViewController {
-                webView = mainVC.bridge?.webView
-            }
-            if let wv = webView {
-                wv.evaluateJavaScript(js) { res, err in
-                    if let err = err {
-                        print("evaluateJS error: \(err)")
-                    } else {
-                        print("evaluateJS succeeded!")
-                    }
-                }
-            } else {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                    self?.evaluateJS(js)
-                }
-            }
-        }
-
-        if Thread.isMainThread {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: exec)
-        } else {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: exec)
-        }
+        NotificationManager.evaluateJS(js)
     }
 }

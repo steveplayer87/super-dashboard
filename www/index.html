@@ -3273,29 +3273,47 @@
               </div>
               <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">即刻常駐</span>
             </div>
-            <div class="fin-row" onclick="window.triggerCardActionNotification()" style="cursor:pointer; display:flex; align-items:center;">
+            <div id="notifStatusCard" onclick="window.openNotificationSettings()" style="cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:12px; padding:11px 13px; margin:4px 0 10px; display:flex; align-items:center; gap:10px;">
+              <div id="notifStatusDot" style="width:10px; height:10px; border-radius:50%; background:var(--gold); flex-shrink:0;"></div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:12.5px; font-weight:700; color:var(--text);" id="notifStatusTitle">iPhone 系統通知診斷中...</div>
+                <div style="font-size:11px; color:var(--text-muted);" id="notifStatusDesc">正在獲取 iOS 授權與橫幅狀態</div>
+              </div>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600; white-space:nowrap;">開啟系統設定</span>
+            </div>
+
+            <div class="fin-row" onclick="window.triggerCardActionNotification(0)" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--good); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">測試 1：長按展開選項卡片通知</div>
-                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">收到通知長按可選擇「出示卡片」、「開啟錢包」、「忽略」</div>
+                <div style="font-weight:600; color:var(--text);">測試 1：長按選項卡片通知（即時下彈）</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">長按可選「出示卡片」、「開啟錢包」、「忽略」</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">長按測試</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">即時下彈</span>
             </div>
-            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification()" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" onclick="window.triggerCardActionNotification(3)" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--gold); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              <div class="fin-row-name" style="flex:1;">
+                <div style="font-weight:600; color:var(--text);">測試 1：倒數 3 秒測試（鎖定畫面／桌面）</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">點擊後請立即按電源鍵鎖屏，在鎖定畫面長按通知選項</div>
+              </div>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600;">3 秒鎖屏</span>
+            </div>
+
+            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification(0)" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">測試 2：貼圖帶圖回覆訊息通知</div>
-                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">通知自帶阿鵝貼圖圖片，可長按直接輸入回覆文字傳送</div>
+                <div style="font-weight:600; color:var(--text);">測試 2：貼圖帶圖回覆訊息（即時下彈）</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">自帶阿鵝貼圖，下拉長按可直接鍵入文字回覆</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">貼圖回覆</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">即時貼圖</span>
             </div>
-            <div class="fin-row" onclick="window.openNotificationSettings()" style="cursor:pointer; display:flex; align-items:center;">
-              <span class="icon" style="color:var(--gold); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification(3)" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">通知權限檢測與系統設定</div>
-                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">若無橫幅彈出，點此直達 iPhone「設定 > Super Dashboard > 通知」開啟允許</div>
+                <div style="font-weight:600; color:var(--text);">測試 2：倒數 3 秒貼圖回覆（鎖屏測試）</div>
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">點擊後立即鎖屏，在鎖定畫面直接長按回覆訊息</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600;">系統設定</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">3 秒鎖屏</span>
             </div>
             <div class="fin-row" onclick="window.openShareExtensionModal()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
@@ -3992,7 +4010,7 @@
           <div class="p-pass-qr-container locked" id="pPassQrBox"></div>
           <div class="qr-lock-overlay" id="qrLockOverlay">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span class="qr-lock-text" id="qrLockText">Face ID 認證中以解鎖二維碼</span>
+            <span class="qr-lock-text" id="qrLockText">靠近掃碼器或讀卡機以解鎖二維碼</span>
           </div>
         </div>
         
@@ -4519,19 +4537,87 @@ window.safeSetIcon = safeSetIcon;
     if(m) m.style.display = 'flex';
   };
 
-  window.triggerCardActionNotification = function(){
+  window.triggerCardActionNotification = function(delay){
+    delay = typeof delay === 'number' ? delay : 0;
     if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scheduleCardActionNotification){
-      window.webkit.messageHandlers.scheduleCardActionNotification.postMessage({});
+      window.webkit.messageHandlers.scheduleCardActionNotification.postMessage({ delay: delay });
     } else {
-      window.location.href = "superdashboard://schedule-card-action";
+      window.location.href = "superdashboard://schedule-card-action?delay=" + delay;
+    }
+    if(delay > 0){
+      if(typeof showToast === "function") showToast("⏰ 已排程 3 秒後通知！請現在鎖定螢幕或退回桌面測試！");
+    } else {
+      if(typeof showToast === "function") showToast("正在發送長按選項通知...");
     }
   };
 
-  window.triggerReplyWithStickerNotification = function(){
+  window.triggerReplyWithStickerNotification = function(delay){
+    delay = typeof delay === 'number' ? delay : 0;
     if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scheduleReplyNotification){
-      window.webkit.messageHandlers.scheduleReplyNotification.postMessage({});
+      window.webkit.messageHandlers.scheduleReplyNotification.postMessage({ delay: delay });
     } else {
-      window.location.href = "superdashboard://schedule-reply-notification";
+      window.location.href = "superdashboard://schedule-reply-notification?delay=" + delay;
+    }
+    if(delay > 0){
+      if(typeof showToast === "function") showToast("⏰ 已排程 3 秒後發送貼圖通知！請鎖定螢幕測試！");
+    } else {
+      if(typeof showToast === "function") showToast("正在發送阿鵝貼圖回覆通知...");
+    }
+  };
+
+  window.checkNotificationStatus = function(){
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.checkNotificationStatus){
+      window.webkit.messageHandlers.checkNotificationStatus.postMessage({});
+    } else {
+      window.location.href = "superdashboard://check-notification-status";
+    }
+  };
+
+  window.updateNotificationStatus = function(status, desc){
+    var titleEl = document.getElementById('notifStatusTitle');
+    var descEl = document.getElementById('notifStatusDesc');
+    var dotEl = document.getElementById('notifStatusDot');
+    if(!titleEl) return;
+    if(status === 'authorized'){
+      titleEl.textContent = '✅ iOS 系統通知權限正常';
+      descEl.textContent = desc || '橫幅與聲音已授權，可正常接收推播通知';
+      if(dotEl) dotEl.style.background = 'var(--good)';
+    } else if(status === 'denied'){
+      titleEl.textContent = '❌ iOS 系統通知已被關閉';
+      descEl.textContent = '點此開啟 iPhone「設定 > Super Dashboard > 通知」';
+      if(dotEl) dotEl.style.background = 'var(--danger)';
+    } else if(status === 'notDetermined'){
+      titleEl.textContent = '⚠️ 尚未取得通知權限';
+      descEl.textContent = '點擊測試將觸發系統授權彈窗，請點選「允許」';
+      if(dotEl) dotEl.style.background = 'var(--amber)';
+    } else {
+      titleEl.textContent = '通知狀態：' + status;
+      descEl.textContent = desc || '';
+    }
+  };
+
+  // 原生真實 Face ID 調用
+  window._faceIdCallback = null;
+  window.requestNativeFaceID = function(callback){
+    window._faceIdCallback = callback;
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.authenticateFaceID){
+      window.webkit.messageHandlers.authenticateFaceID.postMessage({});
+    } else {
+      window.location.href = "superdashboard://auth-faceid";
+    }
+  };
+
+  window.onFaceIDSuccess = function(){
+    if(window._faceIdCallback){
+      window._faceIdCallback(true, null);
+      window._faceIdCallback = null;
+    }
+  };
+
+  window.onFaceIDFailure = function(errMsg){
+    if(window._faceIdCallback){
+      window._faceIdCallback(false, errMsg);
+      window._faceIdCallback = null;
     }
   };
 
@@ -5541,7 +5627,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '<div style="font-family:ui-monospace, monospace; font-size:14px; letter-spacing:3px; color:var(--gold); font-weight:700;">•••• ' + (card.last4 || '8866') + '</div>' +
           '<div style="font-size:10px; color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:4px;">' +
             '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3"/><rect width="5" height="5" x="16" y="3"/><rect width="5" height="5" x="3" y="16"/></svg>' +
-            '<span>點擊以 Face ID 解鎖條碼</span>' +
+            '<span>靠近掃碼器或讀卡機以解鎖條碼</span>' +
           '</div>' +
         '</div>' +
         '<div class="merch-bottom-row">' +
@@ -6230,7 +6316,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(qrLockOverlay){
         qrLockOverlay.classList.remove('unlocked');
         qrLockOverlay.style.display = 'flex';
-        if(qrLockText) qrLockText.textContent = 'Face ID 認證中以解鎖二維碼';
+        if(qrLockText) qrLockText.textContent = '靠近掃碼器或讀卡機以解鎖二維碼';
       }
     } else {
       if(pPass) pPass.style.display = 'none';
@@ -6258,46 +6344,48 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     if(appHint) appHint.classList.remove('show');
 
-    // 完整的 Apple Face ID 刷臉認證動效流程
-    if(faceScan){
-      faceScan.className = 'face-scan-icon';
-      var mouth = faceScan.querySelector('.fid-mouth');
-      if(mouth) mouth.setAttribute('d', 'M40 65 Q50 65 60 65');
+    // 原生真實 Face ID 調用與解鎖動效
+    function performFaceIDUnlock(){
+      if(faceScan){
+        faceScan.className = 'face-scan-icon enter';
+        var mouth = faceScan.querySelector('.fid-mouth');
+        if(mouth) mouth.setAttribute('d', 'M40 65 Q50 65 60 65');
+      }
+      if(appText) appText.textContent = '靠近掃碼器或讀卡機';
 
-      // 1. 放大淡入
-      setTimeout(function(){
-        faceScan.classList.add('enter');
-      }, 100);
-
-      // 2. 認證成功：嘴型上揚笑臉 + 轉綠色光暈
-      setTimeout(function(){
-        faceScan.classList.add('smiling');
-        if(mouth) mouth.setAttribute('d', 'M39 63 Q50 74 61 63');
-
-        // 刷臉中：保持二維碼遮罩與模糊狀態，絕不提前露出
-        if(appText) appText.textContent = 'Face ID 識別中...';
-      }, 700);
-
-      // 3. 向中心收攏聚攏並淡出消失
-      setTimeout(function(){
-        faceScan.classList.add('shrink-out');
-      }, 1250);
-
-      // 4. 刷臉動畫完整跑完後：露出清晰二維碼，並提示對準掃描
-      setTimeout(function(){
-        if(appHint) appHint.classList.add('show');
-        if(isBoarding || card.qrCode || card.barcode){
-          if(qrLockOverlay){
-            qrLockOverlay.classList.add('unlocked');
-            setTimeout(function(){ qrLockOverlay.style.display = 'none'; }, 320);
+      window.requestNativeFaceID(function(success, errMsg){
+        if(success){
+          if(faceScan){
+            faceScan.classList.add('smiling');
+            var mouth = faceScan.querySelector('.fid-mouth');
+            if(mouth) mouth.setAttribute('d', 'M39 63 Q50 74 61 63');
+            setTimeout(function(){ faceScan.classList.add('shrink-out'); }, 400);
           }
-          if(qrBox){
-            qrBox.classList.remove('locked');
-            qrBox.classList.add('unlocked');
-          }
-          if(appText) appText.textContent = 'Face ID 認證通過 · 請對準掃描機';
+          setTimeout(function(){
+            if(appHint) appHint.classList.add('show');
+            if(qrLockOverlay){
+              qrLockOverlay.classList.add('unlocked');
+              setTimeout(function(){ qrLockOverlay.style.display = 'none'; }, 320);
+            }
+            if(qrBox){
+              qrBox.classList.remove('locked');
+              qrBox.classList.add('unlocked');
+            }
+            if(appText) appText.textContent = '認證通過 · 靠近掃碼器或讀卡機';
+          }, 600);
+        } else {
+          if(appText) appText.textContent = '靠近掃碼器或讀卡機 (點擊重試)';
+          if(qrLockText) qrLockText.textContent = '認證未通過 · 點此重試 Face ID';
+          if(typeof showToast === 'function') showToast(errMsg || 'Face ID 認證未通過，請點擊重試');
         }
-      }, 1450);
+      });
+    }
+
+    if(isBoarding || card.qrCode || card.barcode){
+      performFaceIDUnlock();
+      if(qrLockOverlay){
+        qrLockOverlay.onclick = function(){ performFaceIDUnlock(); };
+      }
     } else {
       if(appHint) setTimeout(function(){ appHint.classList.add('show'); }, 200);
     }
@@ -8186,6 +8274,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (avatar) avatar.onclick = petGoose;
   }
   initMorePageAndGooseButler();
+  setTimeout(function(){ if(window.checkNotificationStatus) window.checkNotificationStatus(); }, 800);
   setTimeout(function(){
     if(window.syncDynamicShortcuts) window.syncDynamicShortcuts();
   }, 600);
