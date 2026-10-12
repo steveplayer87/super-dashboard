@@ -83,24 +83,15 @@ class ShareViewController: UIViewController {
             UIGraphicsEndImageContext()
         }
 
-        // 寫入剪貼簿，避免 URL 長度限制造成失敗
         UIPasteboard.general.image = scaledImage
         if let url = URL(string: "superdashboard://add-copy-pasteboard") {
-            self.extensionContext?.open(url, completionHandler: { [weak self] _ in
-                DispatchQueue.main.async {
-                    self?.completeShare()
-                }
-            })
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-                self?.completeShare()
-            }
+            openURLViaResponderChain(url)
         } else {
             completeShare()
         }
     }
 
     private func openHostApp(withText text: String) {
-        // 同步寫入通用剪貼簿作為多重兜底保證
         UIPasteboard.general.string = text
 
         var comp = URLComponents()
@@ -113,15 +104,25 @@ class ShareViewController: UIViewController {
             return
         }
 
-        // 1. 標準且官方支援的 extensionContext.open
-        self.extensionContext?.open(url, completionHandler: { [weak self] success in
-            DispatchQueue.main.async {
-                self?.completeShare()
-            }
-        })
+        openURLViaResponderChain(url)
+    }
 
-        // 2. 超時保護，避免介面停滯
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+    private func openURLViaResponderChain(_ url: URL) {
+        let selector = NSSelectorFromString("openURL:")
+        var responder: UIResponder? = self
+        var opened = false
+        while responder != nil {
+            if responder!.responds(to: selector) {
+                responder!.perform(selector, with: url)
+                opened = true
+                break
+            }
+            responder = responder?.next
+        }
+        if !opened {
+            self.extensionContext?.open(url, completionHandler: nil)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             self?.completeShare()
         }
     }

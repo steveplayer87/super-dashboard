@@ -153,6 +153,13 @@ class QuickCopyManager {
             return
         }
 
+        // 清理所有已存在或過期的第二動態島，保證重新乾淨啟動
+        for activity in Activity<QuickCopyAttributes>.activities {
+            Task {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
+
         var activeItems = items
         if activeItems.isEmpty {
             activeItems = [
@@ -168,30 +175,20 @@ class QuickCopyManager {
             updateTimestamp: Date().timeIntervalSince1970
         )
 
-        if let existing = Activity<QuickCopyAttributes>.activities.first {
-            Task {
-                await existing.update(
-                    ActivityContent(state: contentState, staleDate: nil),
-                    alertConfiguration: nil
-                )
-                DispatchQueue.main.async {
-                    NotificationManager.evaluateNotificationFeedback("常用速貼動態島已更新！")
+        do {
+            currentActivity = try Activity.request(
+                attributes: attributes,
+                content: .init(state: contentState, staleDate: nil)
+            )
+            DispatchQueue.main.async {
+                NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面即可直接點擊複製")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    UIApplication.shared.perform(Selector(("suspend")))
                 }
             }
-            currentActivity = existing
-        } else {
-            do {
-                currentActivity = try Activity.request(
-                    attributes: attributes,
-                    content: .init(state: contentState, staleDate: nil)
-                )
-                DispatchQueue.main.async {
-                    NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面或長按島嶼即可點擊複製")
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    NotificationManager.evaluateNotificationFeedback("啟動動態島失敗：\(error.localizedDescription)")
-                }
+        } catch {
+            DispatchQueue.main.async {
+                NotificationManager.evaluateNotificationFeedback("啟動動態島失敗：\(error.localizedDescription)")
             }
         }
     }
@@ -355,6 +352,10 @@ class NotificationManager {
                 content.subtitle = "長按此通知可展開快速操作"
                 content.body = "偵測到您在 桃園高鐵捷運閘門，請選擇快速操作："
                 content.sound = .default
+                if #available(iOS 15.0, *) {
+                    content.interruptionLevel = .timeSensitive
+                    content.relevanceScore = 1.0
+                }
                 content.categoryIdentifier = cardCategoryIdentifier
                 content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
@@ -408,6 +409,10 @@ class NotificationManager {
                 content.subtitle = "傳送了一張貼圖給您"
                 content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
                 content.sound = .default
+                if #available(iOS 15.0, *) {
+                    content.interruptionLevel = .timeSensitive
+                    content.relevanceScore = 1.0
+                }
                 content.categoryIdentifier = replyCategoryIdentifier
                 content.userInfo = ["type": "chat_reply"]
 
@@ -673,19 +678,20 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         if act == "sync-quick-copy" || act == "syncquickcopy" {
             if #available(iOS 16.2, *) {
                 var list: [QuickCopyItemData] = []
-                if let rawList = params as? [[String: Any]] {
-                    list = rawList.map { dict in
-                        let id = dict["id"] as? String ?? UUID().uuidString
-                        let text = dict["text"] as? String ?? ""
-                        let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
-                        let isLink = dict["isLink"] as? Bool ?? false
-                        return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
-                    }
+                var rawList: [[String: Any]] = []
+                if let arr = params as? [[String: Any]] {
+                    rawList = arr
+                } else if let dict = params as? [String: Any], let arr = dict["items"] as? [[String: Any]] {
+                    rawList = arr
+                }
+                list = rawList.map { dict in
+                    let id = dict["id"] as? String ?? UUID().uuidString
+                    let text = dict["text"] as? String ?? ""
+                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let isLink = dict["isLink"] as? Bool ?? false
+                    return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
                 QuickCopyManager.startOrUpdateQuickCopy(items: list)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    UIApplication.shared.perform(Selector(("suspend")))
-                }
             }
             return
         }
