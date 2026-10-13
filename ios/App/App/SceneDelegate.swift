@@ -258,12 +258,12 @@ class NotificationManager {
         // 類型 1：長按展開選項（打開卡片、打開錢包、忽略）
         let openCardAction = UNNotificationAction(
             identifier: "ACTION_OPEN_CARD",
-            title: "💳 快速出示悠遊卡",
+            title: "快速出示悠遊卡",
             options: [.foreground]
         )
         let openWalletAction = UNNotificationAction(
             identifier: "ACTION_OPEN_WALLET",
-            title: "👛 開啟超級錢包",
+            title: "開啟超級錢包",
             options: [.foreground]
         )
         let dismissAction = UNNotificationAction(
@@ -281,7 +281,7 @@ class NotificationManager {
         // 類型 2：即時輸入回覆與貼圖
         let replyAction = UNTextInputNotificationAction(
             identifier: "ACTION_REPLY",
-            title: "💬 回覆訊息",
+            title: "回覆訊息",
             options: [],
             textInputButtonTitle: "傳送",
             textInputPlaceholder: "輸入回覆阿鵝管家..."
@@ -369,9 +369,9 @@ class NotificationManager {
                             evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
                         } else {
                             if delay > 0 {
-                                evaluateNotificationFeedback("⏰ 已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖定螢幕或退回桌面觀看！")
+                                evaluateNotificationFeedback("已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖定螢幕或退回桌面觀看！")
                             } else {
-                                evaluateNotificationFeedback("🔔 長按選項通知已發送！頂部將立即下彈橫幅")
+                                evaluateNotificationFeedback("長按選項通知已發送！頂部將立即下彈橫幅")
                             }
                         }
                     }
@@ -392,7 +392,7 @@ class NotificationManager {
                 }
             } else {
                 DispatchQueue.main.async {
-                    evaluateNotificationFeedback("⚠️ 通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
+                    evaluateNotificationFeedback("通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
                     checkAndReportStatus()
                 }
             }
@@ -405,7 +405,7 @@ class NotificationManager {
         center.getNotificationSettings { settings in
             let fireNotification = {
                 let content = UNMutableNotificationContent()
-                content.title = "阿鵝管家 💬"
+                content.title = "阿鵝管家"
                 content.subtitle = "傳送了一張貼圖給您"
                 content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
                 content.sound = .default
@@ -430,9 +430,9 @@ class NotificationManager {
                             evaluateNotificationFeedback("排程失敗：\(err.localizedDescription)")
                         } else {
                             if delay > 0 {
-                                evaluateNotificationFeedback("⏰ 已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖屏或退回桌面觀看！")
+                                evaluateNotificationFeedback("已排程 \(Int(delay)) 秒後發送！請現在按電源鍵鎖屏或退回桌面觀看！")
                             } else {
-                                evaluateNotificationFeedback("💬 貼圖回覆通知已發送！長按頂部通知條即可直接回覆輸入")
+                                evaluateNotificationFeedback("貼圖回覆通知已發送！長按頂部通知條即可直接回覆輸入")
                             }
                         }
                     }
@@ -449,7 +449,7 @@ class NotificationManager {
                 }
             } else {
                 DispatchQueue.main.async {
-                    evaluateNotificationFeedback("⚠️ 通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
+                    evaluateNotificationFeedback("通知權限遭拒！請至 iPhone「設定 > Super Dashboard > 通知」開啟允許通知。")
                     checkAndReportStatus()
                 }
             }
