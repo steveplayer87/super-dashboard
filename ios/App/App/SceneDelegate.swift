@@ -938,7 +938,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             return
         }
 
-        if urlStr.contains("copy?text=") {
+        // 精確匹配 copy?text=，排除 add-copy
+        if urlStr.contains("/copy?text=") || (urlStr.contains("copy?text=") && !urlStr.contains("add-copy")) {
             if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let textParam = components.queryItems?.first(where: { $0.name == "text" })?.value {
                 UIPasteboard.general.string = textParam
@@ -950,7 +951,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if let encoded = urlStr.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
-            evaluateJS("if(typeof window.handleDeepLink==='function'){ window.handleDeepLink(decodeURIComponent('\(encoded)')); }")
+            let dispatchJs = { [weak self] in
+                self?.evaluateJS("if(typeof window.handleDeepLink==='function'){ window.handleDeepLink(decodeURIComponent('\(encoded)')); }")
+            }
+            dispatchJs()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { dispatchJs() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { dispatchJs() }
         }
     }
 
