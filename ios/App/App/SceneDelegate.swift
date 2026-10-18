@@ -99,41 +99,113 @@ public struct QuickCopyAttributes: ActivityAttributes {
 @available(iOS 16.2, *)
 class LiveActivityManager {
     static var currentActivity: Activity<TaoyuanMetroAttributes>?
-
+    static var timer: Timer?
+    static var startTime: Date?
+    
+    // 依據桃園捷運官方行車時刻：A12到A21全程約33分鐘(2000秒)，A12到A18約21分鐘(1260秒)
+    // 模擬動態演示：將全程加速為動態循環演示(或真實時間演示)
+    static var currentTripSeconds: Double = 900 // 初始在 A16-A17 之間，往 A18 高鐵桃園站前進
+    
     static func startTaoyuanMetroActivity() {
         for activity in Activity<TaoyuanMetroAttributes>.activities {
             Task {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }
         }
+        timer?.invalidate()
+        startTime = Date()
+        currentTripSeconds = 980 // 距離 A18(1260秒) 還剩約 4.6 分鐘，進度在 49%，指標絕不超前
 
         let attributes = TaoyuanMetroAttributes(
             lineName: "桃園捷運 機場線",
             trainType: "直達車 112"
         )
-        let initialContent = TaoyuanMetroAttributes.ContentState(
-            currentStation: "A12 機場一航",
-            nextStation: "A18 高鐵桃園站",
-            destination: "A21 環北站",
-            progress: 0.65,
-            etaMinutes: 8,
-            fare: "NT$ 35",
-            statusText: "即將抵達"
-        )
+        
+        let state = calculateMetroState(elapsedSeconds: currentTripSeconds)
 
         do {
             currentActivity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: initialContent, staleDate: nil)
+                content: .init(state: state, staleDate: nil)
             )
-            let actId = currentActivity?.id ?? ""
-            print("Taoyuan Metro Live Activity started: \(actId)")
+            print("[Metro] Started with state: progress=\(state.progress), next=\(state.nextStation)")
+            
+            // 每 2.5 秒更新一次即時動態，使動態島與鎖屏保持流暢即時推進
+            DispatchQueue.main.async {
+                timer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
+                    updateMetroProgress()
+                }
+            }
         } catch {
             print("Failed to start Live Activity: \(error)")
         }
     }
+    
+    static func updateMetroProgress() {
+        guard let activity = currentActivity else { return }
+        currentTripSeconds += 20 // 每次前進20秒里程
+        if currentTripSeconds > 2100 {
+            currentTripSeconds = 300 // 循環演示
+        }
+        let newState = calculateMetroState(elapsedSeconds: currentTripSeconds)
+        Task {
+            await activity.update(.init(state: newState, staleDate: nil))
+        }
+    }
+    
+    // 桃捷官方各站累積秒數 (A12出發: A12=0, A13=180s, A14a=420s, A15=600s, A16=780s, A17=960s, A18=1260s, A19=1380s, A20=1680s, A21=2000s)
+    static func calculateMetroState(elapsedSeconds: Double) -> TaoyuanMetroAttributes.ContentState {
+        let totalTrip: Double = 2000.0 // A12 到 A21
+        let a18Arrival: Double = 1260.0 // A18抵達時間
+        
+        // 進度比例：A18固定在 63.0% (1260/2000)
+        let rawProgress = min(max(elapsedSeconds / totalTrip, 0.05), 0.98)
+        
+        var nextSt = "A18 高鐵桃園站"
+        var curSt = "A12 機場一航"
+        var etaMin = 0
+        var status = "行駛中"
+        
+        if elapsedSeconds < a18Arrival - 90 {
+            // 還在領航站往高鐵桃園站途中
+            curSt = "A17 領航"
+            nextSt = "A18 高鐵桃園站"
+            etaMin = max(1, Int((a18Arrival - elapsedSeconds) / 60))
+            status = "準點行駛"
+        } else if elapsedSeconds < a18Arrival {
+            // 距離 A18 不到 90 秒
+            curSt = "A17 領航"
+            nextSt = "A18 高鐵桃園站"
+            etaMin = 1
+            status = "即將進站"
+        } else if elapsedSeconds < a18Arrival + 35 {
+            // 正停靠在 A18
+            curSt = "A18 高鐵桃園"
+            nextSt = "A19 體育園區"
+            etaMin = 0
+            status = "停靠站中"
+        } else {
+            // 已出發前往 A19 / A21
+            curSt = "A18 高鐵桃園"
+            nextSt = "A19 體育園區"
+            etaMin = max(1, Int((1380 - elapsedSeconds) / 60))
+            status = "往中壢延伸"
+        }
+        
+        return TaoyuanMetroAttributes.ContentState(
+            currentStation: curSt,
+            nextStation: nextSt,
+            destination: "A21 環北站",
+            progress: rawProgress,
+            etaMinutes: etaMin,
+            fare: "NT$ 35",
+            statusText: status
+        )
+    }
 
     static func stopActivity() {
+        timer?.invalidate()
+        timer = nil
         Task {
             for activity in Activity<TaoyuanMetroAttributes>.activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
@@ -141,7 +213,6 @@ class LiveActivityManager {
         }
     }
 }
-
 // MARK: - QuickCopy Live Activity 管理器 (常用項目動態島)
 @available(iOS 16.2, *)
 class QuickCopyManager {
@@ -250,6 +321,22 @@ class BiometricManager {
 // MARK: - Notification Manager (完整支援自訂動作選項、圖片貼圖與文字即時回覆)
 class NotificationManager {
 
+    // 全域待跳轉目標，解決冷啟動時 WebKit 還在加載導致 evaluateJS 丟失
+    public static var pendingTarget: String? = nil
+
+    public static func executeTargetJump(target: String) {
+        pendingTarget = target
+        let kw = target == "WALLET_HOME" ? "" : target
+        let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet('" + kw + "'); }"
+        
+        // 多階梯重試機制 (立即、0.3秒、0.8秒、1.5秒)，保證網頁任何生命週期均能成功收到
+        evaluateJS(js)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { evaluateJS(js) }
+    }
+
+
     static func parseDelay(_ val: Any?) -> Double {
         if let num = val as? NSNumber {
             return num.doubleValue
@@ -308,24 +395,19 @@ class NotificationManager {
             options: [.customDismissAction]
         )
 
-        // 類型 2：即時輸入回覆與貼圖
+        // 類型 2：即時輸入回覆 (長按通知直接呼叫打字框)
         let replyAction = UNTextInputNotificationAction(
             identifier: "ACTION_REPLY",
-            title: "回覆訊息",
+            title: "輸入回覆",
             options: [],
             textInputButtonTitle: "傳送",
-            textInputPlaceholder: "輸入回覆阿鵝管家..."
-        )
-        let openAppAction = UNNotificationAction(
-            identifier: "ACTION_OPEN_CHAT",
-            title: "開啟對話",
-            options: [.foreground]
+            textInputPlaceholder: "在此鍵入回覆阿鵝管家..."
         )
         let replyCategory = UNNotificationCategory(
             identifier: replyCategoryIdentifier,
-            actions: [replyAction, openAppAction],
+            actions: [replyAction],
             intentIdentifiers: [],
-            options: []
+            options: [.customDismissAction]
         )
 
         center.setNotificationCategories([cardCategory, replyCategory])
@@ -582,6 +664,15 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     override func viewDidLoad() {
         super.viewDidLoad()
         setupDelegatesAndHandlers()
+    }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if let target = NotificationManager.pendingTarget {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                NotificationManager.executeTargetJump(target: target)
+                NotificationManager.pendingTarget = nil
+            }
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -1027,11 +1118,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             }
         } else if actionId == "ACTION_OPEN_CARD" {
             DispatchQueue.main.async {
-                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet('悠遊卡');")
+                NotificationManager.executeTargetJump(target: "悠遊卡")
             }
         } else if actionId == "ACTION_OPEN_WALLET" {
             DispatchQueue.main.async {
-                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet();")
+                NotificationManager.executeTargetJump(target: "WALLET_HOME")
             }
         } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
             handleDeepLink(url: url)

@@ -196,13 +196,21 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                             }
                         }
                         
-                        // 軌道進度條
+                        // 桃捷精確站距動態軌道 (A12 0% -> A18 63% -> A21 100%)
                         VStack(spacing: 5) {
                             GeometryReader { geo in
+                                let totalW = geo.size.width
+                                let progressClamped = max(0.04, min(1.0, CGFloat(context.state.progress)))
+                                let trainX = totalW * progressClamped
+                                let a18X = totalW * 0.63 // 桃捷官方時間比: 21分/33分 = 63.6%
+                                
                                 ZStack(alignment: .leading) {
+                                    // 軌道底槽
                                     Capsule()
                                         .fill(Color.white.opacity(0.12))
                                         .frame(height: 5)
+                                    
+                                    // 已駛過亮色軌道
                                     Capsule()
                                         .fill(
                                             LinearGradient(
@@ -210,18 +218,39 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                                                 startPoint: .leading, endPoint: .trailing
                                             )
                                         )
-                                        .frame(width: geo.size.width * CGFloat(context.state.progress), height: 5)
+                                        .frame(width: trainX, height: 5)
                                     
-                                    HStack {
-                                        Circle().fill(Color.white).frame(width: 8, height: 8)
-                                        Spacer()
-                                        Circle().fill(metroPurpleGlow).frame(width: 11, height: 11)
-                                        Spacer()
-                                        Circle().fill(Color.white.opacity(0.3)).frame(width: 8, height: 8)
+                                    // 起點站 A12 標記
+                                    Circle()
+                                        .fill(Color.white)
+                                        .frame(width: 7, height: 7)
+                                        .offset(x: 0)
+                                    
+                                    // 目標站 A18 標記 (精確坐標 63%)
+                                    Circle()
+                                        .fill(context.state.progress >= 0.63 ? metroPurpleGlow : Color.white.opacity(0.45))
+                                        .frame(width: 9, height: 9)
+                                        .offset(x: a18X - 4.5)
+                                    
+                                    // 終點站 A21 標記 (100%)
+                                    Circle()
+                                        .fill(Color.white.opacity(0.3))
+                                        .frame(width: 7, height: 7)
+                                        .offset(x: totalW - 7)
+                                    
+                                    // 實時動態列車車標 (精確跟隨進度移動，在到達 A18 前絕對在 A18 左側)
+                                    ZStack {
+                                        Circle()
+                                            .fill(metroPurpleGlow)
+                                            .frame(width: 14, height: 14)
+                                        Circle()
+                                            .fill(Color.white)
+                                            .frame(width: 6, height: 6)
                                     }
+                                    .offset(x: max(0, min(totalW - 14, trainX - 7)))
                                 }
                             }
-                            .frame(height: 12)
+                            .frame(height: 14)
                             
                             HStack {
                                 Text("A12 機場一航")
@@ -231,6 +260,7 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                                 Text("A18 高鐵桃園")
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(metroPurpleGlow)
+                                    .offset(x: 10) // 依據 63% 比例微調視覺居中偏右
                                 Spacer()
                                 Text("A21 環北")
                                     .font(.system(size: 9.5, weight: .medium))

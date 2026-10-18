@@ -48,11 +48,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
         } else if actionId == "ACTION_OPEN_CARD" {
             DispatchQueue.main.async {
-                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet('悠遊卡');")
+                NotificationManager.executeTargetJump(target: "悠遊卡")
             }
         } else if actionId == "ACTION_OPEN_WALLET" {
             DispatchQueue.main.async {
-                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet();")
+                NotificationManager.executeTargetJump(target: "WALLET_HOME")
             }
         } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
             DispatchQueue.main.async {
