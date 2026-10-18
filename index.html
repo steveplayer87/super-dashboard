@@ -124,16 +124,22 @@
   .led.flash{ animation:ledFlash .45s ease; }
   @keyframes ledFlash{ 0%{opacity:.85;} 45%{ box-shadow:0 0 18px 5px currentColor; opacity:1; transform:scale(1.3);} 100%{opacity:.85; transform:scale(1);} }
 
-  .keycap.delete-tile{
-    background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%);
-    border-color:#8f2f28; color:#fff;
+  .keycap {
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
   }
-  .trash-icon{ font-size:22px; }
-  .keycap.delete-tile .label{ color:#FFECEA; font-size:12px; font-weight:500; opacity:.9; }
-  .keycap.delete-tile {
+  .keycap.delete-tile{
+    background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%) !important;
+    border-color:#8f2f28 !important; color:#fff !important;
+    cursor: pointer !important;
     overflow: visible !important;
     z-index: 15 !important;
+    -webkit-user-select: none;
+    user-select: none;
   }
+  .trash-icon{ font-size:22px; pointer-events: none !important; }
+  .keycap.delete-tile .label{ color:#FFECEA; font-size:12px; font-weight:500; opacity:.9; pointer-events: none !important; }
+  .keycap.delete-tile svg, .keycap.delete-tile path{ pointer-events: none !important; }
   .edit-pencil {
     position: absolute !important;
     top: -8px !important;
@@ -4255,8 +4261,11 @@
         </div>
 
         <div class="modal-actions" id="modalActionsGroup" style="position:sticky; bottom:0; background:var(--panel-raised); padding:10px 0 16px; margin:16px 0 0 0; z-index:20; border-top:1px solid rgba(255,255,255,0.05);">
-          <button class="cancel" id="modalCancel">取消</button>
-          <button class="confirm" id="modalConfirm">新增</button>
+          <button type="button" class="cancel" id="modalCancel">取消</button>
+          <button type="button" class="confirm" id="modalConfirm">新增</button>
+        </div>
+        <div id="modalDeleteRow" style="display:none; margin-top:8px;">
+          <button type="button" id="modalItemDeleteBtn" style="width:100%; box-sizing:border-box; padding:10px 0; border-radius:10px; border:1px solid rgba(217,86,75,0.4); background:rgba(217,86,75,0.12); color:#ff9d95; font-size:13.5px; font-weight:700; cursor:pointer;">刪除此項目</button>
         </div>
       </div>
 
@@ -5878,19 +5887,33 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         cap.innerHTML =
           icon('trash-2','trash-icon') +
           '<div class="label">' + escapeHtml(label) + '</div>' +
-          '<div class="edit-pencil">' + icon('pencil','pencil-icon') + '</div>';
-        cap.addEventListener('click', function(){
+          '<div class="edit-pencil" title="編輯此項目">' + icon('pencil','pencil-icon') + '</div>';
+
+        var doDeleteTile = function(e){
+          if(e){
+            if(e.target && e.target.closest && e.target.closest('.edit-pencil')) return;
+            e.stopPropagation();
+          }
           pendingRemove[type].add(item.id);
           if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
           else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
           saveData();
           renderGrid(container, type);
           showToast('已刪除項目');
-        });
-        cap.querySelector('.edit-pencil').addEventListener('click', function(e){
-          e.stopPropagation();
-          openEditModal(type, item);
-        });
+        };
+
+        cap.addEventListener('click', doDeleteTile);
+
+        var pencilEl = cap.querySelector('.edit-pencil');
+        if(pencilEl){
+          pencilEl.addEventListener('click', function(e){
+            e.stopPropagation();
+            openEditModal(type, item);
+          });
+          pencilEl.addEventListener('touchend', function(e){
+            e.stopPropagation();
+          });
+        }
       } else {
         var isImg = (type === 'copy' && (item.type === 'image' || (item.text && item.text.startsWith('data:image'))));
         if(isImg){
@@ -7623,6 +7646,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalConfirm.textContent = '新增';
     modalInput.value = '';
     modalInput2.value = '';
+    var delRow = document.getElementById('modalDeleteRow');
+    if(delRow) delRow.style.display = 'none';
     var linkToggle = document.getElementById('copyIsLinkToggle');
     if(linkToggle){
       linkToggle.classList.remove('active', 'on');
@@ -7663,6 +7688,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     else if(type === 'card'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; setCategory(item.type || 'other'); setTheme(item.theme || 'theme-gold'); }
 
     modalConfirm.textContent = '儲存';
+    var delRow = document.getElementById('modalDeleteRow');
+    if(delRow){
+      delRow.style.display = 'block';
+      var delBtn = document.getElementById('modalItemDeleteBtn');
+      if(delBtn){
+        delBtn.onclick = function(){
+          if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'account') state.accounts = state.accounts.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'expense') state.expenses = state.expenses.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'card') state.cards = state.cards.filter(function(i){ return i.id !== item.id; });
+          saveData();
+          closeModal();
+          state.editMode = false;
+          if(editBtn) editBtn.style.display = '';
+          if(editActions) editActions.classList.remove('show');
+          resetPending();
+          renderEverything();
+          showToast('已刪除項目');
+        };
+      }
+    }
     modalOverlay.classList.add('show');
     setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
@@ -7687,6 +7734,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalInput.setAttribute('inputmode','decimal');
     modalInput.value = state.budget ? String(state.budget) : '';
     modalConfirm.textContent = '儲存';
+    var delRow = document.getElementById('modalDeleteRow');
+    if(delRow){
+      delRow.style.display = 'block';
+      var delBtn = document.getElementById('modalItemDeleteBtn');
+      if(delBtn){
+        delBtn.onclick = function(){
+          if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'account') state.accounts = state.accounts.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'expense') state.expenses = state.expenses.filter(function(i){ return i.id !== item.id; });
+          else if(type === 'card') state.cards = state.cards.filter(function(i){ return i.id !== item.id; });
+          saveData();
+          closeModal();
+          state.editMode = false;
+          if(editBtn) editBtn.style.display = '';
+          if(editActions) editActions.classList.remove('show');
+          resetPending();
+          renderEverything();
+          showToast('已刪除項目');
+        };
+      }
+    }
     modalOverlay.classList.add('show');
     setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
