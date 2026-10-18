@@ -5052,7 +5052,7 @@ window.safeSetIcon = safeSetIcon;
     if(m) m.style.display = 'flex';
   };
 
-  // ==================== 原生全雙工通訊橋樑 (支援 MessageHandler、Prompt 與 Custom Scheme) ====================
+  // ==================== 原生全雙工通訊橋樑 (優先使用 WebKit MessageHandler) ====================
   window.callNative = function(action, params){
     var query = '';
     if(params !== undefined && params !== null){
@@ -5067,25 +5067,21 @@ window.safeSetIcon = safeSetIcon;
       }
     }
     var fullUrl = 'superdashboard://' + action + query;
-    var promptCmd = 'superdashboard:' + action + query;
 
-    // 1. WebKit MessageHandler
+    // 1. 優先透過 WebKit MessageHandler (最標準、穩定，不干擾 Web 畫面)
     try {
       if(window.webkit && window.webkit.messageHandlers){
         if(window.webkit.messageHandlers.superdashboard){
           window.webkit.messageHandlers.superdashboard.postMessage({ action: action, params: params });
+          return;
         } else if(window.webkit.messageHandlers[action]){
           window.webkit.messageHandlers[action].postMessage(params || {});
+          return;
         }
       }
     } catch(e){}
 
-    // 2. Prompt interceptor (100% 同步 WebKit 攔截，絕對保證送達)
-    try {
-      window.prompt(promptCmd);
-    } catch(e){}
-
-    // 3. Custom scheme iframe navigation (WKNavigationDelegate 攔截，不跳頁)
+    // 2. 備援方案：Custom Scheme iframe (非 WebKit 環境)
     try {
       var ifr = document.createElement('iframe');
       ifr.style.display = 'none';

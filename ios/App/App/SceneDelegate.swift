@@ -305,6 +305,7 @@ class NotificationManager {
     static func checkAndReportStatus() {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
+            print("[Notification] settings.authorizationStatus: \(settings.authorizationStatus.rawValue), alertSetting: \(settings.alertSetting.rawValue)")
             var statusStr = "unknown"
             var desc = ""
             switch settings.authorizationStatus {
@@ -344,6 +345,7 @@ class NotificationManager {
 
     // 測試 1：長按選項卡片通知
     static func scheduleCardActionNotification(delay: Double = 0.0) {
+        print("[Notification] scheduleCardActionNotification requested with delay: \(delay)")
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             let fireNotification = {
@@ -353,16 +355,17 @@ class NotificationManager {
                 content.body = "偵測到您在 桃園高鐵捷運閘門，請選擇快速操作："
                 content.sound = .default
                 if #available(iOS 15.0, *) {
-                    content.interruptionLevel = .timeSensitive
+                    content.interruptionLevel = .active
                     content.relevanceScore = 1.0
                 }
                 content.categoryIdentifier = cardCategoryIdentifier
                 content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 0.25, repeats: false)
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1.0), repeats: false)
                 let req = UNNotificationRequest(identifier: "card_action_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
+                    print("[Notification] center.add completed for req: \(req.identifier), error: \(String(describing: err))")
                     DispatchQueue.main.async {
                         AudioServicesPlaySystemSound(1007) // 播放提示音響
                         if let err = err {
@@ -410,7 +413,7 @@ class NotificationManager {
                 content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
                 content.sound = .default
                 if #available(iOS 15.0, *) {
-                    content.interruptionLevel = .timeSensitive
+                    content.interruptionLevel = .active
                     content.relevanceScore = 1.0
                 }
                 content.categoryIdentifier = replyCategoryIdentifier
@@ -420,7 +423,7 @@ class NotificationManager {
                     content.attachments = [attachment]
                 }
 
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 0.25, repeats: false)
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1.0), repeats: false)
                 let req = UNNotificationRequest(identifier: "reply_sticker_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
@@ -754,7 +757,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
         // 保證通知代理為 AppDelegate
         if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            UNUserNotificationCenter.current().delegate = appDelegate
+            UNUserNotificationCenter.current().delegate = self
         } else {
             UNUserNotificationCenter.current().delegate = self
         }
@@ -960,16 +963,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
     }
 
-    // 前台接收通知時仍然以橫幅彈出 (轉發給 AppDelegate 處理)
+    // 前台接收通知時仍然以橫幅彈出 (直接保證下彈橫幅)
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
+        print("[Notification] Foreground banner triggered for: \(notification.request.identifier)")
+        if #available(iOS 14.0, *) {
+            completionHandler([.banner, .list, .sound, .badge])
         } else {
-            if #available(iOS 14.0, *) {
-                completionHandler([.banner, .list, .sound, .badge])
-            } else {
-                completionHandler([.alert, .sound, .badge])
-            }
+            completionHandler([.alert, .sound, .badge])
         }
     }
 
