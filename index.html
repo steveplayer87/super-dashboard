@@ -4835,6 +4835,9 @@
 
 
 <script>
+window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
+var state = window.state;
+
 // ==================== 全域安全導航與防崩潰初始化 ====================
 window.showMoreSubView = function(view) {
   try {
@@ -4987,7 +4990,9 @@ window.safeSetIcon = safeSetIcon;
   // 同步前五常用項目至動態島 (包含 label, name, text, isLink 並自動退回桌面)
   window.syncQuickCopyLiveActivity = function(showMsg){
     try {
-      var top5 = (state.copyItems || []).slice(0, 5).map(function(item){
+      var curState = window.state || (typeof state !== 'undefined' ? state : null);
+      if(!curState || !curState.copyItems) return;
+      var top5 = (curState.copyItems || []).slice(0, 5).map(function(item){
         var txt = item.text || '';
         var lbl = item.name || (txt.length > 10 ? txt.substring(0, 10) + '...' : txt);
         return {
@@ -5174,17 +5179,22 @@ window.safeSetIcon = safeSetIcon;
   };
 
   window.syncDynamicShortcuts = function(){
-    if(!state || !state.copyItems) return;
-    var top3 = (state.copyItems || []).slice(0, 3).map(function(item){
-      return {
-        id: item.id,
-        name: item.name || item.text.substring(0, 12),
-        text: item.text,
-        isLink: !!item.isLink
-      };
-    });
-    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.syncDynamicShortcuts){
-      window.webkit.messageHandlers.syncDynamicShortcuts.postMessage(top3);
+    try {
+      var curState = window.state || (typeof state !== 'undefined' ? state : null);
+      if(!curState || !curState.copyItems) return;
+      var top3 = (curState.copyItems || []).slice(0, 3).map(function(item){
+        return {
+          id: item.id,
+          name: item.name || item.text.substring(0, 12),
+          text: item.text,
+          isLink: !!item.isLink
+        };
+      });
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.syncDynamicShortcuts){
+        window.webkit.messageHandlers.syncDynamicShortcuts.postMessage(top3);
+      }
+    } catch(e){
+      console.error('syncDynamicShortcuts error', e);
     }
   };
 
@@ -5738,7 +5748,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     cardTx: []
   };
 
-  var state = { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
+  var state = window.state = (window.state && window.state.copyItems) ? window.state : { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
   var activeCardIndex = 0;
   var modalMode = 'add';
   var modalTarget = 'copy';
@@ -5865,14 +5875,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
   function saveData(){
     try{
+      var curState = window.state || state;
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        copyItems: state.copyItems, shortcutItems: state.shortcutItems,
-        accounts: state.accounts, expenses: state.expenses, budget: state.budget,
-        cards: state.cards, cardTx: state.cardTx
+        copyItems: curState.copyItems, shortcutItems: curState.shortcutItems,
+        accounts: curState.accounts, expenses: curState.expenses, budget: curState.budget,
+        cards: curState.cards, cardTx: curState.cardTx
       }));
     }catch(e){ console.error('儲存失敗', e); }
-    if(window.syncDynamicShortcuts) window.syncDynamicShortcuts();
-    if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false);
+    try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
+    try{ if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false); }catch(e){}
   }
 
   function showToast(msg){
@@ -8094,7 +8105,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   (function init(){
     var data = loadData();
     if(data){
-      state.copyItems = data.copyItems || DEFAULT_DATA.copyItems.slice();
+      window.state = state; state.copyItems = data.copyItems || DEFAULT_DATA.copyItems.slice();
       state.shortcutItems = data.shortcutItems || DEFAULT_DATA.shortcutItems.slice();
       state.accounts = data.accounts || [];
       state.expenses = data.expenses || [];
