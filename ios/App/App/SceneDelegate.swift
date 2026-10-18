@@ -249,6 +249,36 @@ class BiometricManager {
 
 // MARK: - Notification Manager (完整支援自訂動作選項、圖片貼圖與文字即時回覆)
 class NotificationManager {
+
+    static func parseDelay(_ val: Any?) -> Double {
+        if let num = val as? NSNumber {
+            return num.doubleValue
+        } else if let d = val as? Double {
+            return d
+        } else if let i = val as? Int {
+            return Double(i)
+        } else if let s = val as? String, let parsed = Double(s) {
+            return parsed
+        }
+        return 0.0
+    }
+
+    // 當收到使用者的文字回覆時，即時派發系統反饋通知
+    static func scheduleFeedbackNotification(replyText: String) {
+        let center = UNUserNotificationCenter.current()
+        let content = UNMutableNotificationContent()
+        content.title = "阿鵝管家"
+        content.subtitle = "已接收您的指令"
+        content.body = "「收到您的回覆：『\(replyText)』！行程與備忘已為您同步記錄。」"
+        content.sound = .default
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = .active
+        }
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1.0, repeats: false)
+        let req = UNNotificationRequest(identifier: "reply_feedback_\(UUID().uuidString)", content: content, trigger: trigger)
+        center.add(req, withCompletionHandler: nil)
+    }
+
     static let cardCategoryIdentifier = "CARD_ACTION_CATEGORY"
     static let replyCategoryIdentifier = "MESSAGE_REPLY_CATEGORY"
 
@@ -361,7 +391,7 @@ class NotificationManager {
                 content.categoryIdentifier = cardCategoryIdentifier
                 content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1.0), repeats: false)
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 1.0, repeats: false)
                 let req = UNNotificationRequest(identifier: "card_action_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
@@ -423,7 +453,7 @@ class NotificationManager {
                     content.attachments = [attachment]
                 }
 
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(delay, 1.0), repeats: false)
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 1.0, repeats: false)
                 let req = UNNotificationRequest(identifier: "reply_sticker_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
@@ -707,13 +737,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         }
 
         if act == "schedule-card-action" {
-            let delay = (params as? [String: Any])?["delay"] as? Double ?? 0.0
+            let delay = NotificationManager.parseDelay((params as? [String: Any])?["delay"])
             NotificationManager.scheduleCardActionNotification(delay: delay)
             return
         }
 
         if act == "schedule-reply-notification" {
-            let delay = (params as? [String: Any])?["delay"] as? Double ?? 0.0
+            let delay = NotificationManager.parseDelay((params as? [String: Any])?["delay"])
             NotificationManager.scheduleReplyWithStickerNotification(delay: delay)
             return
         }
@@ -859,6 +889,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         let urlStr = url.absoluteString
         print("Handling deep link: \(urlStr)")
 
+        if urlStr.contains("wallet") {
+            let cardKeyword = urlStr.contains("easycard") ? "悠遊卡" : ""
+            let js = "if(typeof window.navigateToWallet==='function') window.navigateToWallet('\(cardKeyword)');"
+            self.evaluateJS(js)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.evaluateJS(js) }
+            return
+        }
+
+
         if urlStr.contains("start-mrt") {
             if #available(iOS 16.2, *) {
                 LiveActivityManager.startTaoyuanMetroActivity()
@@ -870,13 +909,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if urlStr.contains("schedule-notification") || urlStr.contains("schedule-card-action") {
-            let delay = urlStr.contains("delay=3") ? 3.0 : 0.0
+            let delay = urlStr.contains("delay=4") ? 4.0 : (urlStr.contains("delay=3") ? 3.0 : 0.0)
             NotificationManager.scheduleCardActionNotification(delay: delay)
             return
         }
 
         if urlStr.contains("schedule-reply-notification") {
-            let delay = urlStr.contains("delay=3") ? 3.0 : 0.0
+            let delay = urlStr.contains("delay=4") ? 4.0 : (urlStr.contains("delay=3") ? 3.0 : 0.0)
             NotificationManager.scheduleReplyWithStickerNotification(delay: delay)
             return
         }
@@ -973,16 +1012,32 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
     }
 
-    // 點擊通知跳轉
+    // 點擊通知跳轉與互動回覆處理
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
-        } else {
-            if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
-                handleDeepLink(url: url)
+        let actionId = response.actionIdentifier
+        print("[Notification] SceneDelegate didReceive action: \(actionId)")
+
+        if actionId == "ACTION_REPLY", let textResponse = response as? UNTextInputNotificationResponse {
+            let replyText = textResponse.userText
+            print("[Notification] Received inline reply: \(replyText)")
+            NotificationManager.scheduleFeedbackNotification(replyText: replyText)
+            DispatchQueue.main.async {
+                let escaped = replyText.replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: " ")
+                NotificationManager.evaluateJS("if(typeof window.onNotificationReply==='function'){ window.onNotificationReply('\(escaped)'); }")
             }
-            completionHandler()
+        } else if actionId == "ACTION_OPEN_CARD" {
+            DispatchQueue.main.async {
+                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet('悠遊卡');")
+            }
+        } else if actionId == "ACTION_OPEN_WALLET" {
+            DispatchQueue.main.async {
+                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet();")
+            }
+        } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
+            handleDeepLink(url: url)
         }
+
+        completionHandler()
     }
 
     func evaluateJS(_ js: String) {

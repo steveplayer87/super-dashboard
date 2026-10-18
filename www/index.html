@@ -3570,13 +3570,13 @@
               </div>
               <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">即時下彈</span>
             </div>
-            <div class="fin-row" onclick="window.triggerCardActionNotification(3)" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" onclick="window.triggerCardActionNotification(4)" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--gold); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">測試 1：倒數 3 秒測試（鎖定畫面／桌面）</div>
+                <div style="font-weight:600; color:var(--text);">測試 1：倒數 4 秒測試（退回桌面／鎖屏觀看）</div>
                 <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">點擊後請立即按電源鍵鎖屏，在鎖定畫面長按通知選項</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600;">3 秒鎖屏</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); font-weight:600;">4 秒測試</span>
             </div>
 
             <div class="fin-row" onclick="window.triggerReplyWithStickerNotification(0)" style="cursor:pointer; display:flex; align-items:center;">
@@ -3587,13 +3587,13 @@
               </div>
               <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">即時貼圖</span>
             </div>
-            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification(3)" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" onclick="window.triggerReplyWithStickerNotification(4)" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
-                <div style="font-weight:600; color:var(--text);">測試 2：倒數 3 秒貼圖回覆（鎖屏測試）</div>
+                <div style="font-weight:600; color:var(--text);">測試 2：倒數 4 秒貼圖回覆（退回桌面／鎖屏回覆）</div>
                 <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">點擊後立即鎖屏，在鎖定畫面直接長按回覆訊息</div>
               </div>
-              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">3 秒鎖屏</span>
+              <span style="font-size:11px; padding:3px 8px; border-radius:8px; background:rgba(63,169,164,0.15); color:var(--teal); font-weight:600;">4 秒測試</span>
             </div>
             <div class="fin-row" onclick="window.openShareExtensionModal()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
@@ -5097,7 +5097,7 @@ window.safeSetIcon = safeSetIcon;
     delay = typeof delay === 'number' ? delay : 0;
     window.callNative('schedule-card-action', { delay: delay });
     if(delay > 0){
-      if(typeof showToast === "function") showToast("已排程 3 秒後通知！請現在鎖定螢幕或退回桌面測試！");
+      if(typeof showToast === "function") showToast("已排程 4 秒後通知！請現在鎖定螢幕或退回桌面測試！");
     } else {
       if(typeof showToast === "function") showToast("長按選項通知已發送！頂部將立即下彈橫幅");
     }
@@ -5107,7 +5107,7 @@ window.safeSetIcon = safeSetIcon;
     delay = typeof delay === 'number' ? delay : 0;
     window.callNative('schedule-reply-notification', { delay: delay });
     if(delay > 0){
-      if(typeof showToast === "function") showToast("已排程 3 秒後發送貼圖通知！請鎖定螢幕測試！");
+      if(typeof showToast === "function") showToast("已排程 4 秒後發送貼圖通知！請鎖定螢幕測試！");
     } else {
       if(typeof showToast === "function") showToast("貼圖回覆通知已發送！長按頂部通知條即可回覆");
     }
@@ -7188,6 +7188,35 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   window.switchTab = function(tab){ switchPage(tab); };
+
+  // 全域導航到錢包並選中指定卡片
+  window.navigateToWallet = function(cardKeyword){
+    if(typeof switchPage === 'function'){
+      switchPage('wallet');
+    } else if(typeof window.switchPage === 'function'){
+      window.switchPage('wallet');
+    }
+    setTimeout(function(){
+      try {
+        var curCards = (window.state && window.state.cards) || (typeof state !== 'undefined' ? state.cards : []);
+        if(cardKeyword && curCards.length > 0){
+          for(var i = 0; i < curCards.length; i++){
+            var name = curCards[i].name || curCards[i].bank || '';
+            var type = curCards[i].type || '';
+            if(name.indexOf(cardKeyword) !== -1 || type.indexOf(cardKeyword) !== -1 || curCards[i].id === cardKeyword){
+              activeCardIndex = i;
+              break;
+            }
+          }
+        }
+        if(typeof renderWallet === 'function') renderWallet();
+        if(typeof showToast === 'function'){
+          showToast(cardKeyword ? '已為您快速開啟 ' + cardKeyword : '已切換至超級錢包');
+        }
+      } catch(e){ console.error('navigateToWallet error', e); }
+    }, 150);
+  };
+
 
   window._cancelEditMode = function() { if (state.editMode) cancelEdit(); };
   window._updateAddCardBtnVisibility = updateAddCardBtnVisibility;

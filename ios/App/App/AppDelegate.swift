@@ -38,25 +38,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let actionId = response.actionIdentifier
         print("[Notification] userNotificationCenter didReceive action: \(actionId)")
 
-        if actionId == "ACTION_OPEN_CARD" {
+        if actionId == "ACTION_REPLY", let textResponse = response as? UNTextInputNotificationResponse {
+            let replyText = textResponse.userText
+            print("[Notification] Received inline reply: \(replyText)")
+            NotificationManager.scheduleFeedbackNotification(replyText: replyText)
             DispatchQueue.main.async {
-                if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                    sceneDelegate.handleDeepLink(url: URL(string: "superdashboard://wallet?card=easycard")!)
-                }
+                let escaped = replyText.replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: " ")
+                NotificationManager.evaluateJS("if(typeof window.onNotificationReply==='function'){ window.onNotificationReply('\(escaped)'); }")
+            }
+        } else if actionId == "ACTION_OPEN_CARD" {
+            DispatchQueue.main.async {
+                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet('悠遊卡');")
             }
         } else if actionId == "ACTION_OPEN_WALLET" {
             DispatchQueue.main.async {
-                if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                    sceneDelegate.handleDeepLink(url: URL(string: "superdashboard://wallet")!)
-                }
-            }
-        } else if actionId == "ACTION_REPLY", let textResponse = response as? UNTextInputNotificationResponse {
-            let replyText = textResponse.userText
-            print("Received inline notification reply: \(replyText)")
-            DispatchQueue.main.async {
-                NotificationManager.evaluateNotificationFeedback("收到通知回覆：「\(replyText)」")
-                let escaped = replyText.replacingOccurrences(of: "'", with: "\\'").replacingOccurrences(of: "\n", with: " ")
-                NotificationManager.evaluateJS("if(typeof window.onNotificationReply==='function'){ window.onNotificationReply('\(escaped)'); }")
+                NotificationManager.evaluateJS("if(typeof window.navigateToWallet==='function') window.navigateToWallet();")
             }
         } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
             DispatchQueue.main.async {
