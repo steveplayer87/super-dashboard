@@ -3895,7 +3895,7 @@
             <!-- 動作 1: 拍翅狂奔 -->
             <div class="odyssey-action-card">
               <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="font-size:30px; animation:bounce 1.4s infinite ease-in-out;">🪿</div>
+                <div style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; animation:bounce 1.4s infinite ease-in-out;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 5a3 3 0 0 1-3 3H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-2a3 3 0 0 1-3-3c0-2 2-3 2-5a4 4 0 0 0-4-4z"/><circle cx="10" cy="5" r="1" fill="currentColor"/></svg></div>
               </div>
               <div style="flex:1; min-width:0;">
                 <div style="font-size:14px; font-weight:800; color:#2F261D;">展翅狂奔 (Dash Flap)</div>
@@ -3927,7 +3927,7 @@
             <!-- 動作 3: 潛水探頭 -->
             <div class="odyssey-action-card">
               <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="font-size:30px;">🫧</div>
+                <div style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
               </div>
               <div style="flex:1; min-width:0;">
                 <div style="font-size:14px; font-weight:800; color:#2F261D;">水下倒立 (Duck Diving)</div>
@@ -5883,7 +5883,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }));
     }catch(e){ console.error('儲存失敗', e); }
     try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
-    try{ if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false); }catch(e){}
   }
 
   function showToast(msg){
@@ -6094,7 +6093,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
-  function renderAll(){ renderGrid(copyGrid, 'copy'); renderGrid(shortcutGrid, 'shortcut'); if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false); }
+  function renderAll(){ renderGrid(copyGrid, 'copy'); renderGrid(shortcutGrid, 'shortcut'); }
 
   // ==================== 錢包(虛擬卡)頁 ====================
   var cardViewportEl = document.getElementById('cardViewport');
@@ -7824,7 +7823,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       } else {
         state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal });
       }
-      try { if(window.syncQuickCopyLiveActivity) window.syncQuickCopyLiveActivity(false); } catch(e){}
+
     } else if(type === 'shortcut'){
       var inputVal = modalInput2.value.trim();
       if(modalMode === 'edit'){
@@ -8723,7 +8722,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    if(typeof showToast === 'function') showToast('已記錄今日沐浴！已雙向同步寫入 Notion 🪿');
+    if(typeof showToast === 'function') showToast('已記錄今日沐浴！已雙向同步寫入 Notion');
   };
 
   window.logTodayWalk = function(){
@@ -8735,7 +8734,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    if(typeof showToast === 'function') showToast('已記錄今日出遊！活力指數充沛 🪿');
+    if(typeof showToast === 'function') showToast('已記錄今日出遊！活力指數充沛');
   };
 
   // ==================== 主題切換邏輯 (經典黑曜金 vs 萬聖節主題) ====================
@@ -8893,7 +8892,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     renderCustomGooseActions();
     var m = document.getElementById('gooseActionModal');
     if(m) m.style.display = 'none';
-    if(typeof showToast === 'function') showToast('已新增阿鵝動作指南！🪿');
+    if(typeof showToast === 'function') showToast('已新增阿鵝動作指南！');
   };
 
   function renderCustomGooseActions(){
@@ -8907,7 +8906,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       card.className = 'odyssey-action-card custom-odyssey-card';
       var imgHtml = item.image ? 
         ('<img src="' + item.image + '" style="width:100%; height:100%; object-fit:cover;">') :
-        ('<div style="font-size:30px;">🪿⭐</div>');
+        ('<div style="font-size:30px;"></div>');
       card.innerHTML = 
         '<div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
           imgHtml +
@@ -8928,7 +8927,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.petCount = (gooseNotionData.petCount || 87) + 1;
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    if(typeof showToast === 'function') showToast('撫摸成功！阿鵝舒服地甩了甩羽毛 🪿💛');
+    if(typeof showToast === 'function') showToast('撫摸成功！阿鵝舒服地甩了甩羽毛');
   };
 
   function initMorePageAndGooseButler() {

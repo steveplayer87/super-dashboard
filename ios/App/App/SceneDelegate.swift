@@ -183,7 +183,7 @@ class QuickCopyManager {
             DispatchQueue.main.async {
                 NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面即可直接點擊複製")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    UIApplication.shared.perform(Selector(("suspend")))
+                    // Suspend removed
                 }
             }
         } catch {
@@ -359,7 +359,7 @@ class NotificationManager {
                 content.categoryIdentifier = cardCategoryIdentifier
                 content.userInfo = ["url": "superdashboard://wallet?card=easycard"]
 
-                let trigger: UNNotificationTrigger? = delay > 0 ? UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false) : nil
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 0.25, repeats: false)
                 let req = UNNotificationRequest(identifier: "card_action_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
@@ -420,7 +420,7 @@ class NotificationManager {
                     content.attachments = [attachment]
                 }
 
-                let trigger: UNNotificationTrigger? = delay > 0 ? UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false) : nil
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay > 0 ? delay : 0.25, repeats: false)
                 let req = UNNotificationRequest(identifier: "reply_sticker_\(UUID().uuidString)", content: content, trigger: trigger)
 
                 center.add(req) { err in
@@ -493,7 +493,7 @@ class NotificationManager {
                     UIColor(red: 0.83, green: 0.69, blue: 0.22, alpha: 0.25).setFill()
                     circle.fill()
 
-                    let text = "🦆\n阿鵝管家"
+                    let text = "阿鵝管家"
                     let paragraphStyle = NSMutableParagraphStyle()
                     paragraphStyle.alignment = .center
                     let attrs: [NSAttributedString.Key: Any] = [
@@ -669,7 +669,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             if #available(iOS 16.2, *) {
                 LiveActivityManager.startTaoyuanMetroActivity()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    UIApplication.shared.perform(Selector(("suspend")))
+                    // Suspend removed
                 }
             }
             return
@@ -698,7 +698,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
         if act == "suspend" || act == "suspend-app" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                UIApplication.shared.perform(Selector(("suspend")))
+                // Suspend removed
             }
             return
         }
@@ -860,7 +860,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             if #available(iOS 16.2, *) {
                 LiveActivityManager.startTaoyuanMetroActivity()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    UIApplication.shared.perform(Selector(("suspend")))
+                    // Suspend removed
                 }
             }
             return
@@ -910,7 +910,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                 }
                 QuickCopyManager.startOrUpdateQuickCopy(items: list)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    UIApplication.shared.perform(Selector(("suspend")))
+                    // Suspend removed
                 }
             }
             return
@@ -918,7 +918,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
         if urlStr.contains("suspend") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                UIApplication.shared.perform(Selector(("suspend")))
+                // Suspend removed
             }
             return
         }

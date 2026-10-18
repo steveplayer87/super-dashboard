@@ -17,7 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         
         // 請求通知權限
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            print("🔔 Notification permission granted: \(granted), error: \(String(describing: error))")
+            print("[Notification] Notification permission granted: \(granted), error: \(String(describing: error))")
             NotificationManager.checkAndReportStatus()
         }
         return true
@@ -25,7 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     // 前台展示推播通知（在 App 內時依然彈出頂部橫幅、聲音與角標）
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        print("🔔 AppDelegate willPresent called for: \(notification.request.identifier)")
+        print("[Notification] AppDelegate willPresent called for: \(notification.request.identifier)")
         if #available(iOS 14.0, *) {
             completionHandler([.banner, .list, .sound, .badge])
         } else {
@@ -36,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // 點擊通知橫幅或互動式操作按鈕時的處理
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let actionId = response.actionIdentifier
-        print("🔔 userNotificationCenter didReceive action: \(actionId)")
+        print("[Notification] userNotificationCenter didReceive action: \(actionId)")
 
         if actionId == "ACTION_OPEN_CARD" {
             DispatchQueue.main.async {
