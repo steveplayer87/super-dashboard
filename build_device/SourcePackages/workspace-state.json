@@ -13,13 +13,13 @@
           "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
           "name" : "capacitor-swift-pm"
         },
-        "path" : "/Users/steveplayer87/Projects/super-dashboard/build_device/SourcePackages/artifacts/capacitor-swift-pm/Capacitor/Capacitor.xcframework",
+        "path" : "/Users/steveplayer87/Projects/super-dashboard/build_device/SourcePackages/artifacts/capacitor-swift-pm/Cordova/Cordova.xcframework",
         "source" : {
-          "checksum" : "134c65a8bd30bfaa8ccb158d78142fa7231bf3f472e4a5d808c5fbed90fd4c75",
+          "checksum" : "57ff2c8f1e5dcd8d4379ac3cccde1407d81ccd575347dc2aff4f72272b8794a1",
           "type" : "remote",
-          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.5.2/Capacitor.xcframework.zip"
+          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.5.2/Cordova.xcframework.zip"
         },
-        "targetName" : "Capacitor"
+        "targetName" : "Cordova"
       },
       {
         "kind" : {
@@ -33,13 +33,13 @@
           "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
           "name" : "capacitor-swift-pm"
         },
-        "path" : "/Users/steveplayer87/Projects/super-dashboard/build_device/SourcePackages/artifacts/capacitor-swift-pm/Cordova/Cordova.xcframework",
+        "path" : "/Users/steveplayer87/Projects/super-dashboard/build_device/SourcePackages/artifacts/capacitor-swift-pm/Capacitor/Capacitor.xcframework",
         "source" : {
-          "checksum" : "57ff2c8f1e5dcd8d4379ac3cccde1407d81ccd575347dc2aff4f72272b8794a1",
+          "checksum" : "134c65a8bd30bfaa8ccb158d78142fa7231bf3f472e4a5d808c5fbed90fd4c75",
           "type" : "remote",
-          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.5.2/Cordova.xcframework.zip"
+          "url" : "https://github.com/ionic-team/capacitor-swift-pm/releases/download/8.5.2/Capacitor.xcframework.zip"
         },
-        "targetName" : "Cordova"
+        "targetName" : "Capacitor"
       }
     ],
     "dependencies" : [

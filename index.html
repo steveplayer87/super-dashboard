@@ -9564,6 +9564,29 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)));
   }
 
+  function sendGooseSyncToWorker(payload, successMsg){
+    try {
+      fetch('https://wardrobe-sync.jispig28.workers.dev/api/sync-goose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function(res){
+        return res.json();
+      }).then(function(data){
+        if(data && data.success){
+          if(data.bath) gooseNotionData.lastBathDate = data.bath;
+          if(data.walk) gooseNotionData.lastWalkDate = data.walk;
+          if(data.nails) gooseNotionData.lastNailsDate = data.nails;
+          gooseNotionData.lastSyncTime = Date.now();
+          try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
+          updateGooseDisplay();
+        }
+      }).catch(function(err){
+        console.warn('Worker sync error:', err);
+      });
+    } catch(e){}
+  }
+
   window.logTodayBath = function(){
     var now = new Date();
     var y = now.getFullYear();
@@ -9574,25 +9597,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-
-    try {
-      fetch('https://api.notion.com/v1/pages/' + NOTION_PAGE_ID_GOOSE, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': 'Bearer ' + NOTION_API_KEY,
-          'Notion-Version': '2022-06-28',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          properties: {
-            '上次日期': {
-              date: { start: todayStr }
-            }
-          }
-        })
-      }).catch(function(){});
-    } catch(e){}
-
+    sendGooseSyncToWorker({ bath: todayStr }, '已記錄今日洗阿鵝！香氛純淨度 100%');
     if(typeof showToast === 'function') showToast('已記錄今日洗阿鵝！香氛純淨度 100%');
   };
 
@@ -9606,6 +9611,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
+    sendGooseSyncToWorker({ walk: todayStr }, '已記錄今日遛阿鵝！活力指數充沛');
     if(typeof showToast === 'function') showToast('已記錄今日遛阿鵝！活力指數充沛');
   };
 
@@ -9619,6 +9625,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
+    sendGooseSyncToWorker({ nails: todayStr }, '已記錄今日阿鵝剪指甲！舒適清爽');
     if(typeof showToast === 'function') showToast('已記錄今日阿鵝剪指甲！舒適清爽');
   };
 
