@@ -936,17 +936,15 @@
   .airline-banner-title{ font-size:15px; font-weight:800; color:#E3EFFB; margin-bottom:2px; }
   .airline-banner-sub{ font-size:11px; color:#8FA5C2; }
 
-  /* 航空 App 匯入按鈕 (保持原比例) */
+  /* 取得票卡按鈕 (完美匹配全域主題配色) */
   .airline-btn{
     width:100%; padding:13px 16px; border-radius:14px; border:1px solid var(--accent);
-    background:linear-gradient(135deg, var(--gold) 0%, #d4af37 50%, #b89230 100%);
-    color:#1A1202; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px;
-    cursor:pointer; transition:all .2s; box-shadow:0 4px 16px rgba(212,175,55,.35);
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color:#14120E; font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer; transition:all .2s; box-shadow:0 4px 16px var(--accent-glow);
   }
   .airline-btn:active{ transform:scale(0.98); filter:brightness(0.95); }
-  .airline-btn .icon{ font-size:15px; color:#1A1202; }
-  .airline-btn:active{ transform:translateY(1.5px); filter:brightness(.9); }
-  .airline-btn .icon{ font-size:15px; color:var(--gold); }
+  .airline-btn .icon{ font-size:15px; color:#14120E; }
   .airline-btn.loading{ opacity:.85; pointer-events:none; }
 
   /* Apple 原廠風格 12瓣菊花放射狀旋轉 Spinner */
@@ -3199,113 +3197,266 @@
   }
   .wallet-subnav-pill:active { transform: scale(0.97); }
 
-  /* ====== Card Kit 6 大卡面擬物樣式 (1.586 : 1 標準尺寸) ====== */
-  .theme-kit-white {
-    background: linear-gradient(180deg,#ffffff 0%,#f8f8fa 100%) !important;
-    color: #1c1c1e !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.95), inset 0 0 12px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.1) !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-  }
-  .theme-kit-visa-light {
-    background: radial-gradient(120% 120% at 90% 10%,#ffc1d9 0%,transparent 60%),
-                radial-gradient(100% 100% at 10% 90%,#b8f0ea 0%,transparent 60%),
-                linear-gradient(135deg,#fce8f0 0%,#e7f6f5 100%) !important;
-    color: #1c1c1e !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,.08) !important;
-    border: 1px solid rgba(0,0,0,0.06) !important;
-  }
-  .theme-kit-dark {
-    background: radial-gradient(120% 140% at 100% 0%,rgba(120,130,160,.25) 0%,transparent 60%),
-                linear-gradient(145deg,#232328 0%,#131316 60%,#0c0c0e 100%) !important;
-    color: #f2f2f7 !important;
-    border: 1px solid rgba(255,255,255,.12) !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,.35) !important;
-  }
-  .theme-kit-visa-dark {
-    background: radial-gradient(120% 120% at 15% 15%,#7b1fa2 0%,transparent 55%),
-                radial-gradient(120% 120% at 85% 85%,#e91e63 0%,transparent 60%),
-                linear-gradient(145deg,#1f0a2e 0%,#0c0314 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255,255,255,.12) !important;
-    box-shadow: 0 8px 24px rgba(123,31,162,.25) !important;
-  }
-  .theme-kit-silver {
-    background: radial-gradient(circle at 50% 50%,#f0f2f5 0%,#d8dce2 35%,#bfc5ce 70%,#a8b0bb 100%) !important;
-    color: #1a1e24 !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 8px 24px rgba(0,0,0,.2) !important;
-    border: 1px solid rgba(255,255,255,0.4) !important;
-  }
-  .theme-kit-bronze {
-    background: radial-gradient(circle at 50% 50%,#e0b88f 0%,#c79663 35%,#a87440 70%,#875524 100%) !important;
-    color: #2b1704 !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 8px 24px rgba(0,0,0,.25) !important;
-    border: 1px solid rgba(255,215,130,0.3) !important;
-  }
-
-  .kit-card-face {
+  /* ====== Card Kit 6 款擬物卡面 (Container Query 尺寸體系) ====== */
+  .card {
+    container-type: inline-size;
     width: 100%;
     height: 100%;
+    aspect-ratio: 178 / 115;
     position: relative;
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     box-sizing: border-box;
-    overflow: hidden;
   }
-  .kit-card-top-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .kit-card-chip {
-    width: 32px;
-    height: 24px;
-    border-radius: 5px;
-    background: linear-gradient(135deg, #d4af37, #f5d888);
-    border: 1px solid rgba(0,0,0,0.15);
+  .card .face {
     position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 7.9cqw;
+    overflow: hidden;
+    --fg: #1c1c1e;
+    --muted: #a1a1a6;
+    --dot: #444;
+    --pan: #333;
+    --exp: #444;
+    --tiny: #b0b0b5;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
   }
-  .kit-card-pan-row {
+  .card .face > * {
+    position: absolute;
+    white-space: nowrap;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+  .card .logo {
+    left: 9cqw;
+    top: 11cqw;
+    width: 17cqw;
+    height: 10.8cqw;
+  }
+  .card .nfc {
+    left: 32.5cqw;
+    top: 12.4cqw;
+    width: 5.4cqw;
+    height: 5.4cqw;
+    color: var(--muted);
+  }
+  .card .info {
+    right: 12.4cqw;
+    top: 13.4cqw;
+    width: 4.6cqw;
+    height: 4.6cqw;
+    color: var(--muted);
+  }
+  .card .label {
+    left: 10.7cqw;
+    top: 26.4cqw;
+    transform: translateY(-50%);
+    font-size: 3.6cqw;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .card .pan {
+    left: 10.7cqw;
+    top: 34.3cqw;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    letter-spacing: 2px;
-    font-weight: 700;
+    gap: 5cqw;
   }
-  .kit-card-pan-dots {
-    display: flex;
-    gap: 3px;
+  .card .pan .g {
+    display: inline-flex;
+    gap: 1.1cqw;
   }
-  .kit-card-pan-dots b {
+  .card .pan .g b {
     display: inline-block;
-    width: 5px;
-    height: 5px;
+    width: 3.1cqw;
+    height: 3.1cqw;
     border-radius: 50%;
-    background: currentColor;
-    opacity: 0.6;
+    background: var(--dot);
   }
-  .kit-card-bottom-row {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .kit-card-holder-name {
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .kit-card-exp {
-    font-size: 11px;
+  .card .pan .last {
+    margin-left: 1.2cqw;
+    font-size: 5.3cqw;
     font-weight: 700;
-    letter-spacing: 0.8px;
+    letter-spacing: .14em;
+    color: var(--pan);
+  }
+  .card .name {
+    left: 11.2cqw;
+    top: 51cqw;
+    transform: translateY(-50%);
+    font-size: 4.3cqw;
+    font-weight: 700;
+  }
+  .card .exp {
+    right: 12.4cqw;
+    top: 51cqw;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+  }
+  .card .exp small {
+    font-size: 1.7cqw;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--tiny);
+    letter-spacing: .04em;
+  }
+  .card .exp span {
+    font-size: 4.2cqw;
+    font-weight: 600;
+    letter-spacing: .05em;
+    color: var(--exp);
+  }
+
+  .card.c-white .face {
+    background: linear-gradient(180deg,#ffffff 0%,#fafafa 100%);
+    box-shadow:
+      inset 0 0 0 .7cqw rgba(255,255,255,.95),
+      inset 0 0 3.2cqw rgba(0,0,0,.04),
+      0 0 0 .3cqw rgba(0,0,0,.035),
+      0 3cqw 6cqw -2.5cqw rgba(0,0,0,.09);
+  }
+  .card .visa-logo {
+    top: 13.2cqw;
+    height: 5.6cqw;
+  }
+  .card .cent {
+    left: 10.5cqw;
+    top: 5.5cqw;
+    width: 15.6cqw;
+    height: 18.2cqw;
+    object-fit: contain;
+  }
+  .card.visa .label {
+    top: 23.2cqw;
+  }
+  .card.c-visa-light .face {
+    --fg: #2c2c34;
+    --muted: #8e8a92;
+    --dot: #3a3a40;
+    --pan: #2c2c34;
+    --exp: #3a3a40;
+    --tiny: #9a96a0;
+    background: radial-gradient(75% 75% at 12% -5%,#ff5c7c,rgba(255,92,124,0)),
+                radial-gradient(55% 55% at 95% 5%,#ffb8c6,rgba(255,184,198,0)),
+                radial-gradient(70% 70% at 8% 108%,#52cfd6,rgba(82,207,214,0)),
+                radial-gradient(45% 55% at 62% 105%,#cdeef0,rgba(205,238,240,0)),
+                #f8f2ef;
+    box-shadow: inset 0 0 0 .7cqw rgba(255,255,255,.55), 0 3cqw 6cqw -2.5cqw rgba(0,0,0,.12);
+  }
+  .card.c-dark .face, .card.c-visa-dark .face {
+    --fg: #fff;
+    --muted: rgba(255,255,255,.55);
+    --dot: #fff;
+    --pan: #fff;
+    --exp: #fff;
+    --tiny: rgba(255,255,255,.5);
+    box-shadow: inset 0 0 0 .6cqw rgba(255,255,255,.14), inset 0 -2cqw 4cqw rgba(0,0,0,.16), 0 3cqw 6cqw -2.5cqw rgba(0,0,0,.3);
+  }
+  .card.c-dark .face {
+    background: linear-gradient(180deg,#646466,#565658);
+  }
+  .card.c-visa-dark .face {
+    background: radial-gradient(80% 60% at 0% 110%,#ff2d95,rgba(255,45,149,0)),
+                radial-gradient(70% 55% at 80% 105%,#d4247f,rgba(212,36,127,0)),
+                radial-gradient(70% 80% at 100% 0%,#4b3d9f,rgba(75,61,159,0)),
+                #1b1a40;
+  }
+  .card.c-silver .face, .card.c-bronze .face {
+    box-shadow: inset 0 0 0 .5cqw rgba(255,255,255,.4), 0 3cqw 6cqw -2.5cqw rgba(0,0,0,.28), 0 0 0 .3cqw rgba(0,0,0,.12);
+  }
+  .card.c-silver .face {
+    --fg: #2a2a2c;
+    --muted: #6f6f74;
+    --dot: #3b3b3e;
+    --pan: #2a2a2c;
+    --exp: #3a3a3d;
+    --tiny: #7a7a80;
+    background: repeating-conic-gradient(from 0deg at 50% 52%,rgba(255,255,255,.07) 0 .6deg,rgba(0,0,0,.045) .6deg 1.2deg),
+                conic-gradient(from 20deg at 50% 52%,#d6d6d9,#fbfbfc,#b4b4b9,#f1f1f3,#a6a6ac,#eeeef0,#bdbdc2,#fafafb,#cfcfd3,#a9a9af,#ededef,#d6d6d9);
+  }
+  .card.c-bronze .face {
+    --fg: #fff;
+    --muted: rgba(255,235,220,.7);
+    --dot: #fff;
+    --pan: #fff;
+    --exp: #fff;
+    --tiny: rgba(255,235,220,.6);
+    background: repeating-conic-gradient(from 0deg at 50% 52%,rgba(255,255,255,.06) 0 .6deg,rgba(0,0,0,.07) .6deg 1.2deg),
+                conic-gradient(from 20deg at 50% 52%,#6a4128,#c08a5e,#7a4a30,#b87f55,#5a3722,#b27a52,#74472e,#c4906a,#6a4128,#5e3a25,#b9835a,#6a4128);
+  }
+  .card .bgwave {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .card.c-visa-light .face {
+    background: #f7f1ee;
+  }
+
+  /* 消除 .v-card 承載 Card Kit 卡片時的多餘 padding/border/shine */
+  .v-card[class*="theme-kit-"],
+  .v-card.theme-kit-white,
+  .v-card.theme-kit-visa-light,
+  .v-card.theme-kit-dark,
+  .v-card.theme-kit-visa-dark,
+  .v-card.theme-kit-silver,
+  .v-card.theme-kit-bronze {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+  .v-card[class*="theme-kit-"] > .v-card-shine {
+    display: none !important;
+  }
+  .style-card-mini.is-kit {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
   }
 
 </style>
 </head>
 <body>
+<!-- Card Kit 向量圖示庫 (Mastercard, Visa, NFC, Info, Centurion) -->
+<svg width="0" height="0" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+  <symbol id="mc" viewBox="0 0 38 24">
+    <circle cx="12" cy="12" r="12" fill="#EB001B"/>
+    <circle cx="26" cy="12" r="12" fill="#F79E1B"/>
+    <path d="M19 2.25A12 12 0 0 1 19 21.75A12 12 0 0 1 19 2.25Z" fill="#FF5F00"/>
+  </symbol>
+  <symbol id="nfc" viewBox="0 0 16 16">
+    <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+      <path d="M4.2 5.6a3.4 3.4 0 0 1 0 4.8"/>
+      <path d="M7.4 3.8a6.2 6.2 0 0 1 0 8.4"/>
+      <path d="M10.6 2a9 9 0 0 1 0 12"/>
+    </g>
+  </symbol>
+  <symbol id="info" viewBox="0 0 12 12">
+    <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+      <circle cx="6" cy="6" r="5"/>
+      <path d="M6 5.4v3"/>
+    </g>
+    <circle cx="6" cy="3.7" r=".65" fill="currentColor"/>
+  </symbol>
+  <symbol id="visa" viewBox="0 0 44 14">
+    <text x="0" y="12.5" font-family="Inter,Arial,sans-serif" font-style="italic" font-weight="800" font-size="17" letter-spacing="-.4" fill="currentColor">VISA</text>
+  </symbol>
+  <symbol id="cent" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="12" fill="#2a2a2c"/>
+    <circle cx="12" cy="12" r="10.8" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width=".8"/>
+    <path d="M8 19c0-3 1-4.2 1-6.2 0-3 1.4-5.3 4-5.3 2.1 0 3.2 1.5 3.2 3.4 0 1.1-.5 1.6-.5 2.6l1 2.5-2 .6V19z" fill="#e9e6e0"/>
+  </symbol>
+</svg>
 <div id="app">
   <div class="topbar">
     <div class="brand" title="點擊可復原浮動球"><span class="brand-icon" id="brandIcon"></span>超級儀錶板</div>
@@ -3696,7 +3847,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><circle cx="8" cy="12" r="6" stroke="#005bac" stroke-width="2.5"/><circle cx="16" cy="12" r="6" stroke="#e60012" stroke-width="2.5"/></svg><span>全聯福利中心 (PX Pay)</span></div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0;"><rect width="32" height="32" rx="6" fill="#fff"/><circle cx="12" cy="16" r="7.5" stroke="#005BAC" stroke-width="3" fill="none"/><circle cx="20" cy="16" r="7.5" stroke="#E60012" stroke-width="3" fill="none"/><circle cx="16" cy="16" r="2.5" fill="#005BAC"/></svg><span>全聯福利中心 (PX Pay)</span></div>
                 <div class="loyalty-item-desc">結帳自動報號並累積福利點數</div>
               </div>
             </div>
@@ -3710,7 +3861,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect width="24" height="24" rx="4" fill="#007B5F"/><path d="M5 5 H19 V8 L10 19 H6 L13 8 H5 Z" fill="#EE1C25"/><path d="M14 9 H18 V19 H15 V12 H14 Z" fill="#F58220"/></svg><span>7-ELEVEN OPEN POINT</span></div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0;"><rect width="32" height="32" rx="6" fill="#007B5F"/><path d="M7 7 H25 V11 L14 25 H8 L18 11 H7 Z" fill="#EE1C25"/><path d="M18 12 H24 V25 H20 V16 H18 Z" fill="#F58220"/><text x="16" y="20" font-family="Arial,sans-serif" font-size="3.2" font-weight="900" fill="#fff" text-anchor="middle">ELEVEN</text></svg><span>7-ELEVEN OPEN POINT</span></div>
                 <div class="loyalty-item-desc">統一超商、康是美全集團自動積點</div>
               </div>
             </div>
@@ -3724,7 +3875,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect x="2" y="4" width="20" height="7" fill="#008FD7" rx="1"/><rect x="2" y="13" width="20" height="7" fill="#58B826" rx="1"/></svg><span>全家 FamilyMart</span></div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0;"><rect width="32" height="32" rx="6" fill="#fff"/><rect x="2" y="3" width="28" height="12" rx="3" fill="#008FD7"/><rect x="2" y="17" width="28" height="12" rx="3" fill="#58B826"/><circle cx="16" cy="16" r="4" fill="#fff"/><path d="M14 15.5 Q16 18 18 15.5" stroke="#008FD7" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg><span>全家 FamilyMart</span></div>
                 <div class="loyalty-item-desc">會員條碼與發票載具雙重同動</div>
               </div>
             </div>
@@ -3738,7 +3889,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><path d="M4 6 L10 12 L4 18" stroke="#E2001A" stroke-width="3" stroke-linecap="round"/><path d="M20 6 L14 12 L20 18" stroke="#00387B" stroke-width="3" stroke-linecap="round"/></svg><span>家樂福 Carrefour</span></div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0;"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M5 8 L13 16 L5 24 Z" fill="#E2001A"/><path d="M27 8 L19 16 L27 24 Z" fill="#00387B"/><path d="M13 11 C15 9 17 9 19 11" stroke="#fff" stroke-width="2" fill="none"/></svg><span>家樂福 Carrefour</span></div>
                 <div class="loyalty-item-desc">大賣場與超市消費紅利自動歸戶</div>
               </div>
             </div>
@@ -3752,7 +3903,7 @@
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:6px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="flex-shrink:0;"><rect width="24" height="16" y="4" rx="3" fill="#008080"/><text x="12" y="15" font-size="7" font-weight="900" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">W</text></svg><span>屈臣氏 Watsons</span></div>
+                <div class="loyalty-item-name" style="display:flex; align-items:center; gap:8px;"><svg viewBox="0 0 32 32" width="22" height="22" style="flex-shrink:0;"><rect width="32" height="32" rx="6" fill="#009EA0"/><text x="16" y="22" font-family="Georgia,serif" font-size="18" font-weight="900" fill="#FFFFFF" text-anchor="middle">W</text></svg><span>屈臣氏 Watsons</span></div>
                 <div class="loyalty-item-desc">藥妝門市感應付款即享會員價與積點</div>
               </div>
             </div>
@@ -4394,8 +4545,105 @@
               <span class="style-carousel-hint">左右滑動選擇 →</span>
             </div>
             <div class="style-carousel" id="themeCarousel">
-              <!-- 1. 黑曜金 -->
-              <div class="style-card-item active" data-theme="theme-gold">
+              <!-- Card Kit 01. 白色微光 Mastercard -->
+              <div class="style-card-item active" data-theme="theme-kit-white">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-white"><div class="face">
+                    <svg class="logo"><use href="#mc"/></svg>
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Debit</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">8822</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>2/28</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- Card Kit 02. 霓光幻彩 Visa Light -->
+              <div class="style-card-item" data-theme="theme-kit-visa-light">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-visa-light visa"><div class="face">
+                    <svg class="bgwave" viewBox="0 0 890 580" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wl_preview" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="600"><stop offset="0" stop-color="#f09489"/><stop offset=".3" stop-color="#dba0b0"/><stop offset=".5" stop-color="#c2a8c0"/><stop offset=".62" stop-color="#9fd3dc"/><stop offset=".8" stop-color="#62cad4"/><stop offset="1" stop-color="#4fc7d1"/></linearGradient><linearGradient id="wp_preview" gradientUnits="userSpaceOnUse" x1="250" y1="0" x2="890" y2="0"><stop offset="0" stop-color="#ee8a82" stop-opacity="0"/><stop offset=".22" stop-color="#ff5683"/><stop offset=".6" stop-color="#ff5f95"/><stop offset="1" stop-color="#f9a6c6"/></linearGradient><radialGradient id="ww_preview" gradientUnits="userSpaceOnUse" cx="790" cy="470" r="300"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="wb1_prev" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="38"/></filter><filter id="wb2_prev" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3"/></filter><filter id="wb3_prev" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="45"/></filter></defs><rect width="890" height="580" fill="#f7f2ef"/><path filter="url(#wb1_prev)" fill="url(#wl_preview)" d="M-60 -60H300L420 150C450 220 520 290 575 390C585 450 520 540 440 640H-60Z"/><path filter="url(#wb3_prev)" fill="url(#wp_preview)" opacity=".6" d="M0 -20H910V188C760 190 660 208 560 208C490 208 450 185 410 150C360 108 300 60 250 -20Z"/><path filter="url(#wb2_prev)" fill="url(#wp_preview)" d="M0 -20H910V188C760 190 660 208 560 208C490 208 450 185 410 150C360 108 300 60 250 -20Z"/><rect width="890" height="580" fill="url(#ww_preview)"/></svg>
+                    <svg class="logo visa-logo"><use href="#visa"/></svg>
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Credit Cashback</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">6644</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>8/08</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- Card Kit 03. 太空曜黑 Mastercard Dark -->
+              <div class="style-card-item" data-theme="theme-kit-dark">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-dark"><div class="face">
+                    <svg class="logo"><use href="#mc"/></svg>
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Debit</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">8822</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>2/28</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- Card Kit 04. 魅紫星芒 Visa Dark -->
+              <div class="style-card-item" data-theme="theme-kit-visa-dark">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-visa-dark visa"><div class="face">
+                    <svg class="logo visa-logo"><use href="#visa"/></svg>
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Credit Cashback</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">6644</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>8/08</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- Card Kit 05. 放射銀芒 Centurion Silver -->
+              <div class="style-card-item" data-theme="theme-kit-silver">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-silver"><div class="face">
+                    <img class="logo cent" alt="" src="cent_silver.png">
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Rewards</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">0482</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>6/26</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- Card Kit 06. 奢華金銅 Centurion Bronze -->
+              <div class="style-card-item" data-theme="theme-kit-bronze">
+                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="style-card-mini is-kit">
+                  <article class="card c-bronze"><div class="face">
+                    <img class="logo cent" alt="" src="cent_bronze.png">
+                    <svg class="nfc"><use href="#nfc"/></svg>
+                    <svg class="info"><use href="#info"/></svg>
+                    <span class="label">Rewards</span>
+                    <div class="pan"><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><i class="g"><b></b><b></b><b></b><b></b></i><span class="last">0482</span></div>
+                    <span class="name">Leonardo De Luca</span>
+                    <div class="exp"><small>VALID<br>THRU</small><span>6/26</span></div>
+                  </div></article>
+                </div>
+              </div>
+
+              <!-- 經典 1. 黑曜金 -->
+              <div class="style-card-item" data-theme="theme-gold">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-gold">
                   <div class="mini-top-row">
@@ -4411,7 +4659,7 @@
                 </div>
               </div>
 
-              <!-- 2. 鈦銀 -->
+              <!-- 經典 2. 鈦銀 -->
               <div class="style-card-item" data-theme="theme-titanium">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-titanium">
@@ -4428,7 +4676,7 @@
                 </div>
               </div>
 
-              <!-- 3. 星紫 -->
+              <!-- 經典 3. 星紫 -->
               <div class="style-card-item" data-theme="theme-aurora">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-aurora">
@@ -4445,7 +4693,7 @@
                 </div>
               </div>
 
-              <!-- 4. 赤焰 -->
+              <!-- 經典 4. 赤焰 -->
               <div class="style-card-item" data-theme="theme-carbon">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-carbon">
@@ -4462,7 +4710,7 @@
                 </div>
               </div>
 
-              <!-- 5. 翡翠 -->
+              <!-- 經典 5. 翡翠 -->
               <div class="style-card-item" data-theme="theme-emerald">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-emerald">
@@ -4479,7 +4727,7 @@
                 </div>
               </div>
 
-              <!-- 6. 蒸氣黃銅 -->
+              <!-- 經典 6. 蒸氣黃銅 -->
               <div class="style-card-item" data-theme="theme-copper">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-copper">
@@ -4496,7 +4744,7 @@
                 </div>
               </div>
 
-              <!-- 7. 和風櫻雪 -->
+              <!-- 經典 7. 和風櫻雪 -->
               <div class="style-card-item" data-theme="theme-sakura">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-sakura">
@@ -4513,7 +4761,7 @@
                 </div>
               </div>
 
-              <!-- 8. 星宇藍 -->
+              <!-- 經典 8. 星宇藍 -->
               <div class="style-card-item" data-theme="theme-boarding">
                 <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
                 <div class="style-card-mini theme-boarding">
@@ -4526,96 +4774,6 @@
                   <div class="mini-card-text">
                     <div class="mini-card-name">星宇航太藍 · 尊榮金軌</div>
                     <div class="mini-card-sub">STARLUX AEROSPACE MIDNIGHT</div>
-                  </div>
-                </div>
-              </div>
-
-                            <!-- Card Kit 01. 白色微光 -->
-              <div class="style-card-item" data-theme="theme-kit-white">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-white">
-                  <div class="mini-top-row">
-                    <div style="display:flex; align-items:center; gap:2px;"><svg viewBox="0 0 36 24" width="22" height="15"><circle cx="12" cy="12" r="10" fill="#EB001B"/><circle cx="24" cy="12" r="10" fill="#F79E1B" fill-opacity="0.88"/></svg></div>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">白色微光 · 白玻磨砂</div>
-                    <div class="mini-card-sub">MASTERCARD DEBIT</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Kit 02. 霓光幻彩 -->
-              <div class="style-card-item" data-theme="theme-kit-visa-light">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-visa-light">
-                  <div class="mini-top-row">
-                    <span style="font-family:'Arial Black',sans-serif; font-size:11px; font-weight:900; color:#1a1f71;">VISA</span>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">霓光幻彩 · 晶漾漸層</div>
-                    <div class="mini-card-sub">VISA CREDIT CASHBACK</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Kit 03. 太空曜黑 -->
-              <div class="style-card-item" data-theme="theme-kit-dark">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-dark">
-                  <div class="mini-top-row">
-                    <div style="display:flex; align-items:center; gap:2px;"><svg viewBox="0 0 36 24" width="22" height="15"><circle cx="12" cy="12" r="10" fill="#EB001B"/><circle cx="24" cy="12" r="10" fill="#F79E1B" fill-opacity="0.88"/></svg></div>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">太空曜黑 · 極光石墨</div>
-                    <div class="mini-card-sub">MASTERCARD PLATINUM</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Kit 04. 魅紫星芒 -->
-              <div class="style-card-item" data-theme="theme-kit-visa-dark">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-visa-dark">
-                  <div class="mini-top-row">
-                    <span style="font-family:'Arial Black',sans-serif; font-size:11px; font-weight:900; color:#ffffff;">VISA</span>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">魅紫星芒 · 深邃霓虹</div>
-                    <div class="mini-card-sub">VISA DARK CASHBACK</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Kit 05. 放射銀芒 -->
-              <div class="style-card-item" data-theme="theme-kit-silver">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-silver">
-                  <div class="mini-top-row">
-                    <div style="font-size:9px; font-weight:800; letter-spacing:0.8px;">CENTURION</div>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">放射銀芒 · 尊榮金屬</div>
-                    <div class="mini-card-sub">CENTURION REWARDS</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Kit 06. 奢華金銅 -->
-              <div class="style-card-item" data-theme="theme-kit-bronze">
-                <div class="style-card-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <div class="style-card-mini theme-kit-bronze">
-                  <div class="mini-top-row">
-                    <div style="font-size:9px; font-weight:800; letter-spacing:0.8px;">CENTURION</div>
-                    <div class="mini-nfc"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg></div>
-                  </div>
-                  <div class="mini-card-text">
-                    <div class="mini-card-name">奢華金銅 · 古銅拉絲</div>
-                    <div class="mini-card-sub">CENTURION BRONZE</div>
                   </div>
                 </div>
               </div>
@@ -6222,7 +6380,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var modalTarget = 'copy';
   var editContext = null;
   var modalCategory = 'other';
-  var selectedCardTheme = 'theme-gold';
+  var selectedCardTheme = 'theme-kit-white';
   var customImageData = '';
   var pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
 
@@ -6571,6 +6729,73 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return state.cards.filter(function(c){ return !(state.editMode && pendingRemove.card.has(c.id)); });
   }
 
+  // Card Kit 背景光影波浪 SVG (專供 c-visa-light 使用)
+  var BW_SVG = '<svg class="bgwave" viewBox="0 0 890 580" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wl_live" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="600"><stop offset="0" stop-color="#f09489"/><stop offset=".3" stop-color="#dba0b0"/><stop offset=".5" stop-color="#c2a8c0"/><stop offset=".62" stop-color="#9fd3dc"/><stop offset=".8" stop-color="#62cad4"/><stop offset="1" stop-color="#4fc7d1"/></linearGradient><linearGradient id="wp_live" gradientUnits="userSpaceOnUse" x1="250" y1="0" x2="890" y2="0"><stop offset="0" stop-color="#ee8a82" stop-opacity="0"/><stop offset=".22" stop-color="#ff5683"/><stop offset=".6" stop-color="#ff5f95"/><stop offset="1" stop-color="#f9a6c6"/></linearGradient><radialGradient id="ww_live" gradientUnits="userSpaceOnUse" cx="790" cy="470" r="300"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="wb1_live" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="38"/></filter><filter id="wb2_live" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3"/></filter><filter id="wb3_live" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="45"/></filter></defs><rect width="890" height="580" fill="#f7f2ef"/><path filter="url(#wb1_live)" fill="url(#wl_live)" d="M-60 -60H300L420 150C450 220 520 290 575 390C585 450 520 540 440 640H-60Z"/><path filter="url(#wb3_live)" fill="url(#wp_live)" opacity=".6" d="M0 -20H910V188C760 190 660 208 560 208C490 208 450 185 410 150C360 108 300 60 250 -20Z"/><path filter="url(#wb2_live)" fill="url(#wp_live)" d="M0 -20H910V188C760 190 660 208 560 208C490 208 450 185 410 150C360 108 300 60 250 -20Z"/><rect width="890" height="580" fill="url(#ww_live)"/></svg>';
+
+  // 渲染 Card Kit 官方高質感擬物卡面 (Container Query cqw 幾何適配)
+  function renderCardKitFace(card){
+    var thm = (card && card.theme) ? card.theme : 'theme-kit-white';
+    var v = 'c-white';
+    var logo = '<svg class="logo"><use href="#mc"/></svg>';
+    var label = 'Debit';
+    var last = (card && card.last4) ? card.last4 : '8822';
+    var name = (card && card.name && card.name !== '新卡片') ? card.name : 'Leonardo De Luca';
+    var exp = (card && card.exp) ? card.exp : '2/28';
+    var hasWave = false;
+
+    if(thm.indexOf('visa-light') !== -1){
+      v = 'c-visa-light visa';
+      logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
+      label = 'Credit Cashback';
+      hasWave = true;
+      last = (card && card.last4) ? card.last4 : '6644';
+      exp = (card && card.exp) ? card.exp : '8/08';
+    } else if(thm.indexOf('visa-dark') !== -1){
+      v = 'c-visa-dark visa';
+      logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
+      label = 'Credit Cashback';
+      last = (card && card.last4) ? card.last4 : '6644';
+      exp = (card && card.exp) ? card.exp : '8/08';
+    } else if(thm.indexOf('dark') !== -1){
+      v = 'c-dark';
+      logo = '<svg class="logo"><use href="#mc"/></svg>';
+      label = 'Debit';
+      last = (card && card.last4) ? card.last4 : '8822';
+      exp = (card && card.exp) ? card.exp : '2/28';
+    } else if(thm.indexOf('silver') !== -1){
+      v = 'c-silver';
+      logo = '<img class="logo cent" alt="" src="cent_silver.png">';
+      label = 'Rewards';
+      last = (card && card.last4) ? card.last4 : '0482';
+      exp = (card && card.exp) ? card.exp : '6/26';
+    } else if(thm.indexOf('bronze') !== -1){
+      v = 'c-bronze';
+      logo = '<img class="logo cent" alt="" src="cent_bronze.png">';
+      label = 'Rewards';
+      last = (card && card.last4) ? card.last4 : '0482';
+      exp = (card && card.exp) ? card.exp : '6/26';
+    }
+
+    var waveHtml = hasWave ? BW_SVG : '';
+    var gDots = '<i class="g"><b></b><b></b><b></b><b></b></i>';
+
+    return '<article class="card ' + v + '" style="width:100%; height:100%;">' +
+      '<div class="face">' +
+        waveHtml +
+        logo +
+        '<svg class="nfc"><use href="#nfc"/></svg>' +
+        '<svg class="info"><use href="#info"/></svg>' +
+        '<span class="label">' + escapeHtml(label) + '</span>' +
+        '<div class="pan">' +
+          gDots + gDots + gDots +
+          '<span class="last">' + escapeHtml(last) + '</span>' +
+        '</div>' +
+        '<span class="name">' + escapeHtml(name) + '</span>' +
+        '<div class="exp"><small>VALID<br>THRU</small><span>' + escapeHtml(exp) + '</span></div>' +
+      '</div>' +
+    '</article>';
+  }
+
   // 渲染主畫面橫向長方形卡片 (登機證也是標準 1.586:1 橫卡上半部)
   function renderCardContent(card){
     var nfcRightSvg = '<div class="card-touch-nfc-right" title="支援感應">' +
@@ -6582,7 +6807,17 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '</svg>' +
     '</div>';
 
-    // 0. 台北捷運一日票 (採用 image.webp 官方純淨卡面，無雜亂文字覆蓋)
+    // 0. Card Kit 擬物卡面 (白色、粉藍 Visa、太空黑、魅紫 Visa、放射銀芒、奢華金銅)
+    if(card.theme && (card.theme.indexOf('theme-kit-') !== -1 || card.theme.indexOf('c-') !== -1)){
+      return renderCardKitFace(card);
+    }
+
+    // 0.1 外部匯入自訂 HTML 卡面
+    if(card.customHtml){
+      return '<div class="custom-card-ext-wrap" style="width:100%;height:100%;overflow:hidden;border-radius:16px;">' + card.customHtml + '</div>';
+    }
+
+    // 0.2 台北捷運一日票 (採用 image.webp 官方純淨卡面，無雜亂文字覆蓋)
     if(card.passType === 'subway' || card.theme === 'theme-subway' || (card.name && (card.name.indexOf('捷運') !== -1 || card.name.indexOf('一日票') !== -1))){
       return '<div class="metro-pass-card-wrap" style="width:100%; height:100%; position:relative; overflow:hidden; border-radius:16px; background:#0F1D38;">' +
         '<img src="' + METRO_PASS_IMAGE_DATA + '" alt="台北捷運一日票" style="width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;" />' +
@@ -6727,8 +6962,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function applyCardTheme(el, theme, customImage){
     if(!el) return;
-    ['theme-gold','theme-titanium','theme-aurora','theme-carbon','theme-emerald','theme-copper','theme-sakura','theme-boarding','theme-custom'].forEach(function(cls){
-      el.classList.remove(cls);
+    Array.from(el.classList).forEach(function(cls){
+      if(cls.startsWith('theme-')) el.classList.remove(cls);
     });
     el.classList.add(theme || 'theme-gold');
     if(theme === 'theme-custom' && customImage){
@@ -7077,19 +7312,20 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var cardFuncNav = document.getElementById('cardFuncNav');
     var histSection = document.getElementById('walletHistorySection');
     var carrierLoyaltyPanel = document.getElementById('carrierLoyaltyPanel');
-    var isPaymentCard = (card.type === 'credit');
+    var isBoarding = (card.type === 'boarding' || card.type === 'pass');
+    var showFuncNav = !isBoarding;
 
     if(cardFuncNav){
-      cardFuncNav.style.display = isPaymentCard ? 'flex' : 'none';
+      cardFuncNav.style.display = showFuncNav ? 'flex' : 'none';
     }
 
-    if(isPaymentCard){
+    if(showFuncNav){
       // 確保卡片有預設載具與會員設定
       if(card.useCarrier === undefined) card.useCarrier = true;
       if(!card.loyaltyList) card.loyaltyList = ['pxmart', 'openpoint', 'familymart'];
 
-      // 更新載具號碼徽章
-      var currentCarrier = (appData && appData.carrierCode) ? appData.carrierCode : '/GJ6FDG78';
+      // 更新載具號碼徽章 (與全域設定同步)
+      var currentCarrier = (state.globalSettings && state.globalSettings.carrierCode) ? state.globalSettings.carrierCode : ((appData && appData.carrierCode) ? appData.carrierCode : '/AB12345');
       var badgeEl = document.getElementById('linkedCarrierCodeBadge');
       if(badgeEl) badgeEl.textContent = currentCarrier;
 
@@ -7107,7 +7343,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         };
       }
 
-      // 修改載具按鈕
+      // 修改載具按鈕 (同步至全域設定中樞)
       var btnEditCarrier = document.getElementById('btnEditLinkedCarrier');
       if(btnEditCarrier){
         btnEditCarrier.onclick = function(e){
@@ -7116,6 +7352,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           if(newCode && newCode.trim()){
             var trimmed = newCode.trim().toUpperCase();
             if(!trimmed.startsWith('/')) trimmed = '/' + trimmed;
+            if(!state.globalSettings) state.globalSettings = {};
+            state.globalSettings.carrierCode = trimmed;
             if(!appData) appData = {};
             appData.carrierCode = trimmed;
             saveData();
@@ -8080,6 +8318,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               name: rawName || '外部自訂卡片',
               type: 'custom',
               theme: 'theme-custom',
+              customHtml: content,
               balance: 0,
               last4: 'EXT',
               transitNo: 'EXT-' + Math.floor(1000 + Math.random() * 9000),
@@ -8522,6 +8761,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       else if(modalCategory === 'car') val = '數位車鑰匙';
       else if(modalCategory === 'access') val = '門禁門卡';
       else if(modalCategory === 'boarding') val = '星宇航空登機證';
+      else if(selectedCardTheme === 'theme-kit-white') val = '白色微光金融卡';
+      else if(selectedCardTheme === 'theme-kit-visa-light') val = '霓光幻彩回饋卡';
+      else if(selectedCardTheme === 'theme-kit-dark') val = '太空曜黑晶片卡';
+      else if(selectedCardTheme === 'theme-kit-visa-dark') val = '魅紫星芒回饋卡';
+      else if(selectedCardTheme === 'theme-kit-silver') val = '放射銀芒尊榮卡';
+      else if(selectedCardTheme === 'theme-kit-bronze') val = '奢華金銅白金卡';
       else if(selectedCardTheme === 'theme-titanium') val = '賽博鈦銀卡';
       else if(selectedCardTheme === 'theme-aurora') val = '星幻極光卡';
       else if(selectedCardTheme === 'theme-carbon') val = '赤焰碳纖卡';
