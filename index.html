@@ -9518,22 +9518,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(spinIcon) spinIcon.classList.add('spinning');
 
     try {
-      var res = await fetch('https://api.notion.com/v1/pages/' + NOTION_PAGE_ID_GOOSE, {
-        headers: {
-          'Authorization': 'Bearer ' + NOTION_API_KEY,
-          'Notion-Version': '2022-06-28',
-          'Content-Type': 'application/json'
-        }
+      var res = await fetch('https://wardrobe-sync.jispig28.workers.dev/api/sync-goose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bath: gooseNotionData.lastBathDate,
+          walk: gooseNotionData.lastWalkDate,
+          nails: gooseNotionData.lastNailsDate
+        })
       });
       if(res.ok){
-        var page = await res.json();
-        var dateProp = page.properties && page.properties['上次日期'] && page.properties['上次日期'].date;
-        if(dateProp && dateProp.start){
-          gooseNotionData.lastBathDate = dateProp.start;
+        var data = await res.json();
+        if(data.success){
+          if(data.bath) gooseNotionData.lastBathDate = data.bath;
+          if(data.walk) gooseNotionData.lastWalkDate = data.walk;
+          if(data.nails) gooseNotionData.lastNailsDate = data.nails;
         }
       }
     } catch(err){
-      console.warn('Notion API sync warning:', err);
+      console.warn('Goose Cloudflare sync warning:', err);
     }
 
     gooseNotionData.lastSyncTime = Date.now();
