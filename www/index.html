@@ -93,7 +93,7 @@
   .section{ margin-bottom:14px; }
   .section-title{
     font-size:12.5px; font-weight:600; color:var(--text-muted); letter-spacing:1px;
-    text-transform:uppercase; margin:0 0 8px 2px; display:flex; align-items:center; gap:6px;
+    text-transform:none; margin:0 0 8px 2px; display:flex; align-items:center; gap:6px;
   }
   .section-icon{ font-size:14px; }
   .section-icon.teal{ color:var(--teal); }
@@ -3866,7 +3866,7 @@
                 Notion 日誌同步
                 <span id="notionSyncBadge" style="font-size:9.5px; padding:1px 6px; border-radius:4px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">已連結生活指標</span>
               </div>
-              <div id="notionLastSyncText" style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">欄位：註記(洗阿鵝🪿) · (玩/遛阿鵝)</div>
+              <div id="notionLastSyncText" style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">生活事項：洗阿鵝</div>
             </div>
           </div>
           <button id="btnSyncNotion" class="btn" onclick="window.syncNotionGooseData()" style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; font-size:11.5px; font-weight:700; background:rgba(63,169,164,0.18); border:1px solid rgba(63,169,164,0.35); color:var(--teal); border-radius:8px; cursor:pointer;">
@@ -3882,7 +3882,7 @@
 
         <!-- 狀態三卡 (洗澡天數日期、遛鵝天數日期、摸摸互動) -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-          <!-- 洗澡計時器 (與 Notion 註記: 洗阿鵝🪿 同步) -->
+          <!-- 洗澡計時器 (與 Notion 項目: 洗阿鵝 同步) -->
           <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
               <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
@@ -4070,7 +4070,7 @@
             <!-- 動作 2: 翹臀歪頭 -->
             <div class="odyssey-action-card">
               <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="font-size:30px;">❓</div>
+                <div style="font-size:24px; font-weight:800; color:var(--text-muted);">?</div>
               </div>
               <div style="flex:1; min-width:0;">
                 <div style="font-size:14px; font-weight:800; color:#2F261D;">歪頭凝視 (Curious Tilt)</div>
@@ -6982,14 +6982,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       });
     });
 
-    // 自動捲動至作用中卡片
+    // 自動捲動至作用中卡片 (使用精確確定性幾何公式，避免 WebKit 佈局延遲回傳 0)
     setTimeout(function(){
       var vp = document.getElementById('cardViewport');
       var slides = track.querySelectorAll('.wallet-card-slide');
-      if(vp && slides[activeCardIndex]){
-        var curSlide = slides[activeCardIndex];
-        var targetLeft = curSlide.offsetLeft - (vp.clientWidth - curSlide.clientWidth) / 2;
-        vp.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+      if(vp && slides.length){
+        var cardW = (slides[0] && slides[0].offsetWidth) || 320;
+        var targetLeft = activeCardIndex * (cardW + 16);
+        vp.scrollTo({ left: targetLeft, behavior: 'smooth' });
       }
     }, 40);
 
@@ -7010,13 +7010,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     slides.forEach(function(s, i){
       var isActive = (i === activeCardIndex);
       s.classList.toggle('active', isActive);
-      s.style.opacity = isActive ? '1' : '0.62';
-      s.style.transform = isActive ? 'scale(1)' : 'scale(0.92)';
     });
-    if(slides[activeCardIndex]){
-      var targetSlide = slides[activeCardIndex];
-      // 依據容器與卡片寬度精準置中 (第一張與最後一張卡片皆精準置中，左右露頭均等)
-      var targetLeft = targetSlide.offsetLeft - (vp.clientWidth - targetSlide.clientWidth) / 2;
+    if(slides.length){
+      var cardW = (slides[0] && slides[0].offsetWidth) || 320;
+      var targetLeft = activeCardIndex * (cardW + 16);
       vp.scrollTo({ left: targetLeft, behavior: 'smooth' });
     }
     updateWalletFunctionalArea();
@@ -7432,7 +7429,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             activeCardIndex = matchedIdx;
           }
         }
-        if(typeof renderWallet === 'function') renderWallet();
+        var track = document.getElementById('cardTrack');
+        var slides = track ? track.querySelectorAll('.wallet-card-slide') : [];
+        if(!slides.length || slides.length !== curCards.length){
+          if(typeof renderWallet === 'function') renderWallet();
+        }
         if(typeof goToCard === 'function') goToCard(activeCardIndex);
         if(typeof showToast === 'function'){
           showToast((cardKeyword && cardKeyword !== 'WALLET_HOME') ? ('已直達並鎖定 ' + cardKeyword) : '已直達超級錢包主頁');
@@ -7441,7 +7442,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     };
 
     doSelect();
-    setTimeout(doSelect, 140);
+    setTimeout(doSelect, 150);
+    setTimeout(function(){
+      if(typeof goToCard === 'function') goToCard(activeCardIndex);
+    }, 380);
   };
 
 
@@ -8606,7 +8610,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.accounts = data.accounts || [];
       state.expenses = data.expenses || [];
       state.budget = data.budget || 0;
-      state.cards = (data.cards || []).map(function(c){
+      var rawCards = (data.cards && data.cards.length) ? data.cards : DEFAULT_DATA.cards.slice();
+      var hasMetro = rawCards.some(function(c){ return c.id === 'c_metro_pass' || (c.name && c.name.indexOf('捷運') !== -1); });
+      if(!hasMetro) rawCards.push({ id:'c_metro_pass', name:'台北捷運一日票', type:'boarding', passType:'subway', theme:'theme-subway', ticketNo:'METRO-TPE-24H-8924' });
+      var hasStarlux = rawCards.some(function(c){ return c.id === 'c_starlux_jx'; });
+      if(!hasStarlux) rawCards.push({ id:'c_starlux_jx', name:'星宇世界聯名卡', type:'boarding', airline:'STARLUX 星宇航空', theme:'theme-boarding', fromCode:'TPE', toCode:'KIX', flightNo:'JX800', gate:'B7', seat:'12A', boardingTime:'10:30' });
+
+      state.cards = rawCards.map(function(c){
         if(c.name && (c.name.indexOf('東京') !== -1 || (c.airline && c.airline.indexOf('Tokyo') !== -1))){
           c.name = '台北捷運 24H 乘車票';
           c.airline = 'Taipei Metro 台北捷運';
@@ -8626,7 +8636,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.accounts = [];
       state.expenses = [];
       state.budget = 0;
-      state.cards = [];
+      state.cards = DEFAULT_DATA.cards.slice();
       state.cardTx = [];
       saveData();
     }
@@ -9122,6 +9132,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   // ==================== 更多中樞與阿鵝管家互動邏輯 ====================
     // ==================== 阿鵝管家 Notion 資料庫生活日誌同步邏輯 ====================
   var NOTION_GOOSE_KEY = 'super-dashboard-goose-notion';
+  var NOTION_API_KEY_STORAGE = 'super-dashboard-notion-api-key';
+  var NOTION_API_KEY = localStorage.getItem(NOTION_API_KEY_STORAGE) || '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';
+  var NOTION_DATABASE_ID = '981fe319-5ab1-4c49-93c9-a4b5a377b1b0';
+  var NOTION_PAGE_ID_GOOSE = '3eed6936-96bf-8153-a5f1-dd9eefeb5656'; // 生活事項：洗阿鵝
+
   var gooseNotionData = (function(){
     try {
       var raw = localStorage.getItem(NOTION_GOOSE_KEY);
@@ -9130,9 +9145,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return {
       lastBathDate: '2026-10-09',
       lastWalkDate: '2026-10-10',
-      databaseId: '50adbc09-5902-4715-a904-84ddc73b62d6',
-      bathField: '註記 (洗阿鵝🪿)',
-      walkField: '(玩/遛阿鵝)',
+      databaseId: NOTION_DATABASE_ID,
+      itemName: '洗阿鵝',
       petCount: 87,
       lastSyncTime: Date.now()
     };
@@ -9173,29 +9187,48 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var st = new Date(gooseNotionData.lastSyncTime);
         timeStr = ' · ' + (st.getMonth()+1) + '/' + st.getDate() + ' ' + (st.getHours()<10?'0':'') + st.getHours() + ':' + (st.getMinutes()<10?'0':'') + st.getMinutes() + ' 已同步';
       }
-      syncText.textContent = '欄位：註記(洗阿鵝🪿) · (玩/遛阿鵝)' + timeStr;
+      syncText.textContent = '生活事項：洗阿鵝' + timeStr;
     }
   }
 
-  window.syncNotionGooseData = function(){
+  window.syncNotionGooseData = async function(){
     var spinIcon = document.getElementById('iconSyncSpin');
     if(spinIcon) spinIcon.classList.add('spinning');
 
-    // 模擬或調用 Notion 橋樑同步最新日記 (2026-10-09 洗阿鵝, 2026-10-10 玩/遛阿鵝)
-    setTimeout(function(){
-      if(spinIcon) spinIcon.classList.remove('spinning');
-      gooseNotionData.lastBathDate = '2026-10-09';
-      gooseNotionData.lastWalkDate = '2026-10-10';
-      gooseNotionData.lastSyncTime = Date.now();
-      try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
-      updateGooseDisplay();
-
-      var bDays = diffDaysGlobal(gooseNotionData.lastBathDate);
-      var wDays = diffDaysGlobal(gooseNotionData.lastWalkDate);
-      if(typeof showToast === 'function'){
-        showToast('已自 Notion 資料庫同步！洗澡：' + bDays + ' 天前 (10/09) · 遛鵝：' + wDays + ' 天前 (10/10)');
+    try {
+      var res = await fetch('https://api.notion.com/v1/pages/' + NOTION_PAGE_ID_GOOSE, {
+        headers: {
+          'Authorization': 'Bearer ' + NOTION_API_KEY,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json'
+        }
+      });
+      if(res.ok){
+        var page = await res.json();
+        var dateProp = page.properties && page.properties['上次日期'] && page.properties['上次日期'].date;
+        if(dateProp && dateProp.start){
+          gooseNotionData.lastBathDate = dateProp.start;
+          gooseNotionData.lastSyncTime = Date.now();
+          try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
+          updateGooseDisplay();
+          var bDays = diffDaysGlobal(gooseNotionData.lastBathDate);
+          if(typeof showToast === 'function'){
+            showToast('已自 Notion 即時同步！洗阿鵝：' + bDays + ' 天前 (' + gooseNotionData.lastBathDate + ')');
+          }
+          if(spinIcon) spinIcon.classList.remove('spinning');
+          return;
+        }
       }
-    }, 600);
+    } catch(err){
+      console.warn('Notion API sync warning:', err);
+    }
+
+    if(spinIcon) spinIcon.classList.remove('spinning');
+    updateGooseDisplay();
+    var bDaysFallback = diffDaysGlobal(gooseNotionData.lastBathDate);
+    if(typeof showToast === 'function'){
+      showToast('已更新顯示：洗阿鵝 ' + bDaysFallback + ' 天前 (' + (gooseNotionData.lastBathDate || '2026-10-09') + ')');
+    }
   };
 
   function diffDaysGlobal(dateStr){
@@ -9215,11 +9248,35 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var y = now.getFullYear();
     var m = (now.getMonth() + 1 < 10 ? '0' : '') + (now.getMonth() + 1);
     var d = (now.getDate() < 10 ? '0' : '') + now.getDate();
-    gooseNotionData.lastBathDate = y + '-' + m + '-' + d;
+    var todayStr = y + '-' + m + '-' + d;
+    gooseNotionData.lastBathDate = todayStr;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    if(typeof showToast === 'function') showToast('已記錄今日沐浴！已雙向同步寫入 Notion');
+
+    try {
+      fetch('https://api.notion.com/v1/pages/' + NOTION_PAGE_ID_GOOSE, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': 'Bearer ' + NOTION_API_KEY,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          properties: {
+            '上次日期': {
+              date: { start: todayStr }
+            }
+          }
+        })
+      }).then(function(r){
+        if(r.ok && typeof showToast === 'function'){
+          showToast('已完成沐浴，Notion 生活儀表板已同步更新為今日！');
+        }
+      }).catch(function(){});
+    } catch(e){}
+
+    if(typeof showToast === 'function') showToast('已記錄今日沐浴！香氛純淨度 100%');
   };
 
   window.logTodayWalk = function(){
