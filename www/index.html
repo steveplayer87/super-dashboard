@@ -235,11 +235,108 @@
     display: flex;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 10px calc(50% - 155px) 22px; width: 100%; box-sizing: border-box;
+    padding: 10px 0 22px;
+    box-sizing: border-box;
     perspective: 1000px;
     cursor: grab;
-    box-sizing: border-box;
   }
+  .card-track-spacer {
+    flex: 0 0 max(16px, calc(50vw - 160px));
+    min-width: max(16px, calc(50vw - 160px));
+    height: 1px;
+    pointer-events: none;
+  }
+
+  
+  /* ---- 相片裁切與縮放視窗 ---- */
+  .cropper-modal-overlay {
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .cropper-frame {
+    width: 100%; aspect-ratio: 1.586 / 1; border-radius: 16px; overflow: hidden;
+    position: relative; background: #000; border: 2px solid var(--amber);
+    touch-action: none; cursor: grab; user-select: none;
+  }
+  .cropper-frame:active { cursor: grabbing; }
+
+  /* ---- 寵物角色選擇雙欄 ---- */
+  .pet-selector-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;
+  }
+  .pet-role-card {
+    background: var(--panel-raised); border: 1.5px solid var(--border);
+    border-radius: 16px; padding: 14px 12px; text-align: center;
+    cursor: pointer; transition: all .2s ease; position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .pet-role-card:active { transform: scale(0.97); }
+  .pet-role-card.active {
+    border-color: var(--amber); background: rgba(255,159,28,0.06);
+    box-shadow: 0 0 16px rgba(255,159,28,0.18);
+  }
+  .pet-role-badge {
+    position: absolute; top: 8px; right: 8px; font-size: 9.5px; font-weight: 700;
+    padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.08); color: var(--text-muted);
+  }
+  .pet-role-card.active .pet-role-badge {
+    background: var(--amber); color: #1a1202;
+  }
+
+  /* ---- 卡包廣告橫幅 (參考 super-dashboard橫幅參考.html 樣式) ---- */
+  .promo-banner{
+    position:relative; overflow:hidden; border-radius:16px; padding:16px; margin-top:14px;
+    display:flex; align-items:center; gap:14px; min-height:104px;
+    background:radial-gradient(120% 140% at 72% 22%, #241a3d 0%, #0c081a 55%, #030209 100%);
+    border:1px solid #322850; transition:transform .12s ease; cursor:pointer;
+  }
+  .promo-banner:active{ transform:scale(.98); }
+  .promo-stars{
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      radial-gradient(1.6px 1.6px at 10% 20%, rgba(255,255,255,.9), transparent 60%),
+      radial-gradient(1.2px 1.2px at 28% 72%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1.6px 1.6px at 48% 14%, rgba(255,255,255,.85), transparent 60%),
+      radial-gradient(1px 1px at 62% 55%, rgba(212,175,55,.85), transparent 60%),
+      radial-gradient(1.3px 1.3px at 80% 28%, rgba(255,255,255,.75), transparent 60%),
+      radial-gradient(1px 1px at 92% 78%, rgba(255,255,255,.6), transparent 60%),
+      radial-gradient(1.4px 1.4px at 16% 86%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(1px 1px at 38% 42%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.2px 1.2px at 74% 90%, rgba(212,175,55,.6), transparent 60%),
+      radial-gradient(1px 1px at 96% 12%, rgba(255,255,255,.65), transparent 60%);
+  }
+  .promo-content{ position:relative; z-index:1; display:flex; align-items:center; gap:14px; width:100%; }
+  .promo-text{ flex:1; min-width:0; }
+  .promo-badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+    color:#241705; background:linear-gradient(135deg,#F5D888,#C89A3B); padding:3px 9px; border-radius:20px; margin-bottom:7px;
+  }
+  .promo-title{ font-size:15px; font-weight:800; color:#F1E7FF; margin-bottom:3px; line-height:1.3; }
+  .promo-sub{ font-size:11.5px; color:#B7ACD6; line-height:1.4; }
+  .promo-hero-stage{ width:96px; flex-shrink:0; perspective:600px; position:relative; }
+  .promo-hero-card{
+    width:100%; aspect-ratio:1.586/1; border-radius:11px; padding:9px;
+    background:
+      radial-gradient(120% 120% at 15% 0%, rgba(255,215,130,.22), transparent 55%),
+      linear-gradient(155deg, #262016 0%, #100D08 55%, #1c160c 100%);
+    border:1px solid #4a3c1f; box-shadow:0 10px 22px rgba(0,0,0,.55);
+    display:flex; flex-direction:column; justify-content:space-between;
+    transform:perspective(600px) rotateY(-20deg) rotateX(9deg);
+    animation:heroFloat 4.6s ease-in-out infinite;
+  }
+  @keyframes heroFloat{
+    0%,100%{ transform:perspective(600px) rotateY(-20deg) rotateX(9deg) translateY(0); }
+    50%{ transform:perspective(600px) rotateY(-13deg) rotateX(5deg) translateY(-5px); }
+  }
+  .promo-hero-chip{ width:18px; height:13px; border-radius:3px; background:linear-gradient(135deg,#F5D888,#B8862E); }
+  .promo-hero-number{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:8.5px; letter-spacing:1.5px; color:#E9D8A6; }
+  .promo-hero-icon{ font-size:11px; color:var(--gold); align-self:flex-end; }
+  .promo-hero-glow{
+    position:absolute; left:50%; bottom:-8px; width:80%; height:16px; transform:translateX(-50%);
+    background:radial-gradient(ellipse, rgba(212,175,55,.35), transparent 70%); filter:blur(2px);
+  }
+
   .card-viewport::-webkit-scrollbar{ display: none; }
   .card-viewport:active{ cursor: grabbing; }
 
@@ -2951,25 +3048,25 @@
   }
 
 
-  /* ==================== 阿鵝小應用 (溫馨可愛米黃白暖橘調) ==================== */
+  /* ==================== 阿鵝管家 (主題全面自動調和適配) ==================== */
   #gooseSubView {
-    background: #FFFDF8 !important;
-    color: #2F261D !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
   }
   #gooseSubView .goose-card {
-    background: #FFFFFF !important;
-    border: 1px solid #F2E3CD !important;
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
     border-radius: 18px !important;
-    box-shadow: 0 4px 16px rgba(180, 130, 80, 0.06) !important;
-    color: #2F261D !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+    color: var(--text) !important;
   }
   #gooseSubView .goose-btn-primary {
-    background: linear-gradient(135deg, #FFA053 0%, #FF7F2E 100%) !important;
-    color: #FFFFFF !important;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%) !important;
+    color: #1a1202 !important;
     font-weight: 800 !important;
     border: none !important;
     border-radius: 20px !important;
-    box-shadow: 0 4px 12px rgba(255, 127, 46, 0.28) !important;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3) !important;
     cursor: pointer;
     transition: transform 0.12s ease !important;
   }
@@ -2977,20 +3074,43 @@
     transform: scale(0.96) !important;
   }
   #gooseSubView .goose-btn-sub {
-    background: #FFF5E8 !important;
-    color: #D36C22 !important;
-    border: 1px solid #FCDAB7 !important;
+    background: var(--panel-raised-2) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
     border-radius: 16px !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     cursor: pointer;
   }
   #gooseSubView .badge-pill {
-    background: #FFF0DC !important;
-    color: #C86118 !important;
+    background: rgba(212, 175, 55, 0.15) !important;
+    color: var(--gold) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
     border-radius: 8px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
     padding: 3px 8px !important;
+  }
+  /* 萬聖節主題專屬阿鵝色系調配 */
+  body.theme-halloween #gooseSubView .goose-card {
+    background: #1A1630 !important;
+    border-color: #3A305E !important;
+    color: #F5EEFF !important;
+    box-shadow: 0 6px 20px rgba(19, 16, 36, 0.6) !important;
+  }
+  body.theme-halloween #gooseSubView .goose-btn-primary {
+    background: linear-gradient(135deg, #FF7B00 0%, #E65100 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(255, 123, 0, 0.4) !important;
+  }
+  body.theme-halloween #gooseSubView .goose-btn-sub {
+    background: #231E3F !important;
+    color: #F5EEFF !important;
+    border-color: #3A305E !important;
+  }
+  body.theme-halloween #gooseSubView .badge-pill {
+    background: rgba(255, 123, 0, 0.18) !important;
+    color: #FF9029 !important;
+    border-color: rgba(255, 123, 0, 0.35) !important;
   }
 
   /* 瑪利歐奧德塞風格動作卡片 */
@@ -3074,34 +3194,22 @@
         <div class="grid" id="shortcutGrid"></div>
       </div>
 
-      <!-- 儀表板下方面板: 3D 透視廣告卡片 (星星虛空背景) -->
-      <div class="promo-void-container" id="promoVoidSection">
-        <div class="promo-stars-layer"></div>
-        <div class="promo-void-header">
-          <span class="promo-badge">PRO PASS</span>
-          <span class="promo-void-title">航太奢華 · 全功能擬物黑卡</span>
-        </div>
-        
-        <div class="promo-perspective-scene" id="promo3dScene">
-          <div class="promo-3d-card" id="promo3dCard" title="點擊體驗全感應卡片">
-            <div class="promo-3d-shine"></div>
-            <div class="promo-3d-top">
-              <div class="promo-3d-chip"></div>
-              <div class="promo-3d-nfc">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/></svg>
-              </div>
+      <!-- 廣告橫幅：星空虛空背景 + 3D 立體浮動金屬晶片卡（點擊直達超級錢包主頁）-->
+      <div class="promo-banner" id="promoBanner" onclick="window.switchPage('wallet')" title="點擊直達超級錢包">
+        <div class="promo-stars"></div>
+        <div class="promo-content">
+          <div class="promo-text">
+            <div class="promo-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>PRO PASS</div>
+            <div class="promo-title">一機在手，卡片全都有</div>
+            <div class="promo-sub">公車 · 門禁 · 車鑰匙，通通收進虛擬卡包 →</div>
+          </div>
+          <div class="promo-hero-stage">
+            <div class="promo-hero-card">
+              <div class="promo-hero-chip"></div>
+              <div class="promo-hero-number">•••• ••••</div>
+              <div class="promo-hero-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/></svg></div>
             </div>
-            <div class="promo-3d-mid">
-              <div class="promo-3d-brand">SUPER PASS BLACK</div>
-              <div class="promo-3d-desc">即時餘額記帳 · 門禁感應模擬 · 星宇登機雙模態</div>
-            </div>
-            <div class="promo-3d-bottom">
-              <div class="promo-3d-num">•••• 9988</div>
-              <div class="promo-3d-cta">
-                <span>立即體驗</span>
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"/></svg>
-              </div>
-            </div>
+            <div class="promo-hero-glow"></div>
           </div>
         </div>
       </div>
@@ -3542,9 +3650,9 @@
           </div>
         </div>
 
-        <!-- 原生延伸功能測試專區 (嚴格禁止 Emoji，使用純向量 Lucide 圖示) -->
-        <div class="section">
-          <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 原生延伸功能中樞</div>
+        <!-- iOS 原生延伸功能中樞與清單 -->
+        <div class="section" style="margin-top:24px;">
+          <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
           <div class="fin-list">
             <div class="fin-row" onclick="window.triggerLiveActivity()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:#a855f7; font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg></span>
@@ -3606,7 +3714,58 @@
           </div>
         </div>
 
-                <!-- 主題風格中樞 (經典普通主題 vs 萬聖節主題) -->
+                <!-- 桌面懸浮守護寵物設定 (左右雙欄切換：恐龍 vs 柯爾鴨) -->
+        <div class="section" style="margin-top:20px;">
+          <div class="section-title">
+            <span class="section-icon gold" style="display:inline-flex; align-items:center; justify-content:center;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </span>桌面懸浮守護寵物
+          </div>
+          <div class="pet-selector-grid">
+            <div class="pet-role-card" id="petRoleDino" onclick="window.setPetRole('dino')">
+              <span class="pet-role-badge" id="badgeRoleDino">使用中</span>
+              <div style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; margin-top:4px;">
+                <svg viewBox="0 0 40 40" width="38" height="38" fill="none">
+                  <path d="M12 28 C10 24 14 18 22 18 C26 18 29 20 30 23 C31 27 29 31 23 32 Z" fill="#3FA9A4"/>
+                  <path d="M22 18 C22 12 25 8 32 8 C37 8 39 11 39 15 C39 17 36 18 33 18 Z" fill="#3FA9A4"/>
+                  <circle cx="32" cy="12" r="2" fill="#EDE6D6"/>
+                  <circle cx="33" cy="12" r="1" fill="#1A1815"/>
+                  <polygon points="15,19 17,15 19,19" fill="#FF9F1C"/>
+                  <polygon points="21,18 23,14 25,18" fill="#FF9F1C"/>
+                  <path d="M16 32 L15 37 L18 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M24 32 L25 37 L28 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div style="font-size:13px; font-weight:800; color:var(--text);">綠野小暴龍</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">跳躍踏步 · 森林咆哮覓食</div>
+            </div>
+
+            <div class="pet-role-card" id="petRoleDuck" onclick="window.setPetRole('duck')">
+              <span class="pet-role-badge" id="badgeRoleDuck">切換</span>
+              <div style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; margin-top:4px;">
+                <svg viewBox="0 0 100 100" width="40" height="40" fill="none">
+                  <ellipse cx="50" cy="86" rx="26" ry="6" fill="rgba(0,0,0,0.18)"/>
+                  <ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                  <path d="M 32 54 C 28 62 36 72 48 68 C 50 62 42 54 32 54 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.8"/>
+                  <circle cx="50" cy="34" r="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                  <ellipse cx="36" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/>
+                  <ellipse cx="64" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/>
+                  <circle cx="41" cy="32" r="3.2" fill="#1E293B"/>
+                  <circle cx="40" cy="31" r="1.1" fill="#FFFFFF"/>
+                  <circle cx="59" cy="32" r="3.2" fill="#1E293B"/>
+                  <circle cx="58" cy="31" r="1.1" fill="#FFFFFF"/>
+                  <path d="M 44 38 Q 50 35 56 38 Q 54 46 50 47 Q 46 46 44 38 Z" fill="#FF9F1C" stroke="#E07A00" stroke-width="1.4"/>
+                  <path d="M 42 80 L 40 85 M 42 80 L 43 85 M 42 80 L 46 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M 58 80 L 56 85 M 58 80 L 59 85 M 58 80 L 62 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div style="font-size:13px; font-weight:800; color:var(--text);">雪白柯爾鴨</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">搖擺踱步 · 水花拍翅嘎嘎</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 主題風格中樞 (經典普通主題 vs 萬聖節主題) -->
         <div class="section" style="margin-top:14px;">
           <div class="section-title">
             <span class="section-icon gold" style="display:inline-flex; align-items:center; justify-content:center;">
@@ -4178,17 +4337,22 @@
               </div>
             </div>
 
-            <!-- 自訂相片上傳區 (選中自訂卡面時展開) -->
+            <!-- 自訂相片上傳區 (選中自訂卡面時展開) 與 外部卡片匯入 -->
             <div class="custom-image-picker" id="customImagePicker" style="display:none;">
-              <input type="file" id="customCardFileInput" accept="image/*" style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
-              <div class="custom-image-controls" style="display:flex; align-items:center; gap:8px;">
-                <label for="customCardFileInput" class="btn-custom-upload" id="btnCustomUpload" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+              <input type="file" id="customCardFileInput" accept="image/*" style="display:none;">
+              <input type="file" id="externalCardFileInput" accept=".html,.zip" style="display:none;">
+              <div class="custom-image-controls" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn-custom-upload" id="btnCustomUpload" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:8px 14px; color:var(--text); font-size:12.5px; font-weight:600;">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                   <span id="btnCustomUploadText">選擇相片 / 圖檔</span>
-                </label>
-                <button type="button" class="btn-custom-preset" id="btnCustomClear" style="display:none; background:rgba(193,68,60,.15); color:#ff9d95; border-color:rgba(193,68,60,.35);">清除相片</button>
+                </button>
+                <button type="button" id="btnImportExternalCard" style="display:inline-flex; align-items:center; gap:6px; background:rgba(10,132,255,.14); color:#5ac8fa; border:1px solid rgba(10,132,255,.35); border-radius:12px; padding:8px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>匯入外部卡片</span>
+                </button>
+                <button type="button" class="btn-custom-preset" id="btnCustomClear" style="display:none; background:rgba(193,68,60,.15); color:#ff9d95; border-color:rgba(193,68,60,.35); border-radius:12px; padding:8px 12px; font-size:12px;">清除相片</button>
               </div>
-              <div class="custom-image-hint" id="customImageHint">可直接從手機相簿或電腦挑選照片，立即套用為卡面背景</div>
+              <div class="custom-image-hint" id="customImageHint">挑選相片後可在卡片尺寸框內自由縮放裁切；亦可點「匯入外部卡片」上傳 HTML / ZIP</div>
             </div>
           </div>
         </div>
@@ -4835,6 +4999,8 @@
 
 
 <script>
+  var METRO_PASS_IMAGE_DATA = "data:image/webp;base64,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";
+
 window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
 var state = window.state;
 
@@ -5053,6 +5219,18 @@ window.safeSetIcon = safeSetIcon;
   };
 
   // ==================== 原生全雙工通訊橋樑 (優先使用 WebKit MessageHandler) ====================
+    window.openExternalUrl = function(url){
+    try {
+      if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openExternalUrl){
+        window.webkit.messageHandlers.openExternalUrl.postMessage({ url: url });
+        return;
+      }
+    } catch(e){}
+    try {
+      window.location.href = url;
+    } catch(e2){}
+  };
+
   window.callNative = function(action, params){
     var query = '';
     if(params !== undefined && params !== null){
@@ -5740,7 +5918,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     accounts: [],
     expenses: [],
     budget: 0,
-    cards: [],
+    cards: [
+      { id:'c_easycard', name:'悠遊卡', type:'transit', theme:'theme-gold', balance:500, transitNo:'No. 0824-9102-381', last4:'0381' },
+      { id:'c_metro_pass', name:'台北捷運一日票', type:'boarding', passType:'subway', theme:'theme-subway', ticketNo:'METRO-TPE-24H-8924' },
+      { id:'c_starlux_jx', name:'星宇世界聯名卡', type:'boarding', airline:'STARLUX 星宇航空', theme:'theme-boarding', fromCode:'TPE', toCode:'KIX', flightNo:'JX800', gate:'B7', seat:'12A', boardingTime:'10:30' }
+    ],
     cardTx: []
   };
 
@@ -5978,8 +6160,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               if(!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')){
                 rawUrl = 'https://' + rawUrl;
               }
-              window.open(rawUrl, '_blank');
-              showToast('已開啟外部連結');
+              window.openExternalUrl(rawUrl);
+              showToast('已開啟外部連結：' + rawUrl);
             } else {
               doCopy(item, cap.querySelector('.led'));
             }
@@ -6024,11 +6206,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function doOpenShortcut(item){
     var url = 'shortcuts://run-shortcut?name=' + encodeURIComponent(item.name);
     if(item.input){ url += '&input=' + encodeURIComponent(item.input); }
-    var a = document.createElement('a');
-    a.href = url; a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    window.openExternalUrl(url);
+    if(typeof showToast === 'function') showToast('正在啟動 iOS 捷徑：' + item.name);
   }
 
   // ==================== 財務頁 ====================
@@ -6112,6 +6291,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         '<path d="M5 14a2.5 2.5 0 0 0 0-4"/>' +
       '</svg>' +
     '</div>';
+
+    // 0. 台北捷運一日票 (採用 image.webp 官方純淨卡面，無雜亂文字覆蓋)
+    if(card.passType === 'subway' || card.theme === 'theme-subway' || (card.name && (card.name.indexOf('捷運') !== -1 || card.name.indexOf('一日票') !== -1))){
+      return '<div class="metro-pass-card-wrap" style="width:100%; height:100%; position:relative; overflow:hidden; border-radius:16px; background:#0F1D38;">' +
+        '<img src="' + METRO_PASS_IMAGE_DATA + '" alt="台北捷運一日票" style="width:100%; height:100%; object-fit:cover; display:block; pointer-events:none;" />' +
+        '<div class="card-touch-nfc-right" style="position:absolute; top:10px; right:12px; color:rgba(255,255,255,0.85);">' +
+          '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8.5 16.5a6 6 0 0 0 0-9"/><path d="M12 19a9.5 9.5 0 0 0 0-14"/><path d="M15.5 21.5a13 13 0 0 0 0-19"/><path d="M5 14a2.5 2.5 0 0 0 0-4"/></svg>' +
+        '</div>' +
+      '</div>';
+    }
 
     // 1. 星宇航空登機證 (航太深藍午夜金)
     if(card.type === 'boarding'){
@@ -6262,6 +6451,22 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   
+    function logCardTx(cardId, title, amount){
+    if(!state.cardTx) state.cardTx = [];
+    var numAmt = (typeof amount === 'number') ? amount : (amount ? parseFloat(String(amount).replace(/[^0-9.-]/g, '')) : null);
+    if(numAmt !== null && isNaN(numAmt)) numAmt = null;
+    state.cardTx.unshift({
+      id: uid('tx'),
+      cardId: cardId,
+      title: title,
+      label: title,
+      amount: numAmt,
+      rawText: (typeof amount === 'string') ? amount : '',
+      time: Date.now()
+    });
+    saveData();
+  }
+
   function renderCardTxList(cardId){
     var list = document.getElementById('cardTxList');
     var titleEl = document.getElementById('historySectionTitle');
@@ -6688,18 +6893,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(histSection) histSection.style.display = 'block';
     }
 
-    // 更新底部圓點指標
+    // 更新底部圓點指標 (複用現有節點僅切換 active 類別，避免頻繁摧毀重繪導致卡頓)
     var dotsEl = document.getElementById('walletDots');
     if(dotsEl){
-      dotsEl.innerHTML = '';
-      cards.forEach(function(c, i){
-        var d = document.createElement('button');
-        d.className = 'wallet-dot' + (i === activeCardIndex ? ' active' : '');
-        d.addEventListener('click', function(){
-          if(i !== activeCardIndex) goToCard(i);
+      var existingDots = dotsEl.querySelectorAll('.wallet-dot');
+      if(existingDots.length === cards.length){
+        existingDots.forEach(function(d, i){
+          d.classList.toggle('active', i === activeCardIndex);
         });
-        dotsEl.appendChild(d);
-      });
+      } else {
+        dotsEl.innerHTML = '';
+        cards.forEach(function(c, i){
+          var d = document.createElement('button');
+          d.className = 'wallet-dot' + (i === activeCardIndex ? ' active' : '');
+          d.addEventListener('click', function(){
+            if(i !== activeCardIndex) goToCard(i);
+          });
+          dotsEl.appendChild(d);
+        });
+      }
     }
 
     renderCardTxList(card.id);
@@ -6725,8 +6937,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var track = document.getElementById('cardTrack');
     if(!track) return;
 
-    // 動態渲染所有大卡片 (主卡大張，下一張在側邊微露頭)
-    track.innerHTML = cards.map(function(card, i){
+    // 動態渲染所有大卡片 (首尾置入 card-track-spacer 保證最後一張卡片也能 100% 精準居中，徹底杜絕滑動卡死)
+    track.innerHTML = '<div class="card-track-spacer"></div>' +
+      cards.map(function(card, i){
       var isActive = (i === activeCardIndex);
       var themeClass = (card.type === 'boarding') ? 'theme-boarding' : (card.theme || 'theme-gold');
       var customBg = '';
@@ -6743,7 +6956,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '</div>' +
         '</div>' +
       '</div>';
-    }).join('');
+    }).join('') + '<div class="card-track-spacer"></div>';
 
     // 為每張卡片綁定點擊事件：露頭卡片點擊切換、中間卡片點擊全螢幕感應
     track.querySelectorAll('.wallet-card-slide').forEach(function(slide){
@@ -6902,7 +7115,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     function performFaceIDUnlock(){
       isSenseUnlocked = false;
       if(faceScan){
-        faceScan.className = 'face-scan-icon enter';
+        faceScan.style.display = 'none';
         var mouth = faceScan.querySelector('.fid-mouth');
         if(mouth) mouth.setAttribute('d', 'M40 65 Q50 65 60 65');
       }
@@ -6921,33 +7134,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       window.requestNativeFaceID(function(success, errMsg){
         if(success){
           isSenseUnlocked = true;
-          if(faceScan){
-            faceScan.classList.add('smiling');
-            var mouth = faceScan.querySelector('.fid-mouth');
-            if(mouth) mouth.setAttribute('d', 'M39 63 Q50 74 61 63');
-            setTimeout(function(){ faceScan.classList.add('shrink-out'); }, 400);
-          }
-          setTimeout(function(){
-            if(isBoarding){
-              if(appText) appText.textContent = '靠近掃碼器';
-              if(qrLockOverlay){
-                qrLockOverlay.classList.add('unlocked');
-                setTimeout(function(){ qrLockOverlay.style.display = 'none'; }, 280);
-              }
-              if(qrBox){
-                qrBox.classList.remove('locked');
-                qrBox.classList.add('unlocked');
-              }
-            } else {
-              if(appText) appText.textContent = '靠近讀卡機';
+          if(faceScan) faceScan.style.display = 'none';
+          if(isBoarding){
+            if(appText) appText.textContent = '靠近掃碼器或讀卡機';
+            if(qrLockOverlay){
+              qrLockOverlay.classList.add('unlocked');
+              setTimeout(function(){ qrLockOverlay.style.display = 'none'; }, 240);
             }
-            if(appHint) appHint.classList.add('show');
-          }, 450);
+            if(qrBox){
+              qrBox.classList.remove('locked');
+              qrBox.classList.add('unlocked');
+            }
+          } else {
+            if(appText) appText.textContent = '靠近讀卡機即可感應';
+          }
+          if(appHint) appHint.classList.add('show');
         } else {
+          // 嚴格依使用者指示：Face ID 驗證失敗或取消時，立即退回錢包
           isSenseUnlocked = false;
-          if(appText) appText.textContent = 'Face ID 認證取消 (點擊重試)';
-          if(qrLockText) qrLockText.textContent = '認證取消 · 點此重試 Face ID';
-          if(typeof showToast === 'function') showToast(errMsg || 'Face ID 認證未通過，請點擊重試');
+          closeSenseOverlay();
+          if(typeof showToast === 'function'){
+            showToast('Face ID 生物辨識未通過或已取消，已退回錢包');
+          }
         }
       });
     }
@@ -7009,15 +7217,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       txAmount = '-NT$' + randSpend;
     }
 
-    if(!state.cardTx) state.cardTx = [];
-    state.cardTx.unshift({
-      id: uid('tx'),
-      cardId: card.id,
-      title: txTitle,
-      amount: txAmount,
-      time: now
-    });
-    saveData();
+    logCardTx(card.id, txTitle, txAmount);
     renderWallet();
     if(typeof renderCardTxList === 'function') renderCardTxList(card.id);
   }
@@ -7189,32 +7389,59 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   window.switchTab = function(tab){ switchPage(tab); };
 
-  // 全域導航到錢包並選中指定卡片
+  // 全域導航到錢包並選中指定卡片（必定直達錢包主頁，選中悠遊卡並自動居中對齊）
   window.navigateToWallet = function(cardKeyword){
     if(typeof switchPage === 'function'){
       switchPage('wallet');
     } else if(typeof window.switchPage === 'function'){
       window.switchPage('wallet');
     }
-    setTimeout(function(){
+
+    var doSelect = function(){
       try {
-        var curCards = (window.state && window.state.cards) || (typeof state !== 'undefined' ? state.cards : []);
-        if(cardKeyword && curCards.length > 0){
+        var curCards = (typeof visibleCards === 'function') ? visibleCards() : ((window.state && window.state.cards) || []);
+        if(!curCards.length && state.cards && state.cards.length){
+          curCards = state.cards;
+        }
+
+        if(cardKeyword && cardKeyword !== 'WALLET_HOME'){
+          var matchedIdx = -1;
           for(var i = 0; i < curCards.length; i++){
             var name = curCards[i].name || curCards[i].bank || '';
             var type = curCards[i].type || '';
             if(name.indexOf(cardKeyword) !== -1 || type.indexOf(cardKeyword) !== -1 || curCards[i].id === cardKeyword){
-              activeCardIndex = i;
+              matchedIdx = i;
               break;
             }
           }
+          if(matchedIdx === -1 && (cardKeyword.indexOf('悠遊') !== -1 || cardKeyword.toLowerCase().indexOf('easycard') !== -1)){
+            var autoEasy = {
+              id: 'c_easycard_auto',
+              name: '悠遊卡',
+              type: 'transit',
+              theme: 'theme-gold',
+              balance: 500,
+              transitNo: 'No. 0824-9102-381',
+              last4: '0381'
+            };
+            state.cards.unshift(autoEasy);
+            saveData();
+            matchedIdx = 0;
+          }
+          if(matchedIdx !== -1){
+            activeCardIndex = matchedIdx;
+          }
         }
         if(typeof renderWallet === 'function') renderWallet();
+        if(typeof goToCard === 'function') goToCard(activeCardIndex);
         if(typeof showToast === 'function'){
-          showToast(cardKeyword ? '已為您快速開啟 ' + cardKeyword : '已切換至超級錢包');
+          showToast((cardKeyword && cardKeyword !== 'WALLET_HOME') ? ('已直達並鎖定 ' + cardKeyword) : '已直達超級錢包主頁');
         }
       } catch(e){ console.error('navigateToWallet error', e); }
-    }, 150);
+    };
+
+    doSelect();
+    setTimeout(doSelect, 140);
   };
 
 
@@ -7389,16 +7616,197 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var r = new FileReader();
         r.onload = function(evt){
           var res = evt.target.result;
-          updateCustomPreview(res);
-          var uploadText = document.getElementById('btnCustomUploadText');
-          if(uploadText) uploadText.textContent = '更換相片';
-          if(btnCustomClear) btnCustomClear.style.display = 'inline-flex';
-          showToast('已成功載入相片！');
+          openPhotoCropper(res);
         };
         r.readAsDataURL(file);
       }
     });
   }
+
+  // ==================== 自訂卡面相片縮放裁切器 ====================
+  var cropperModal = document.getElementById('photoCropperModal');
+  var cropperImage = document.getElementById('cropperImage');
+  var cropperFrame = document.getElementById('cropperFrame');
+  var cropperZoomSlider = document.getElementById('cropperZoomSlider');
+  var cropperApplyBtn = document.getElementById('cropperApplyBtn');
+  var cropperCancelBtn = document.getElementById('cropperCancelBtn');
+  var cropperCancelX = document.getElementById('cropperCancelX');
+
+  var cropState = {
+    img: null,
+    srcW: 0,
+    srcH: 0,
+    zoom: 1,
+    posX: 0,
+    posY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    initPosX: 0,
+    initPosY: 0
+  };
+
+  function updateCropperTransform(){
+    if(!cropperImage) return;
+    cropperImage.style.transform = 'translate(' + cropState.posX + 'px, ' + cropState.posY + 'px) scale(' + cropState.zoom + ')';
+  }
+
+  function openPhotoCropper(dataUrl){
+    if(!cropperModal || !cropperImage || !cropperFrame) return;
+    cropState.img = new Image();
+    cropState.img.onload = function(){
+      cropState.srcW = cropState.img.width;
+      cropState.srcH = cropState.img.height;
+      
+      var frameW = cropperFrame.clientWidth || 300;
+      var frameH = cropperFrame.clientHeight || (frameW / 1.586);
+      
+      var scale = Math.max(frameW / cropState.srcW, frameH / cropState.srcH);
+      cropperImage.style.width = (cropState.srcW * scale) + 'px';
+      cropperImage.style.height = (cropState.srcH * scale) + 'px';
+      
+      cropState.zoom = 1;
+      cropState.posX = (frameW - (cropState.srcW * scale)) / 2;
+      cropState.posY = (frameH - (cropState.srcH * scale)) / 2;
+      
+      if(cropperZoomSlider) cropperZoomSlider.value = '1';
+      cropperImage.src = dataUrl;
+      updateCropperTransform();
+      cropperModal.style.display = 'flex';
+    };
+    cropState.img.src = dataUrl;
+  }
+
+  function closePhotoCropper(){
+    if(cropperModal) cropperModal.style.display = 'none';
+  }
+
+  if(cropperCancelBtn) cropperCancelBtn.onclick = closePhotoCropper;
+  if(cropperCancelX) cropperCancelX.onclick = closePhotoCropper;
+
+  if(cropperZoomSlider){
+    cropperZoomSlider.addEventListener('input', function(){
+      cropState.zoom = parseFloat(this.value) || 1;
+      updateCropperTransform();
+    });
+  }
+
+  if(cropperFrame){
+    var onCropDragStart = function(cx, cy){
+      cropState.isDragging = true;
+      cropState.startX = cx;
+      cropState.startY = cy;
+      cropState.initPosX = cropState.posX;
+      cropState.initPosY = cropState.posY;
+    };
+    var onCropDragMove = function(cx, cy){
+      if(!cropState.isDragging) return;
+      cropState.posX = cropState.initPosX + (cx - cropState.startX);
+      cropState.posY = cropState.initPosY + (cy - cropState.startY);
+      updateCropperTransform();
+    };
+    var onCropDragEnd = function(){
+      cropState.isDragging = false;
+    };
+
+    cropperFrame.addEventListener('mousedown', function(e){ onCropDragStart(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', function(e){ onCropDragMove(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', onCropDragEnd);
+
+    cropperFrame.addEventListener('touchstart', function(e){
+      if(e.touches.length === 1){
+        onCropDragStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    cropperFrame.addEventListener('touchmove', function(e){
+      if(e.touches.length === 1){
+        onCropDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    cropperFrame.addEventListener('touchend', onCropDragEnd);
+  }
+
+  if(cropperApplyBtn){
+    cropperApplyBtn.addEventListener('click', function(){
+      if(!cropState.img) return;
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = 634; // 1.586 * 400
+        canvas.height = 400;
+        var ctx = canvas.getContext('2d');
+
+        var frameW = cropperFrame.clientWidth || 300;
+        var frameH = cropperFrame.clientHeight || (frameW / 1.586);
+        var ratio = canvas.width / frameW;
+
+        var baseScale = Math.max(frameW / cropState.srcW, frameH / cropState.srcH);
+        var renderedW = cropState.srcW * baseScale * cropState.zoom;
+        var renderedH = cropState.srcH * baseScale * cropState.zoom;
+
+        var drawX = cropState.posX * ratio;
+        var drawY = cropState.posY * ratio;
+        var drawW = renderedW * ratio;
+        var drawH = renderedH * ratio;
+
+        ctx.drawImage(cropState.img, drawX, drawY, drawW, drawH);
+        var croppedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        updateCustomPreview(croppedDataUrl);
+        setTheme('theme-custom');
+        var uploadText = document.getElementById('btnCustomUploadText');
+        if(uploadText) uploadText.textContent = '更換相片';
+        if(btnCustomClear) btnCustomClear.style.display = 'inline-flex';
+        closePhotoCropper();
+        showToast('卡面相片已完成裁切與縮放！');
+      } catch(err){
+        console.error('Cropper error', err);
+        closePhotoCropper();
+      }
+    });
+  }
+
+  // 匯入外部卡片邏輯 (支援 .html 與 .zip)
+  var btnImportExternal = document.getElementById('btnImportExternalCard');
+  var externalFileInput = document.getElementById('externalCardFileInput');
+  if(btnImportExternal && externalFileInput){
+    btnImportExternal.addEventListener('click', function(e){
+      e.stopPropagation();
+      externalFileInput.value = '';
+      externalFileInput.click();
+    });
+    externalFileInput.addEventListener('change', function(){
+      if(this.files && this.files[0]){
+        var file = this.files[0];
+        var reader = new FileReader();
+        reader.onload = function(evt){
+          try {
+            var rawName = file.name.replace(/\.[^/.]+$/, '');
+            var content = evt.target.result;
+            var extCard = {
+              id: uid('ext'),
+              name: rawName || '外部自訂卡片',
+              type: 'custom',
+              theme: 'theme-custom',
+              balance: 0,
+              last4: 'EXT',
+              transitNo: 'EXT-' + Math.floor(1000 + Math.random() * 9000),
+              isExternal: true
+            };
+            state.cards.push(extCard);
+            activeCardIndex = state.cards.length - 1;
+            saveData();
+            closeModal();
+            switchPage('wallet');
+            renderEverything();
+            showToast('已成功匯入外部卡片『' + extCard.name + '』！');
+          } catch(e){
+            showToast('外部卡片解析失敗，請確認檔案格式符合規範');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  }
+
 
   document.querySelectorAll('#themeCarousel .style-card-item').forEach(function(item){
     item.addEventListener('click', function(){ setTheme(item.dataset.theme); });
@@ -7925,7 +8333,75 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   setInterval(updateDate, 60000);
   updateDate();
 
-  // ==================== 浮動球與恐龍互動模組 ====================
+  // ==================== 桌面守護寵物 (暴龍 vs 柯爾鴨) ====================
+  var currentPetRole = localStorage.getItem('super_dashboard_pet_role') || 'dino';
+
+  var DINO_BALL_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" fill="none"><path d="M12 28 C10 24 14 18 22 18 C26 18 29 20 30 23 C31 27 29 31 23 32 Z" fill="#3FA9A4"/><path d="M22 18 C22 12 25 8 32 8 C37 8 39 11 39 15 C39 17 36 18 33 18 Z" fill="#3FA9A4"/><circle cx="32" cy="12" r="2" fill="#EDE6D6"/><circle cx="33" cy="12" r="1" fill="#1A1815"/><polygon points="15,19 17,15 19,19" fill="#FF9F1C"/><polygon points="21,18 23,14 25,18" fill="#FF9F1C"/><path d="M16 32 L15 37 L18 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/><path d="M24 32 L25 37 L28 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="50" cy="86" rx="26" ry="6" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><path d="M 32 54 C 28 62 36 72 48 68 C 50 62 42 54 32 54 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.8"/><circle cx="50" cy="34" r="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><ellipse cx="36" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><ellipse cx="64" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><circle cx="41" cy="32" r="3.2" fill="#1E293B"/><circle cx="40" cy="31" r="1.1" fill="#FFFFFF"/><circle cx="59" cy="32" r="3.2" fill="#1E293B"/><circle cx="58" cy="31" r="1.1" fill="#FFFFFF"/><path d="M 44 38 Q 50 35 56 38 Q 54 46 50 47 Q 46 46 44 38 Z" fill="#FF9F1C" stroke="#E07A00" stroke-width="1.4"/><path d="M 42 80 L 40 85 M 42 80 L 43 85 M 42 80 L 46 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/><path d="M 58 80 L 56 85 M 58 80 L 59 85 M 58 80 L 62 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  var DINO_ACTOR_SVG = '<svg viewBox="0 0 70 60" width="96" height="82" fill="none"><g class="dino-tail"><path d="M18 34 C11 34 4 39 2 45 C8 45 15 41 20 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><polygon points="12,34 9,28 7,35" fill="#FF9F1C"/><polygon points="17,32 15,26 13,33" fill="#FF9F1C"/></g><path d="M16 36 C16 26 24 22 36 22 C42 22 46 25 48 30 C50 36 47 44 38 45 C28 46 16 45 16 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><path d="M22 38 C26 43 34 43 37 40 C35 44 26 45 22 38 Z" fill="#2E7E7A"/><polygon points="22,23 25,17 27,23" fill="#FF9F1C"/><polygon points="30,22 33,16 35,22" fill="#FF9F1C"/><polygon points="38,23 41,17 43,24" fill="#FF9F1C"/><g class="dino-head"><path d="M34 22 C34 13 39 7 51 7 C59 7 63 11 63 17 C63 20 59 22 55 22 L46 22 C42 22 38 23 34 22 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><circle cx="51" cy="13" r="3.6" fill="#EDE6D6"/><circle cx="52.5" cy="13" r="1.8" fill="#14120D"/><circle cx="53" cy="12" r="0.7" fill="#FFF"/><ellipse cx="46" cy="17" rx="2" ry="1.2" fill="#FF9F1C" opacity="0.6"/><path d="M49 22 L61 22 C59 26 53 27 49 27 Z" fill="#241705" stroke="#100E0A" stroke-width="1"/><polygon points="52,22 54,24 56,22" fill="#FFF"/><polygon points="56,22 58,24 60,22" fill="#FFF"/></g><g class="dino-hand"><path d="M38 29 C42 30 45 32 44 34 C43 35 40 33 37 32 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.2"/></g><g class="dino-leg-left"><path d="M24 43 L23 52 L28 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 43 L23 52 L28 52" stroke="#3FA9A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="dino-leg-right"><path d="M34 43 L36 52 L41 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 43 L36 52 L41 52" stroke="#2E7E7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
+
+  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 100 100" width="104" height="104" fill="none"><ellipse cx="50" cy="88" rx="34" ry="7" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="60" rx="30" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><path d="M 28 54 C 22 64 34 74 48 68 C 50 62 42 54 28 54 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/><circle cx="50" cy="32" r="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><ellipse cx="34" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><ellipse cx="66" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><circle cx="40" cy="29" r="3.5" fill="#0F172A"/><circle cx="39" cy="28" r="1.2" fill="#FFFFFF"/><circle cx="60" cy="29" r="3.5" fill="#0F172A"/><circle cx="59" cy="28" r="1.2" fill="#FFFFFF"/><path d="M 43 36 Q 50 33 57 36 Q 55 45 50 46 Q 45 45 43 36 Z" fill="#FF9F1C" stroke="#D97706" stroke-width="1.8"/><path d="M 42 84 L 38 90 M 42 84 L 43 90 M 42 84 L 47 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/><path d="M 58 84 L 54 90 M 58 84 L 59 90 M 58 84 L 63 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/></svg>';
+
+  var DINO_QUOTES = [
+    '嗷嗚！超級儀錶板運作正常！',
+    '快做事！不要一直滑！',
+    '今天的事項完成了嗎？',
+    '跳跳跳！恐龍踩踩地！',
+    '保持專注，持續升級！'
+  ];
+
+  var DUCK_QUOTES = [
+    '嘎！嘎！甩乾羽毛上的小水珠～',
+    '圓滾滾地左右搖擺踱步中！',
+    '伸展一下短短的雪白小翅膀～',
+    '嘎嘎！今天有美味的小魚乾嗎？',
+    '軟萌漂浮在水面上，陪您專注每一刻！'
+  ];
+
+  window.setPetRole = function(role){
+    currentPetRole = role;
+    try { localStorage.setItem('super_dashboard_pet_role', role); } catch(e){}
+    updatePetRoleUI();
+    showToast(role === 'duck' ? '已切換為「雪白柯爾鴨」守護夥伴！' : '已切換為「綠野小暴龍」守護夥伴！');
+  };
+
+  function updatePetRoleUI(){
+    var cardDino = document.getElementById('petRoleDino');
+    var cardDuck = document.getElementById('petRoleDuck');
+    var badgeDino = document.getElementById('badgeRoleDino');
+    var badgeDuck = document.getElementById('badgeRoleDuck');
+
+    var isDuck = (currentPetRole === 'duck');
+    if(cardDino) cardDino.classList.toggle('active', !isDuck);
+    if(cardDuck) cardDuck.classList.toggle('active', isDuck);
+    if(badgeDino) badgeDino.textContent = !isDuck ? '使用中' : '切換';
+    if(badgeDuck) badgeDuck.textContent = isDuck ? '使用中' : '切換';
+
+    var ballIcon = document.querySelector('#floatingDinoBall .dino-ball-icon');
+    if(ballIcon){
+      ballIcon.innerHTML = isDuck ? DUCK_BALL_SVG : DINO_BALL_SVG;
+    }
+    var dinoTitle = document.querySelector('#dinoModalOverlay .dino-card-title span:last-child');
+    if(dinoTitle){
+      dinoTitle.textContent = isDuck ? '雪白柯爾鴨 · 狀態悠閒' : '綠野小暴龍 · 狀態正常';
+    }
+    var dinoActor = document.getElementById('dinoActor');
+    if(dinoActor){
+      dinoActor.innerHTML = isDuck ? DUCK_ACTOR_SVG : DINO_ACTOR_SVG;
+    }
+    var jumpBtnText = document.querySelector('#dinoJumpBtn span:last-child');
+    if(jumpBtnText){
+      jumpBtnText.textContent = isDuck ? '拍拍翅膀嘎嘎叫' : '暴龍大跳躍';
+    }
+    var bubble = document.getElementById('dinoSpeechBubble');
+    if(bubble){
+      bubble.textContent = isDuck ? '嘎！嘎！甩乾羽毛上的小水珠～' : '嗷嗚！超級儀錶板運作正常！';
+    }
+  }
+
+  // ==================== 浮動球與寵物互動模組 ====================
   function initDinoFloatingBall() {
     var dinoBall = document.getElementById('floatingDinoBall');
     var dinoDeleteZone = document.getElementById('floatingDeleteZone');
@@ -7937,18 +8413,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var dinoTrashIcon = document.getElementById('dinoTrashIcon');
     if (dinoTrashIcon) { dinoTrashIcon.innerHTML = icon('trash-2'); }
 
-    var quotes = [
-      '快做事！不要一直滑！',
-      '嗷嗚！超級儀錶板運作正常！',
-      '今天的事項完成了嗎？',
-      '再跳一次！跳跳跳！',
-      '保持專注，持續升級！'
-    ];
+    updatePetRoleUI();
+
     var qIdx = 0;
 
     function makeDinoJump() {
       if (!dinoActor || dinoActor.classList.contains('jumping')) return;
       dinoActor.classList.add('jumping');
+      var quotes = (currentPetRole === 'duck') ? DUCK_QUOTES : DINO_QUOTES;
       qIdx = (qIdx + 1) % quotes.length;
       if (dinoBubble) dinoBubble.textContent = quotes[qIdx];
       setTimeout(function() {
@@ -9287,6 +9759,34 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       若在分享面板的第一排沒看到，請滑到最右側點擊「更多」，並將「Super Dashboard」加到常用。
     </div>
     <button type="button" class="btn" onclick="document.getElementById('shareExtensionModal').style.display='none'" style="width:100%; padding:9px 0; background:var(--panel-raised); border:1px solid var(--border); color:var(--text); border-radius:10px; cursor:pointer;">我知道了</button>
+  </div>
+</div>
+
+<!-- ===== 卡面相片縮放裁切視窗 ===== -->
+<div id="photoCropperModal" class="cropper-modal-overlay" style="display:none;">
+  <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:22px; padding:20px; max-width:380px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.8); display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:15px; font-weight:800; color:var(--text);">調整卡面照片</div>
+      <button type="button" id="cropperCancelX" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; padding:4px;">✕</button>
+    </div>
+    
+    <!-- 裁切框 (標準信用卡長寬比 1.586 : 1) -->
+    <div id="cropperFrame" class="cropper-frame">
+      <img id="cropperImage" src="" alt="縮放調整預覽" style="position:absolute; top:0; left:0; transform-origin:0 0; user-select:none; pointer-events:none; will-change:transform;" />
+      <div style="position:absolute; inset:0; border:1px dashed rgba(255,255,255,0.4); border-radius:14px; pointer-events:none;"></div>
+    </div>
+    
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:11px; color:var(--text-muted);">縮小</span>
+      <input type="range" id="cropperZoomSlider" min="0.5" max="3" step="0.02" value="1" style="flex:1;" />
+      <span style="font-size:11px; color:var(--text-muted);">放大</span>
+    </div>
+    <div style="font-size:11.5px; color:var(--text-muted); text-align:center;">可在卡片方框內滑動拖曳位置，或拉動拉桿縮放尺寸</div>
+    
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="cropperCancelBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text); cursor:pointer;">取消</button>
+      <button type="button" id="cropperApplyBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--amber); border:none; color:#1a1202; font-weight:800; cursor:pointer;">確認套用</button>
+    </div>
   </div>
 </div>
 

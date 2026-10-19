@@ -94,12 +94,7 @@ class ShareViewController: UIViewController {
     private func openHostApp(withText text: String) {
         UIPasteboard.general.string = text
 
-        var comp = URLComponents()
-        comp.scheme = "superdashboard"
-        comp.host = "add-copy"
-        comp.queryItems = [URLQueryItem(name: "text", value: text)]
-
-        guard let url = comp.url else {
+        guard let url = URL(string: "superdashboard://add-copy-pasteboard") else {
             completeShare()
             return
         }
@@ -108,19 +103,25 @@ class ShareViewController: UIViewController {
     }
 
     private func openURLViaResponderChain(_ url: URL) {
-        let selector = NSSelectorFromString("openURL:")
+        // 優先使用系統級 extensionContext.open
+        if let context = self.extensionContext {
+            context.open(url) { [weak self] success in
+                print("[ShareExtension] context.open result: \(success)")
+                DispatchQueue.main.async {
+                    self?.completeShare()
+                }
+            }
+            return
+        }
+
         var responder: UIResponder? = self
-        var opened = false
+        let selector = NSSelectorFromString("openURL:")
         while responder != nil {
-            if responder!.responds(to: selector) {
+            if responder!.responds(to: selector) && responder != self {
                 responder!.perform(selector, with: url)
-                opened = true
                 break
             }
             responder = responder?.next
-        }
-        if !opened {
-            self.extensionContext?.open(url, completionHandler: nil)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             self?.completeShare()

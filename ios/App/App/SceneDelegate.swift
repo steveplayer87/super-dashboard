@@ -326,14 +326,15 @@ class NotificationManager {
 
     public static func executeTargetJump(target: String) {
         pendingTarget = target
-        let kw = target == "WALLET_HOME" ? "" : target
+        let kw = (target == "WALLET_HOME") ? "" : target
         let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet('" + kw + "'); }"
         
-        // 多階梯重試機制 (立即、0.3秒、0.8秒、1.5秒)，保證網頁任何生命週期均能成功收到
+        // 多階梯重試機制 (立即、0.2秒、0.5秒、1.0秒、2.0秒)，保證網頁任何生命週期均能成功收到
         evaluateJS(js)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { evaluateJS(js) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { evaluateJS(js) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { evaluateJS(js) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { evaluateJS(js) }
     }
 
 
@@ -669,7 +670,14 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if let target = NotificationManager.pendingTarget {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                NotificationManager.executeTargetJump(target: target)
+                if target == "WALLET_LAST" {
+                    let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet(); setTimeout(function(){ var cards = (typeof visibleCards==='function')?visibleCards():state.cards; if(typeof window.goToCard==='function') window.goToCard(cards.length - 1); }, 350); }"
+                    NotificationManager.evaluateJS(js)
+                } else if target == "MORE_PAGE" {
+                    NotificationManager.evaluateJS("if(typeof window.switchTab==='function') window.switchTab('more');")
+                } else {
+                    NotificationManager.executeTargetJump(target: target)
+                }
                 NotificationManager.pendingTarget = nil
             }
         }
@@ -698,22 +706,53 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             "authenticateFaceID",
             "syncDynamicShortcuts",
             "saveImageToPhotos",
+            "openExternalUrl",
             "superdashboard"
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
         handlers.forEach { ucc.add(self, name: $0) }
     }
 
-    // 核心攔截：當 JavaScript 導航或請求 superdashboard:// 時，100% 捕獲並轉發給 handleDeepLink
+    // 核心攔截：當 JavaScript 導航或請求 superdashboard:// 時轉發給 handleDeepLink；捷徑 shortcuts:// 與外部連結以系統 Safari 開啟
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if let url = navigationAction.request.url, url.scheme == "superdashboard" {
-            decisionHandler(.cancel)
-            DispatchQueue.main.async {
-                (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.handleDeepLink(url: url)
+        if let url = navigationAction.request.url {
+            let scheme = url.scheme?.lowercased() ?? ""
+            if scheme == "superdashboard" {
+                decisionHandler(.cancel)
+                DispatchQueue.main.async {
+                    (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.handleDeepLink(url: url)
+                }
+                return
             }
-            return
+            // 捷徑 shortcuts:// 或電話、信箱
+            if scheme == "shortcuts" || scheme == "itms-apps" || scheme == "tel" || scheme == "mailto" || scheme == "sms" {
+                decisionHandler(.cancel)
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+                return
+            }
+            // 外部 HTTP/HTTPS 連結點擊時以系統 Safari 開啟，保證連結點擊必有反應
+            if navigationAction.navigationType == .linkActivated || navigationAction.targetFrame == nil {
+                if scheme == "http" || scheme == "https" {
+                    if let host = url.host, host != "localhost" && host != "127.0.0.1" {
+                        decisionHandler(.cancel)
+                        DispatchQueue.main.async {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
+                        return
+                    }
+                }
+            }
         }
         decisionHandler(.allow)
+    }
+
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+        return nil
     }
 
     // 備援通道：攔截 window.prompt("superdashboard:...")
@@ -753,6 +792,12 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             NotificationManager.openSystemSettings()
         } else if message.name == "checkNotificationStatus" {
             NotificationManager.checkAndReportStatus()
+        } else if message.name == "openExternalUrl" {
+            if let body = message.body as? [String: Any], let urlStr = body["url"] as? String, let url = URL(string: urlStr) {
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
+            }
         } else if message.name == "authenticateFaceID" {
             handleUnifiedAction(action: "auth-faceid", params: nil)
         } else if message.name == "syncDynamicShortcuts" {
@@ -894,9 +939,45 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             handleShortcutItem(shortcutItem)
         }
         
+        // 處理命令列測試參數
+        if ProcessInfo.processInfo.arguments.contains("--metro") {
+            NotificationManager.executeTargetJump(target: "台北捷運")
+        } else if ProcessInfo.processInfo.arguments.contains("--lastcard") {
+            NotificationManager.pendingTarget = "WALLET_LAST"
+            let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet(); setTimeout(function(){ var cards = (typeof visibleCards==='function')?visibleCards():state.cards; if(typeof window.goToCard==='function') window.goToCard(cards.length - 1); }, 350); }"
+            NotificationManager.evaluateJS(js)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { NotificationManager.evaluateJS(js) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { NotificationManager.evaluateJS(js) }
+        } else if ProcessInfo.processInfo.arguments.contains("--more") {
+            NotificationManager.pendingTarget = "MORE_PAGE"
+            let js = "if(typeof window.switchTab==='function'){ window.switchTab('more'); }"
+            NotificationManager.evaluateJS(js)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { NotificationManager.evaluateJS(js) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { NotificationManager.evaluateJS(js) }
+        } else if ProcessInfo.processInfo.arguments.contains("--easycard") {
+            NotificationManager.executeTargetJump(target: "悠遊卡")
+        } else if ProcessInfo.processInfo.arguments.contains("--wallet") {
+            NotificationManager.executeTargetJump(target: "WALLET_HOME")
+        }
+
         // 處理冷啟動時的 URL Scheme
         if let url = connectionOptions.urlContexts.first?.url {
             handleDeepLink(url: url)
+        }
+
+        // 處理冷啟動時的通知回應（快速出示悠遊卡 / 開啟超級錢包）
+        if let response = connectionOptions.notificationResponse {
+            let actionId = response.actionIdentifier
+            print("[Notification] Cold launch notificationResponse action: \(actionId)")
+            if actionId == "ACTION_OPEN_CARD" {
+                NotificationManager.executeTargetJump(target: "悠遊卡")
+            } else if actionId == "ACTION_OPEN_WALLET" {
+                NotificationManager.executeTargetJump(target: "WALLET_HOME")
+            } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
+                handleDeepLink(url: url)
+            } else {
+                NotificationManager.executeTargetJump(target: "悠遊卡")
+            }
         }
     }
 
@@ -981,10 +1062,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         print("Handling deep link: \(urlStr)")
 
         if urlStr.contains("wallet") {
-            let cardKeyword = urlStr.contains("easycard") ? "悠遊卡" : ""
-            let js = "if(typeof window.navigateToWallet==='function') window.navigateToWallet('\(cardKeyword)');"
-            self.evaluateJS(js)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.evaluateJS(js) }
+            let cardKeyword = urlStr.contains("easycard") ? "悠遊卡" : "WALLET_HOME"
+            NotificationManager.executeTargetJump(target: cardKeyword)
             return
         }
 
@@ -1123,6 +1202,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         } else if actionId == "ACTION_OPEN_WALLET" {
             DispatchQueue.main.async {
                 NotificationManager.executeTargetJump(target: "WALLET_HOME")
+            }
+        } else if actionId == UNNotificationDefaultActionIdentifier {
+            // 使用者直接點擊通知條本體（未展開按鈕）
+            if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
+                handleDeepLink(url: url)
+            } else {
+                NotificationManager.executeTargetJump(target: "悠遊卡")
             }
         } else if let urlStr = response.notification.request.content.userInfo["url"] as? String, let url = URL(string: urlStr) {
             handleDeepLink(url: url)

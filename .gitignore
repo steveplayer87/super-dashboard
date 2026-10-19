@@ -11,3 +11,6 @@ node_modules/
 DerivedData/
 *.xcuserstate
 xcuserdata/
+
+build_sim/
+image_b64.txt
