@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 370 234" width="100%" height="100%" style="display:block; border-radius:16px; overflow:hidden;">
+  <defs>
+    <clipPath id="metroCardClip">
+      <rect width="370" height="234" rx="16" ry="16"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#metroCardClip)">
+    <!-- Card White Base -->
+    <rect width="370" height="234" fill="#FFFFFF"/>
+    
+    <!-- Top-Left Metro Taipei Logo -->
+    <g transform="translate(28, 22)">
+      <!-- Taipei Metro Swirl Icon -->
+      <g transform="scale(0.85)">
+        <path d="M12 2 C6.5 2 2 6.5 2 12 C2 14.5 3 16.8 4.6 18.5 L7.8 15.3 C6.9 14.3 6.3 13 6.3 11.5 C6.3 8.4 8.8 5.9 11.9 5.9 C14.3 5.9 16.4 7.4 17.2 9.5 L21.7 9.5 C20.7 5.1 16.8 2 12 2 Z" fill="#1D242B"/>
+        <path d="M12 22 C17.5 22 22 17.5 22 12 C22 9.5 21 7.2 19.4 5.5 L16.2 8.7 C17.1 9.7 17.7 11 17.7 12.5 C17.7 15.6 15.2 18.1 12.1 18.1 C9.7 18.1 7.6 16.6 6.8 14.5 L2.3 14.5 C3.3 18.9 7.2 22 12 22 Z" fill="#1D242B"/>
+        <circle cx="12" cy="12" r="2.8" fill="#1D242B"/>
+      </g>
+      <!-- metro Taipei typography -->
+      <text x="26" y="15" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="14.5" font-weight="900" fill="#1D242B" letter-spacing="-0.3px">metro</text>
+      <text x="27" y="24" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="9" font-weight="600" fill="#1D242B" letter-spacing="0.2px">Taipei</text>
+    </g>
+
+    <!-- Background Sun / Moon Circle -->
+    <circle cx="270" cy="46" r="60" fill="#ECEEF1"/>
+
+    <!-- Landmark 4: Grand Hotel & City Silhouettes (Right) -->
+    <path d="M294 36 H314 V44 H294 Z M288 44 H320 V50 H288 Z M282 50 H326 V57 H282 Z M276 57 H332 V72 H276 Z M264 72 H350 V140 H264 Z" fill="#225CA6"/>
+    <!-- Grand Hotel 3 Golden Windows -->
+    <rect x="285" y="68" width="28" height="3.5" fill="#C5A553" rx="0.8"/>
+    <rect x="285" y="77" width="28" height="3.5" fill="#C5A553" rx="0.8"/>
+    <rect x="285" y="86" width="28" height="3.5" fill="#C5A553" rx="0.8"/>
+    <!-- Vertical Website text -->
+    <text x="343" y="60" transform="rotate(90 343 60)" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="7.5" font-weight="700" fill="#FFFFFF" letter-spacing="0.8px" opacity="0.95">www.metro.taipei</text>
+
+    <!-- Landmark 2: Taipei 101 Silhouette (Center) -->
+    <g fill="#225CA6" transform="translate(172, 58)">
+      <!-- spire -->
+      <rect x="17" y="0" width="2" height="26" fill="#225CA6"/>
+      <rect x="15" y="26" width="6" height="8" fill="#225CA6"/>
+      <!-- tiered segments -->
+      <path d="M13 34 L12 45 H24 L23 34 Z"/>
+      <path d="M11 45 L10 57 H26 L25 45 Z"/>
+      <path d="M9 57 L8 70 H28 L27 57 Z"/>
+      <path d="M7 70 L6 84 H30 L29 70 Z"/>
+    </g>
+    <!-- Light gray side building next to 101 -->
+    <rect x="201" y="88" width="32" height="52" fill="#DFE2E6"/>
+    <!-- Orange accent window -->
+    <rect x="223" y="116" width="7.5" height="7.5" fill="#E75A32"/>
+
+    <!-- Landmark 1: Chiang Kai-shek Memorial Hall (Center-Left) -->
+    <!-- Octagonal Roof -->
+    <path d="M154 130 C154 130 148 142 129 146 C144 148 164 148 179 146 C160 142 154 130 154 130 Z" fill="#225CA6"/>
+    <path d="M154 130 L154 126" stroke="#C5A553" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="154" cy="125" r="2" fill="#C5A553"/>
+    <!-- Base -->
+    <path d="M135 146 L131 170 H177 L173 146 Z" fill="#DFE2E6"/>
+    <path d="M149 170 V156 A5 5 0 0 1 159 156 V170 Z" fill="#8D7353"/>
+    <path d="M120 166 L129 170 H112 Z" fill="#225CA6"/>
+
+    <!-- Landmark 3: Taipei Metro Train (Front Right) -->
+    <!-- Train Front Car -->
+    <g transform="translate(186, 138)">
+      <!-- Head Car Body -->
+      <rect x="0" y="0" width="46" height="52" rx="14" fill="#DFE2E6"/>
+      <rect x="4" y="4" width="38" height="46" rx="10" fill="#F4F5F8"/>
+      <!-- Windshield -->
+      <rect x="8" y="10" width="30" height="22" rx="5" fill="#1B222B"/>
+      <!-- Headlights -->
+      <circle cx="12" cy="45" r="4.5" fill="#FFFFFF" stroke="#DFE2E6" stroke-width="1"/>
+      <circle cx="34" cy="45" r="4.5" fill="#FFFFFF" stroke="#DFE2E6" stroke-width="1"/>
+      
+      <!-- Side Car Body extending to right -->
+      <rect x="38" y="2" width="150" height="50" fill="#FFFFFF"/>
+      <!-- Passenger Windows -->
+      <rect x="52" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+      <rect x="70" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+      <rect x="96" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+      <rect x="114" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+      <rect x="140" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+      <rect x="158" y="10" width="14" height="22" rx="4" fill="#1B222B"/>
+
+      <!-- Train Waist Blue Line -->
+      <rect x="17" y="43" width="170" height="6.5" fill="#225CA6"/>
+    </g>
+
+    <!-- Typography: ONE-DAY PASS -->
+    <g transform="translate(34, 138)">
+      <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="900" fill="#1D242B" letter-spacing="1.2px">ONE-DAY</text>
+      <text x="0" y="26" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="900" fill="#1D242B" letter-spacing="0.5px">PASS</text>
+      
+      <!-- Arrow and Chinese / English Pass Title -->
+      <g transform="translate(0, 44)">
+        <polygon points="-8,0 -8,-9 -17,-4.5" fill="#E75A32"/>
+        <text x="2" y="-1" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang TC', sans-serif" font-size="13" font-weight="800" fill="#1D242B" letter-spacing="0.6px">一日票</text>
+        <text x="2" y="13" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="10" font-weight="700" fill="#1D242B" letter-spacing="0.3px">One-Day Pass</text>
+      </g>
+    </g>
+
+    <!-- Bottom Organization Tag -->
+    <text x="270" y="214" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif" font-size="7.5" font-weight="700" fill="#7D838C" letter-spacing="1px">TAIPEI RAPID TRANSIT CORPORATION</text>
+  </g>
+</svg>
