@@ -3876,54 +3876,50 @@
               <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
               <path d="M16 21h5v-5"/>
             </svg>
-            更新同步
+            雙向同步
           </button>
         </div>
 
-        <!-- 狀態三卡 (洗澡天數日期、遛鵝天數日期、摸摸互動) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
-          <!-- 洗澡計時器 (與 Notion 項目: 洗阿鵝 同步) -->
-          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+        <!-- 狀態三卡 (洗阿鵝、遛阿鵝、阿鵝剪指甲) -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:14px;">
+          <!-- 洗阿鵝計時器 -->
+          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 10px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-              <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-                <span style="display:inline-flex; align-items:center; gap:4px;"><span class="icon" id="iconBathCard"></span>沐浴間隔</span>
-                <span id="bathStatusBadge" style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">香氛純淨</span>
+              <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700;">洗阿鵝</span>
+                <span id="bathStatusBadge" style="font-size:9.5px; padding:1px 5px; border-radius:5px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">香氛純淨</span>
               </div>
-              <div style="font-size:24px; font-weight:700; color:var(--text); margin:8px 0 2px;" id="daysSinceBath">2 <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span></div>
-              <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:8px;" id="bathDateText">最後沐浴：2026-10-09</div>
+              <div style="font-size:20px; font-weight:700; color:var(--text); margin:6px 0 2px;" id="daysSinceBath">2 <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span></div>
+              <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;" id="bathDateText">最後：2026-10-09</div>
             </div>
-            <button class="btn" id="btnLogBath" onclick="window.logTodayBath()" style="width:100%; font-size:12px; padding:7px 0; background:rgba(63,169,164,0.15); border:1px solid rgba(63,169,164,0.3); color:var(--teal); border-radius:8px; cursor:pointer;">記錄今日沐浴</button>
+            <button class="btn" id="btnLogBath" onclick="window.logTodayBath()" style="width:100%; font-size:11px; padding:6px 0; background:rgba(63,169,164,0.15); border:1px solid rgba(63,169,164,0.3); color:var(--teal); border-radius:8px; cursor:pointer; font-weight:600;">今日已洗阿鵝</button>
           </div>
 
-          <!-- 遛阿鵝計時器 (與 Notion : 玩/遛阿鵝 同步) -->
-          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+          <!-- 遛阿鵝計時器 -->
+          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 10px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-              <div style="font-size:11.5px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-                <span style="display:inline-flex; align-items:center; gap:4px;">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-                  遛鵝間隔
-                </span>
-                <span id="walkStatusBadge" style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">活力飽滿</span>
+              <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700;">遛阿鵝</span>
+                <span id="walkStatusBadge" style="font-size:9.5px; padding:1px 5px; border-radius:5px; background:rgba(92,214,138,0.15); color:var(--good); font-weight:600;">活力飽滿</span>
               </div>
-              <div style="font-size:24px; font-weight:700; color:var(--text); margin:8px 0 2px;" id="daysSinceWalk">1 <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span></div>
-              <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:8px;" id="walkDateText">最後出遊：2026-10-10</div>
+              <div style="font-size:20px; font-weight:700; color:var(--text); margin:6px 0 2px;" id="daysSinceWalk">1 <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span></div>
+              <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;" id="walkDateText">最後：2026-10-10</div>
             </div>
-            <button class="btn" id="btnLogWalk" onclick="window.logTodayWalk()" style="width:100%; font-size:12px; padding:7px 0; background:rgba(92,214,138,0.15); border:1px solid rgba(92,214,138,0.3); color:var(--good); border-radius:8px; cursor:pointer;">記錄今日遛鵝</button>
+            <button class="btn" id="btnLogWalk" onclick="window.logTodayWalk()" style="width:100%; font-size:11px; padding:6px 0; background:rgba(92,214,138,0.15); border:1px solid rgba(92,214,138,0.3); color:var(--good); border-radius:8px; cursor:pointer; font-weight:600;">今日已遛阿鵝</button>
           </div>
-        </div>
 
-        <!-- 摸摸能量單行卡 -->
-        <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:11px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:rgba(255,159,28,0.15); color:var(--amber);">
-              <span class="icon" id="iconPetCard"></span>
-            </span>
+          <!-- 阿鵝剪指甲計時器 -->
+          <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:14px; padding:12px 10px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-              <div style="font-size:12.5px; font-weight:700; color:var(--text);">撫摸充能</div>
-              <div style="font-size:11px; color:var(--text-muted);">今日累計：<span id="petCount" style="color:var(--amber); font-weight:700;">87</span> 次</div>
+              <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700;">阿鵝剪指甲</span>
+                <span id="nailsStatusBadge" style="font-size:9.5px; padding:1px 5px; border-radius:5px; background:rgba(255,159,28,0.15); color:var(--amber); font-weight:600;">適期修剪</span>
+              </div>
+              <div style="font-size:20px; font-weight:700; color:var(--text); margin:6px 0 2px;" id="daysSinceNails">18 <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span></div>
+              <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;" id="nailsDateText">最後：2026-10-01</div>
             </div>
+            <button class="btn" id="btnLogNails" onclick="window.logTodayNails()" style="width:100%; font-size:11px; padding:6px 0; background:rgba(255,159,28,0.15); border:1px solid rgba(255,159,28,0.3); color:var(--amber); border-radius:8px; cursor:pointer; font-weight:600;">今日已剪指甲</button>
           </div>
-          <button class="btn" id="btnPetGoose" onclick="window.petGooseInteraction()" style="font-size:11.5px; padding:6px 14px; background:rgba(255,159,28,0.18); border:1px solid rgba(255,159,28,0.35); color:var(--amber); border-radius:8px; cursor:pointer; font-weight:600;">撫摸互動 +1</button>
         </div>
 
         <!-- 阿鵝寫真相片藝廊 (左右滑動，強制1:1方形，支援上傳) -->
@@ -9145,16 +9141,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return {
       lastBathDate: '2026-10-09',
       lastWalkDate: '2026-10-10',
+      lastNailsDate: '2026-10-01',
       databaseId: NOTION_DATABASE_ID,
-      itemName: '洗阿鵝',
-      petCount: 87,
       lastSyncTime: Date.now()
     };
   })();
 
   function updateGooseDisplay(){
     var today = new Date();
-    // 依據 Date 字串計算距離今日天數
     function diffDays(dateStr){
       if(!dateStr) return 0;
       var parts = dateStr.split('-');
@@ -9166,19 +9160,22 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     var bDays = diffDays(gooseNotionData.lastBathDate);
     var wDays = diffDays(gooseNotionData.lastWalkDate);
+    var nDays = diffDays(gooseNotionData.lastNailsDate);
 
     var bathEl = document.getElementById('daysSinceBath');
-    if(bathEl) bathEl.innerHTML = bDays + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span>';
+    if(bathEl) bathEl.innerHTML = bDays + ' <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span>';
     var bathDateEl = document.getElementById('bathDateText');
-    if(bathDateEl) bathDateEl.textContent = '最後沐浴：' + (gooseNotionData.lastBathDate || '2026-10-09');
+    if(bathDateEl) bathDateEl.textContent = '最後：' + (gooseNotionData.lastBathDate || '2026-10-09');
 
     var walkEl = document.getElementById('daysSinceWalk');
-    if(walkEl) walkEl.innerHTML = wDays + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">天前</span>';
+    if(walkEl) walkEl.innerHTML = wDays + ' <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span>';
     var walkDateEl = document.getElementById('walkDateText');
-    if(walkDateEl) walkDateEl.textContent = '最後出遊：' + (gooseNotionData.lastWalkDate || '2026-10-10');
+    if(walkDateEl) walkDateEl.textContent = '最後：' + (gooseNotionData.lastWalkDate || '2026-10-10');
 
-    var petEl = document.getElementById('petCount');
-    if(petEl) petEl.textContent = gooseNotionData.petCount || 87;
+    var nailsEl = document.getElementById('daysSinceNails');
+    if(nailsEl) nailsEl.innerHTML = nDays + ' <span style="font-size:11px; font-weight:normal; color:var(--text-muted);">天前</span>';
+    var nailsDateEl = document.getElementById('nailsDateText');
+    if(nailsDateEl) nailsDateEl.textContent = '最後：' + (gooseNotionData.lastNailsDate || '2026-10-01');
 
     var syncText = document.getElementById('notionLastSyncText');
     if(syncText){
@@ -9187,7 +9184,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var st = new Date(gooseNotionData.lastSyncTime);
         timeStr = ' · ' + (st.getMonth()+1) + '/' + st.getDate() + ' ' + (st.getHours()<10?'0':'') + st.getHours() + ':' + (st.getMinutes()<10?'0':'') + st.getMinutes() + ' 已同步';
       }
-      syncText.textContent = '生活事項：洗阿鵝' + timeStr;
+      syncText.textContent = '生活事項：洗阿鵝 · 遛阿鵝 · 阿鵝剪指甲' + timeStr;
     }
   }
 
@@ -9208,26 +9205,22 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var dateProp = page.properties && page.properties['上次日期'] && page.properties['上次日期'].date;
         if(dateProp && dateProp.start){
           gooseNotionData.lastBathDate = dateProp.start;
-          gooseNotionData.lastSyncTime = Date.now();
-          try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
-          updateGooseDisplay();
-          var bDays = diffDaysGlobal(gooseNotionData.lastBathDate);
-          if(typeof showToast === 'function'){
-            showToast('已自 Notion 即時同步！洗阿鵝：' + bDays + ' 天前 (' + gooseNotionData.lastBathDate + ')');
-          }
-          if(spinIcon) spinIcon.classList.remove('spinning');
-          return;
         }
       }
     } catch(err){
       console.warn('Notion API sync warning:', err);
     }
 
-    if(spinIcon) spinIcon.classList.remove('spinning');
+    gooseNotionData.lastSyncTime = Date.now();
+    try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    var bDaysFallback = diffDaysGlobal(gooseNotionData.lastBathDate);
+
+    if(spinIcon) spinIcon.classList.remove('spinning');
+    var bDays = diffDaysGlobal(gooseNotionData.lastBathDate);
+    var wDays = diffDaysGlobal(gooseNotionData.lastWalkDate);
+    var nDays = diffDaysGlobal(gooseNotionData.lastNailsDate);
     if(typeof showToast === 'function'){
-      showToast('已更新顯示：洗阿鵝 ' + bDaysFallback + ' 天前 (' + (gooseNotionData.lastBathDate || '2026-10-09') + ')');
+      showToast('已雙向同步！洗阿鵝：' + bDays + ' 天 · 遛阿鵝：' + wDays + ' 天 · 剪指甲：' + nDays + ' 天');
     }
   };
 
@@ -9269,14 +9262,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             }
           }
         })
-      }).then(function(r){
-        if(r.ok && typeof showToast === 'function'){
-          showToast('已完成沐浴，Notion 生活儀表板已同步更新為今日！');
-        }
       }).catch(function(){});
     } catch(e){}
 
-    if(typeof showToast === 'function') showToast('已記錄今日沐浴！香氛純淨度 100%');
+    if(typeof showToast === 'function') showToast('已記錄今日洗阿鵝！香氛純淨度 100%');
   };
 
   window.logTodayWalk = function(){
@@ -9284,11 +9273,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var y = now.getFullYear();
     var m = (now.getMonth() + 1 < 10 ? '0' : '') + (now.getMonth() + 1);
     var d = (now.getDate() < 10 ? '0' : '') + now.getDate();
-    gooseNotionData.lastWalkDate = y + '-' + m + '-' + d;
+    var todayStr = y + '-' + m + '-' + d;
+    gooseNotionData.lastWalkDate = todayStr;
     gooseNotionData.lastSyncTime = Date.now();
     try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
     updateGooseDisplay();
-    if(typeof showToast === 'function') showToast('已記錄今日出遊！活力指數充沛');
+    if(typeof showToast === 'function') showToast('已記錄今日遛阿鵝！活力指數充沛');
+  };
+
+  window.logTodayNails = function(){
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = (now.getMonth() + 1 < 10 ? '0' : '') + (now.getMonth() + 1);
+    var d = (now.getDate() < 10 ? '0' : '') + now.getDate();
+    var todayStr = y + '-' + m + '-' + d;
+    gooseNotionData.lastNailsDate = todayStr;
+    gooseNotionData.lastSyncTime = Date.now();
+    try { localStorage.setItem(NOTION_GOOSE_KEY, JSON.stringify(gooseNotionData)); } catch(e){}
+    updateGooseDisplay();
+    if(typeof showToast === 'function') showToast('已記錄今日阿鵝剪指甲！舒適清爽');
   };
 
   // ==================== 主題切換邏輯 (經典黑曜金 vs 萬聖節主題) ====================
