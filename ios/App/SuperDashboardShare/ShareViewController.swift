@@ -12,7 +12,9 @@ class ShareViewController: UIViewController {
     private let inboxFolder = "SharedInbox"
 
     private let statusLabel = UILabel()
+    private let confirmButton = UIButton(type: .system)
     private var didStart = false
+    private var pendingEntries: [[String: String]] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,12 +25,27 @@ class ShareViewController: UIViewController {
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusLabel.textColor = .label
         view.addSubview(statusLabel)
+        confirmButton.setTitle("儲存到超級儀表板", for: .normal)
+        confirmButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        confirmButton.backgroundColor = .systemBlue
+        confirmButton.setTitleColor(.white, for: .normal)
+        confirmButton.layer.cornerRadius = 12
+        confirmButton.contentEdgeInsets = UIEdgeInsets(top: 14, left: 22, bottom: 14, right: 22)
+        confirmButton.translatesAutoresizingMaskIntoConstraints = false
+        confirmButton.isHidden = true
+        confirmButton.addTarget(self, action: #selector(confirmSave), for: .touchUpInside)
+        view.addSubview(confirmButton)
         NSLayoutConstraint.activate([
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -32),
             statusLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
-            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
+            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24),
+            confirmButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            confirmButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+            confirmButton.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            confirmButton.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
         ])
     }
 
@@ -125,12 +142,42 @@ class ShareViewController: UIViewController {
                 self.finish(message: "無法讀取分享內容", success: false)
                 return
             }
-            var inbox = (defaults.array(forKey: self.inboxKey) as? [[String: String]]) ?? []
-            inbox.append(contentsOf: entries)
-            defaults.set(inbox, forKey: self.inboxKey)
-            defaults.synchronize()
+            self.pendingEntries = entries
+            self.view.backgroundColor = .systemBackground
+            self.statusLabel.isHidden = false
+            self.statusLabel.textColor = .label
+            let count = entries.count
+            let firstText = entries.first(where: { $0["kind"] == "text" })?["value"]
+            if let text = firstText, !text.isEmpty {
+                let preview = text.count > 90 ? String(text.prefix(90)) + "…" : text
+                self.statusLabel.text = "要儲存以下內容到常用項目嗎？\n\n\(preview)"
+            } else {
+                self.statusLabel.text = "準備儲存 \(count) 張圖片到常用項目？"
+            }
+            self.confirmButton.isHidden = false
+        }
+    }
 
-            self.finish(message: "", success: true)
+
+    @objc private func confirmSave() {
+        guard !pendingEntries.isEmpty,
+              let defaults = UserDefaults(suiteName: groupID) else {
+            finish(message: "找不到待儲存內容，請重新分享", success: false)
+            return
+        }
+        var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
+        inbox.append(contentsOf: pendingEntries)
+        defaults.set(inbox, forKey: inboxKey)
+        guard defaults.synchronize() else {
+            finish(message: "暫存失敗，請再試一次", success: false)
+            return
+        }
+        pendingEntries.removeAll()
+        statusLabel.text = "已加入待處理收件匣，開啟超級儀表板即可完成儲存。"
+        confirmButton.isHidden = true
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+            self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
         }
     }
 
