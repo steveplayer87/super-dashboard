@@ -675,6 +675,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     NotificationManager.evaluateJS(js)
                 } else if target == "MORE_PAGE" {
                     NotificationManager.evaluateJS("if(typeof window.switchTab==='function') window.switchTab('more');")
+                } else if target == "WALLET_ADDCARD" {
+                    let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet(); setTimeout(function(){ if(typeof window.openAddModal==='function') window.openAddModal('card'); }, 300); }"
+                    NotificationManager.evaluateJS(js)
                 } else {
                     NotificationManager.executeTargetJump(target: target)
                 }
@@ -958,6 +961,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             NotificationManager.executeTargetJump(target: "悠遊卡")
         } else if ProcessInfo.processInfo.arguments.contains("--wallet") {
             NotificationManager.executeTargetJump(target: "WALLET_HOME")
+        } else if ProcessInfo.processInfo.arguments.contains("--addcard") {
+            NotificationManager.pendingTarget = "WALLET_ADDCARD"
+            let js = "if(typeof window.navigateToWallet==='function'){ window.navigateToWallet(); setTimeout(function(){ if(typeof window.openAddModal==='function') window.openAddModal('card'); }, 350); }"
+            NotificationManager.evaluateJS(js)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { NotificationManager.evaluateJS(js) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { NotificationManager.evaluateJS(js) }
         }
 
         // 處理冷啟動時的 URL Scheme
@@ -989,6 +998,118 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         SceneDelegateProxy.shared.scene(scene, continue: userActivity)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        drainSharedInbox()
+    }
+
+    // MARK: - App Group 收件匣（Share Extension 寫入，主 App 取出）
+    private static let sharedGroupID = "group.com.steveplayer87.superdashboard"
+    private static let sharedInboxKey = "sharedInbox"
+    private static let sharedInboxFolder = "SharedInbox"
+
+    private func currentMainWebView() -> WKWebView? {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let winScene = scene as? UIWindowScene else { continue }
+            for win in winScene.windows {
+                if let vc = win.rootViewController as? MainViewController {
+                    return vc.webView
+                }
+            }
+        }
+        return nil
+    }
+
+    /// 取出分享收件匣並交給網頁。網頁尚未載入完成時會每 0.5 秒重試（最多約 10 秒），
+    /// 且只有在確定投遞時才清空收件匣，避免冷啟動時內容遺失。
+    func drainSharedInbox(attempt: Int = 0) {
+        guard let defaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+              let pending = defaults.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
+              !pending.isEmpty else { return }
+
+        func retry() {
+            guard attempt < 20 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.drainSharedInbox(attempt: attempt + 1)
+            }
+        }
+
+        guard let web = currentMainWebView() else { retry(); return }
+
+        let probe = "typeof window.handleSharedPasteboard==='function' && typeof window.handleSharedPasteboardJson==='function'"
+        web.evaluateJavaScript(probe) { [weak self] ready, _ in
+            guard let self = self else { return }
+            guard (ready as? Bool) == true else { retry(); return }
+
+            // 重新讀取一次再清空，避免多次觸發造成重複投遞
+            guard let d = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+                  let entries = d.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
+                  !entries.isEmpty else { return }
+            // 收到網頁端明確回報「已寫入」後才清空收件匣；失敗時保留並重試。
+            self.deliverSharedEntries(entries, web: web) { success in
+                guard success else {
+                    print("[ShareInbox] web handler did not confirm persistence; inbox retained")
+                    retry()
+                    return
+                }
+                guard let latest = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+                      let current = latest.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]] else { return }
+                // 僅移除本次已處理的項目，保留分享期間新加入的內容。
+                let remaining = Array(current.dropFirst(min(entries.count, current.count)))
+                if remaining.isEmpty { latest.removeObject(forKey: SceneDelegate.sharedInboxKey) }
+                else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
+                print("[ShareInbox] confirmed persisted \(entries.count) entries")
+            }
+        }
+    }
+
+    private func deliverSharedEntries(_ entries: [[String: String]], web: WKWebView, completion: @escaping (Bool) -> Void) {
+        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID)
+        let dir = container?.appendingPathComponent(SceneDelegate.sharedInboxFolder, isDirectory: true)
+        let validEntries = entries.filter { $0["kind"] != nil && $0["value"] != nil }
+        guard !validEntries.isEmpty else { completion(false); return }
+        let lock = NSLock()
+        var completed = 0
+        var allSucceeded = true
+        for (index, entry) in validEntries.enumerated() {
+            guard let kind = entry["kind"], let value = entry["value"] else { continue }
+            var js: String?
+            if kind == "text" {
+                if let json = try? JSONSerialization.data(withJSONObject: ["payload": value]),
+                   let jsonString = String(data: json, encoding: .utf8) {
+                    js = "(function(){if(typeof window.handleSharedPasteboardJson==='function'){return window.handleSharedPasteboardJson(\(jsonString))===true;}return false;})()"
+                }
+            } else if kind == "image", let fileURL = dir?.appendingPathComponent(value) {
+                if let data = try? Data(contentsOf: fileURL) {
+                    let base64 = "data:image/jpeg;base64," + data.base64EncodedString()
+                    if let json = try? JSONSerialization.data(withJSONObject: [base64]),
+                       let jsonString = String(data: json, encoding: .utf8) {
+                        js = "(function(){if(typeof window.handleSharedPasteboard==='function'){return window.handleSharedPasteboard(\(String(jsonString.dropFirst().dropLast())))===true;}return false;})()"
+                    }
+                }
+            }
+            guard let script = js else {
+                lock.lock(); allSucceeded = false; completed += 1
+                let done = completed == validEntries.count; let success = allSucceeded
+                lock.unlock()
+                if done { completion(success) }
+                continue
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 + Double(index) * 0.6) {
+                web.evaluateJavaScript(script) { result, error in
+                    lock.lock()
+                    if error != nil || (result as? Bool) != true { allSucceeded = false }
+                    completed += 1
+                    let done = completed == validEntries.count
+                    let success = allSucceeded
+                    lock.unlock()
+                    if let error = error { print("[ShareInbox] delivery failed: \(error.localizedDescription)") }
+                    else { print("[ShareInbox] persistence result: \(String(describing: result))") }
+                    if done { completion(success) }
+                }
+            }
+        }
     }
 
     // MARK: - 處理 3D Touch / 長按 App 圖標快速動作 (Home Screen Quick Actions)
@@ -1060,6 +1181,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     func handleDeepLink(url: URL) {
         let urlStr = url.absoluteString
         print("Handling deep link: \(urlStr)")
+
+        if urlStr.contains("shared-inbox") {
+            drainSharedInbox()
+            return
+        }
 
         if urlStr.contains("wallet") {
             let cardKeyword = urlStr.contains("easycard") ? "悠遊卡" : "WALLET_HOME"

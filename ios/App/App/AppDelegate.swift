@@ -16,9 +16,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         NotificationManager.setupCategories()
         
         // 請求通知權限
-        center.requestAuthorization(options: [.alert, .sound, .badge, .provisional]) { granted, error in
-            print("[Notification] Notification permission granted: \(granted), error: \(String(describing: error))")
-            NotificationManager.checkAndReportStatus()
+        if !ProcessInfo.processInfo.arguments.contains("--no-prompt") {
+            center.requestAuthorization(options: [.alert, .sound, .badge, .provisional]) { granted, error in
+                print("[Notification] Notification permission granted: \(granted), error: \(String(describing: error))")
+                NotificationManager.checkAndReportStatus()
+            }
         }
         return true
     }

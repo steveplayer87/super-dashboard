@@ -1,136 +1,208 @@
 import UIKit
-import Social
-import MobileCoreServices
 import UniformTypeIdentifiers
+import ImageIO
 
+/// 分享延伸：把外部分享進來的文字 / 網址 / 圖片，寫進 App Group 收件匣。
+/// 主 App 在回到前景（或被 superdashboard://shared-inbox 喚起）時，會讀取並加入。
+/// 不再依賴剪貼簿與「extension 開 App」，因為後者在 Share Extension 內會被系統拒絕。
 class ShareViewController: UIViewController {
+
+    private let groupID = "group.com.steveplayer87.superdashboard"
+    private let inboxKey = "sharedInbox"
+    private let inboxFolder = "SharedInbox"
+
+    private let statusLabel = UILabel()
+    private var didStart = false
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .clear
+        statusLabel.text = ""
+        statusLabel.isHidden = true
+        statusLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        statusLabel.textAlignment = .center
+        statusLabel.numberOfLines = 0
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(statusLabel)
+        NSLayoutConstraint.activate([
+            statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            statusLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
+        ])
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        handleSharedContent()
+        guard !didStart else { return }
+        didStart = true
+        collectAndStore()
     }
 
-    private func handleSharedContent() {
-        guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
-              let attachments = extensionItem.attachments, !attachments.isEmpty else {
-            completeShare()
+    // MARK: - 收集分享內容
+
+    private func collectAndStore() {
+        guard let defaults = UserDefaults(suiteName: groupID),
+              let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) else {
+            finish(message: "App Group 尚未啟用，請重新簽署安裝", success: false)
             return
         }
 
-        // 1. 優先檢查是否為圖片 (Photos / Screenshot / Image)
-        for itemProvider in attachments {
-            if itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                itemProvider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { [weak self] (item, error) in
-                    if let url = item as? URL, let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
-                        self?.processAndShareImage(image)
-                    } else if let image = item as? UIImage {
-                        self?.processAndShareImage(image)
-                    } else if let data = item as? Data, let image = UIImage(data: data) {
-                        self?.processAndShareImage(image)
-                    } else {
-                        self?.completeShare()
-                    }
-                }
-                return
-            }
-        }
-
-        // 2. 檢查是否為網址 (Safari / Browser URL)
-        for itemProvider in attachments {
-            if itemProvider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-                itemProvider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { [weak self] (item, error) in
-                    if let url = item as? URL {
-                        self?.openHostApp(withText: url.absoluteString)
-                    } else if let str = item as? String {
-                        self?.openHostApp(withText: str)
-                    } else {
-                        self?.completeShare()
-                    }
-                }
-                return
-            }
-        }
-
-        // 3. 檢查是否為一般文字 (Notes / Text / Clipboard)
-        for itemProvider in attachments {
-            if itemProvider.hasItemConformingToTypeIdentifier(UTType.text.identifier) ||
-               itemProvider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
-                itemProvider.loadItem(forTypeIdentifier: itemProvider.registeredTypeIdentifiers.first ?? UTType.text.identifier, options: nil) { [weak self] (item, error) in
-                    if let text = item as? String {
-                        self?.openHostApp(withText: text)
-                    } else {
-                        self?.completeShare()
-                    }
-                }
-                return
-            }
-        }
-
-        completeShare()
-    }
-
-    private func processAndShareImage(_ image: UIImage) {
-        let maxDimension: CGFloat = 800
-        var scaledImage = image
-        if image.size.width > maxDimension || image.size.height > maxDimension {
-            let ratio = min(maxDimension / image.size.width, maxDimension / image.size.height)
-            let newSize = CGSize(width: image.size.width * ratio, height: image.size.height * ratio)
-            UIGraphicsBeginImageContextWithOptions(newSize, false, 0.8)
-            image.draw(in: CGRect(origin: .zero, size: newSize))
-            if let resized = UIGraphicsGetImageFromCurrentImageContext() {
-                scaledImage = resized
-            }
-            UIGraphicsEndImageContext()
-        }
-
-        UIPasteboard.general.image = scaledImage
-        if let url = URL(string: "superdashboard://add-copy-pasteboard") {
-            openURLViaResponderChain(url)
-        } else {
-            completeShare()
-        }
-    }
-
-    private func openHostApp(withText text: String) {
-        UIPasteboard.general.string = text
-
-        guard let url = URL(string: "superdashboard://add-copy-pasteboard") else {
-            completeShare()
+        let items = (extensionContext?.inputItems as? [NSExtensionItem]) ?? []
+        let providers = items.flatMap { $0.attachments ?? [] }
+        if providers.isEmpty {
+            finish(message: "沒有可加入的內容", success: false)
             return
         }
 
-        openURLViaResponderChain(url)
-    }
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var entries: [[String: String]] = []
+        func add(_ entry: [String: String]) {
+            lock.lock(); entries.append(entry); lock.unlock()
+        }
 
-    private func openURLViaResponderChain(_ url: URL) {
-        // 優先使用系統級 extensionContext.open
-        if let context = self.extensionContext {
-            context.open(url) { [weak self] success in
-                print("[ShareExtension] context.open result: \(success)")
-                DispatchQueue.main.async {
-                    self?.completeShare()
+        let imageProviders = providers.filter { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }
+
+        if !imageProviders.isEmpty {
+            // 1. 圖片（最多 5 張）
+            for provider in imageProviders.prefix(5) {
+                group.enter()
+                provider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { [weak self] item, _ in
+                    defer { group.leave() }
+                    if let name = self?.storeImage(item: item, container: container) {
+                        add(["kind": "image", "value": name])
+                    }
                 }
             }
-            return
+        } else if let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.url.identifier) }) {
+            // 2. 網址
+            group.enter()
+            provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { item, _ in
+                defer { group.leave() }
+                if let url = item as? URL {
+                    add(["kind": "text", "value": url.absoluteString])
+                } else if let str = item as? String, !str.isEmpty {
+                    add(["kind": "text", "value": str])
+                }
+            }
+        } else if let provider = providers.first(where: {
+            $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) ||
+            $0.hasItemConformingToTypeIdentifier(UTType.text.identifier)
+        }) {
+            // 3. 一般文字：載入實際符合的文字型別，不使用 registeredTypeIdentifiers.first
+            let typeID = provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+                ? UTType.plainText.identifier
+                : UTType.text.identifier
+            group.enter()
+            provider.loadItem(forTypeIdentifier: typeID, options: nil) { item, error in
+                defer { group.leave() }
+                var text: String?
+                if let s = item as? String {
+                    text = s
+                } else if let s = item as? NSString {
+                    text = s as String
+                } else if let a = item as? NSAttributedString {
+                    text = a.string
+                } else if let d = item as? Data {
+                    text = String(data: d, encoding: .utf8)
+                } else if let u = item as? URL {
+                    text = u.isFileURL ? (try? String(contentsOf: u, encoding: .utf8)) : u.absoluteString
+                } else if let error = error {
+                    print("[ShareExtension] load text failed: \(error.localizedDescription)")
+                } else {
+                    print("[ShareExtension] unsupported text item: \(String(describing: item))")
+                }
+                if let t = text?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {
+                    add(["kind": "text", "value": t])
+                }
+            }
         }
 
-        var responder: UIResponder? = self
-        let selector = NSSelectorFromString("openURL:")
-        while responder != nil {
-            if responder!.responds(to: selector) && responder != self {
-                responder!.perform(selector, with: url)
-                break
+        group.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
+            if entries.isEmpty {
+                self.finish(message: "無法讀取分享內容", success: false)
+                return
             }
-            responder = responder?.next
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.completeShare()
+            var inbox = (defaults.array(forKey: self.inboxKey) as? [[String: String]]) ?? []
+            inbox.append(contentsOf: entries)
+            defaults.set(inbox, forKey: self.inboxKey)
+            defaults.synchronize()
+
+            self.finish(message: "", success: true)
         }
     }
 
-    private func completeShare() {
+    // MARK: - 圖片處理（用 ImageIO 縮圖，避免大圖吃光 extension 記憶體上限）
+
+    private func storeImage(item: NSSecureCoding?, container: URL) -> String? {
+        var jpeg: Data?
+        if let url = item as? URL, let src = CGImageSourceCreateWithURL(url as CFURL, nil) {
+            jpeg = jpegThumbnail(from: src)
+        } else if let data = item as? Data, let src = CGImageSourceCreateWithData(data as CFData, nil) {
+            jpeg = jpegThumbnail(from: src)
+        } else if let image = item as? UIImage {
+            jpeg = downscaledJPEG(image)
+        }
+        guard let bytes = jpeg else { return nil }
+
+        let dir = container.appendingPathComponent(inboxFolder, isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let name = UUID().uuidString + ".jpg"
+        do {
+            try bytes.write(to: dir.appendingPathComponent(name), options: .atomic)
+            return name
+        } catch {
+            return nil
+        }
+    }
+
+    private func jpegThumbnail(from source: CGImageSource) -> Data? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 800
+        ]
+        guard let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return UIImage(cgImage: cg).jpegData(compressionQuality: 0.6)
+    }
+
+    private func downscaledJPEG(_ image: UIImage) -> Data? {
+        let maxDim: CGFloat = 800
+        let longest = max(image.size.width, image.size.height)
+        guard longest > 0 else { return nil }
+        let ratio = min(1, maxDim / longest)
+        let size = CGSize(width: image.size.width * ratio, height: image.size.height * ratio)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let out = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        return out.jpegData(compressionQuality: 0.6)
+    }
+
+    // MARK: - 結束（成功：靜默 + 震動；失敗：顯示原因）
+
+    private func finish(message: String, success: Bool) {
         DispatchQueue.main.async { [weak self] in
-            self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+            guard let self = self else { return }
+            if success {
+                // 不顯示任何畫面、不開 App：存完就收起，用震動代替確認
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                    self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+                }
+            } else {
+                // 失敗才顯示原因，避免無聲失敗
+                self.view.backgroundColor = .systemBackground
+                self.statusLabel.isHidden = false
+                self.statusLabel.text = message
+                self.statusLabel.textColor = .systemRed
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { [weak self] in
+                    self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+                }
+            }
         }
     }
 }

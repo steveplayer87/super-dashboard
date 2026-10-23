@@ -5634,11 +5634,12 @@ window.safeSetIcon = safeSetIcon;
   // 接收自 iOS Share Extension 分享之剪貼簿文字或圖片
   window.handleSharedPasteboardJson = function(data){
     if(data && data.payload){
-      window.handleSharedPasteboard(data.payload);
+      return window.handleSharedPasteboard(data.payload) === true;
     }
+    return false;
   };
   window.handleSharedPasteboard = function(payload){
-    if(!payload) return;
+    if(!payload) return false;
     var isImg = payload.startsWith('data:image');
     var newItem = {
       id: uid('c'),
@@ -5652,6 +5653,7 @@ window.safeSetIcon = safeSetIcon;
     if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
     if(typeof renderAll === 'function') renderAll();
     showToast(isImg ? '已自分享功能存入圖片至常用項目！' : ('已自分享功能存入：' + (payload.length > 25 ? (payload.substring(0, 25) + '...') : payload)));
+    return true;
   };
 
   // 觸發桃園捷運搭乘 Live Activity
@@ -8640,6 +8642,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalOverlay.classList.add('show');
     if(type !== 'card'){ setTimeout(function(){ modalInput.focus(); }, 50); }
   }
+  window.openAddModal = openAddModal;
 
   function openEditModal(type, item){
     modalMode = 'edit';
