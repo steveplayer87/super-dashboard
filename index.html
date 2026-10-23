@@ -5648,7 +5648,9 @@ window.safeSetIcon = safeSetIcon;
     };
     if(!state.copyItems) state.copyItems = [];
     state.copyItems.unshift(newItem);
-    saveData();
+    if(saveData() !== true) { state.copyItems.shift(); return false; }
+    var persisted = loadData();
+    if(!persisted || !Array.isArray(persisted.copyItems) || !persisted.copyItems.some(function(item){ return item && item.id === newItem.id; })) { state.copyItems.shift(); return false; }
     if(typeof switchPage === 'function') switchPage('dashboard');
     if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
     if(typeof renderAll === 'function') renderAll();
@@ -6504,13 +6506,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function saveData(){
     try{
       var curState = window.state || state;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      var serialized = JSON.stringify({
         copyItems: curState.copyItems, shortcutItems: curState.shortcutItems,
         accounts: curState.accounts, expenses: curState.expenses, budget: curState.budget,
         cards: curState.cards, cardTx: curState.cardTx
-      }));
-    }catch(e){ console.error('儲存失敗', e); }
+      });
+      localStorage.setItem(STORAGE_KEY, serialized);
+      if(localStorage.getItem(STORAGE_KEY) !== serialized) return false;
+    }catch(e){ console.error('儲存失敗', e); return false; }
     try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
+    return true;
   }
 
   function showToast(msg){

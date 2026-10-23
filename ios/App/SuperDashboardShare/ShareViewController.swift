@@ -168,8 +168,12 @@ class ShareViewController: UIViewController {
         var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
         inbox.append(contentsOf: pendingEntries)
         defaults.set(inbox, forKey: inboxKey)
-        guard defaults.synchronize() else {
-            finish(message: "暫存失敗，請再試一次", success: false)
+        // synchronize() is deprecated and can report an unreliable failure here;
+        // verify the value we just wrote instead of treating its return value as persistence failure.
+        let savedInbox = defaults.array(forKey: inboxKey) as? [[String: String]] ?? []
+        guard savedInbox.count >= inbox.count,
+              Array(savedInbox.suffix(pendingEntries.count)) == pendingEntries else {
+            finish(message: "內容未能寫入共享收件匣，請再試一次", success: false)
             return
         }
         pendingEntries.removeAll()
