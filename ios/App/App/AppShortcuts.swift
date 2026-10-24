@@ -217,8 +217,8 @@ enum QuickCopyInbox {
         var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
         inbox.append(contentsOf: entries)
         defaults.set(inbox, forKey: inboxKey)
-        defaults.synchronize()
-        return true
+        let saved = defaults.array(forKey: inboxKey) as? [[String: String]] ?? []
+        return saved.count >= inbox.count && Array(saved.suffix(entries.count)) == entries
     }
 }
 
@@ -239,7 +239,8 @@ enum AddQuickCopyError: Error, CustomLocalizedStringResourceConvertible {
 struct AddQuickCopyIntent: AppIntent {
     static var title: LocalizedStringResource = "加入常用文字"
     static var description = IntentDescription("把輸入的文字、網址或圖片記錄到超級儀表板的常用文字")
-    static var openAppWhenRun: Bool = false
+    // 讓主 App 前景接收收件匣並實際寫入常用文字，而不是只停留在 App Group 暫存。
+    static var openAppWhenRun: Bool = true
 
     static var parameterSummary: some ParameterSummary {
         Summary("將 \(\.$content) 加入常用文字") {
