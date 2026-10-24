@@ -5701,12 +5701,11 @@ window.safeSetIcon = safeSetIcon;
   // 接收自 iOS Share Extension 分享之剪貼簿文字或圖片
   window.handleSharedPasteboardJson = function(data){
     if(data && data.payload){
-      return window.handleSharedPasteboard(data.payload) === true;
+      window.handleSharedPasteboard(data.payload);
     }
-    return false;
   };
   window.handleSharedPasteboard = function(payload){
-    if(!payload) return false;
+    if(!payload) return;
     var isImg = payload.startsWith('data:image');
     var newItem = {
       id: uid('c'),
@@ -5715,14 +5714,11 @@ window.safeSetIcon = safeSetIcon;
     };
     if(!state.copyItems) state.copyItems = [];
     state.copyItems.unshift(newItem);
-    if(saveData() !== true) { state.copyItems.shift(); return false; }
-    var persisted = loadData();
-    if(!persisted || !Array.isArray(persisted.copyItems) || !persisted.copyItems.some(function(item){ return item && item.id === newItem.id; })) { state.copyItems.shift(); return false; }
+    saveData();
     if(typeof switchPage === 'function') switchPage('dashboard');
     if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
     if(typeof renderAll === 'function') renderAll();
     showToast(isImg ? '已自分享功能存入圖片至常用項目！' : ('已自分享功能存入：' + (payload.length > 25 ? (payload.substring(0, 25) + '...') : payload)));
-    return true;
   };
 
   // 觸發桃園捷運搭乘 Live Activity
@@ -6573,20 +6569,17 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function saveData(){
     try{
       var curState = window.state || state;
-      var serialized = JSON.stringify({
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
         copyItems: curState.copyItems, shortcutItems: curState.shortcutItems,
         accounts: curState.accounts, expenses: curState.expenses, budget: curState.budget,
-        cards: curState.cards, cardTx: curState.cardTx, globalSettings: curState.globalSettings
-      });
-      localStorage.setItem(STORAGE_KEY, serialized);
-      if(localStorage.getItem(STORAGE_KEY) !== serialized) return false;
+        cards: curState.cards, cardTx: curState.cardTx,
+        globalSettings: curState.globalSettings
+      }));
     }catch(e){
       console.error('儲存失敗', e);
       try{ showToast('儲存空間已滿，請刪除一些圖片項目'); }catch(e3){}
-      return false;
     }
     try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
-    return true;
   }
 
   function showToast(msg){
@@ -8930,7 +8923,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalOverlay.classList.add('show');
     if(type !== 'card'){ setTimeout(function(){ modalInput.focus(); }, 50); }
   }
-  window.openAddModal = openAddModal;
 
   function openEditModal(type, item){
     modalMode = 'edit';
