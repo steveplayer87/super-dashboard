@@ -1,5 +1,7 @@
 import AppIntents
+import ActivityKit
 import UIKit
+import ImageIO
 
 // MARK: - App Intent: 開啟超級錢包
 @available(iOS 16.0, *)
@@ -94,6 +96,15 @@ struct SuperDashboardShortcuts: AppShortcutsProvider {
             systemImageName: "doc.on.doc.fill"
         )
         AppShortcut(
+            intent: AddQuickCopyIntent(),
+            phrases: [
+                "在 \(.applicationName) 加入常用文字",
+                "把內容記錄到 \(.applicationName) 常用文字"
+            ],
+            shortTitle: "加入常用文字",
+            systemImageName: "square.and.pencil"
+        )
+        AppShortcut(
             intent: StartMetroLiveActivityIntent(),
             phrases: [
                 "啟動 \(.applicationName) 捷運即時動態",
@@ -102,5 +113,161 @@ struct SuperDashboardShortcuts: AppShortcutsProvider {
             shortTitle: "捷運即時動態",
             systemImageName: "airplane"
         )
+    }
+}
+
+// MARK: - Live Activity 按鈕：複製常用項目（背景執行，不開啟 App）
+// 與 SuperDashboardWidget/QuickCopyLiveActivity.swift 內的同名 Intent 對應，
+// 系統會把動態島按鈕的動作交給主 App 行程執行。
+@available(iOS 17.0, *)
+struct CopyQuickItemIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "複製常用項目"
+    static var openAppWhenRun: Bool = false
+
+    @Parameter(title: "內容")
+    var text: String
+
+    @Parameter(title: "名稱")
+    var label: String
+
+    init() {}
+
+    init(text: String, label: String) {
+        self.text = text
+        self.label = label
+    }
+
+    func perform() async throws -> some IntentResult {
+        await MainActor.run { UIPasteboard.general.string = text }
+        if let activity = Activity<QuickCopyAttributes>.activities.first {
+            var state = activity.content.state
+            state.lastCopiedText = label
+            state.updateTimestamp = Date().timeIntervalSince1970
+            await activity.update(ActivityContent(state: state, staleDate: nil))
+        }
+        return .result()
+    }
+}
+
+// MARK: - 動態島呈現：退回主畫面後，用「帶提醒的更新」讓動態島自動展開數秒
+enum IslandPresenter {
+    private final class BackgroundTaskBox {
+        var id: UIBackgroundTaskIdentifier = .invalid
+    }
+
+    /// 退回主畫面。使用私有 selector，僅適用於自行簽署安裝的版本，不能上架 App Store。
+    static func sendAppToBackground() {
+        UIControl().sendAction(#selector(URLSessionTask.suspend), to: UIApplication.shared, for: nil)
+    }
+
+    /// 先退回主畫面，等 App 進入背景後再執行 work（通常是帶 alertConfiguration 的更新）。
+    /// 過程中向系統要一小段背景執行時間，避免 App 一退到背景就被凍結而來不及更新。
+    static func leaveThenRun(_ work: @escaping () async -> Void) {
+        DispatchQueue.main.async {
+            let box = BackgroundTaskBox()
+            box.id = UIApplication.shared.beginBackgroundTask(withName: "island-expand") {
+                if box.id != .invalid {
+                    UIApplication.shared.endBackgroundTask(box.id)
+                    box.id = .invalid
+                }
+            }
+            sendAppToBackground()
+            Task {
+                try? await Task.sleep(nanoseconds: 900_000_000)
+                await work()
+                await MainActor.run {
+                    if box.id != .invalid {
+                        UIApplication.shared.endBackgroundTask(box.id)
+                        box.id = .invalid
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - App Intent: 加入常用文字（捷徑動作：把輸入項目記錄到常用文字）
+// 與「分享選單」共用同一個 App Group 收件匣（key: sharedInbox），
+// 主 App 回到前景時會自動投遞到網頁端的常用項目。不需要開啟 App。
+enum QuickCopyInbox {
+    static let groupID = "group.com.steveplayer87.superdashboard"
+    static let inboxKey = "sharedInbox"
+    static let inboxFolder = "SharedInbox"
+
+    /// 圖片縮到最長邊 800px 的 JPEG，存進共用容器，回傳檔名
+    static func storeImage(_ data: Data) -> String? {
+        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID),
+              let src = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let opts: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 800
+        ]
+        guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary),
+              let jpeg = UIImage(cgImage: cg).jpegData(compressionQuality: 0.8) else { return nil }
+        let dir = container.appendingPathComponent(inboxFolder, isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let name = UUID().uuidString + ".jpg"
+        do { try jpeg.write(to: dir.appendingPathComponent(name), options: .atomic) } catch { return nil }
+        return name
+    }
+
+    static func append(_ entries: [[String: String]]) -> Bool {
+        guard let defaults = UserDefaults(suiteName: groupID) else { return false }
+        var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
+        inbox.append(contentsOf: entries)
+        defaults.set(inbox, forKey: inboxKey)
+        defaults.synchronize()
+        return true
+    }
+}
+
+@available(iOS 16.0, *)
+enum AddQuickCopyError: Error, CustomLocalizedStringResourceConvertible {
+    case empty
+    case storageUnavailable
+
+    var localizedStringResource: LocalizedStringResource {
+        switch self {
+        case .empty: return "沒有可加入的內容，請提供文字、網址或圖片"
+        case .storageUnavailable: return "無法寫入共用儲存空間，請確認 App Group 已啟用"
+        }
+    }
+}
+
+@available(iOS 16.0, *)
+struct AddQuickCopyIntent: AppIntent {
+    static var title: LocalizedStringResource = "加入常用文字"
+    static var description = IntentDescription("把輸入的文字、網址或圖片記錄到超級儀表板的常用文字")
+    static var openAppWhenRun: Bool = false
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("將 \(\.$content) 加入常用文字") {
+            \.$image
+        }
+    }
+
+    // 在捷徑裡把「輸入項目」（或任何前一個動作的輸出）拖進這個欄位即可
+    @Parameter(title: "內容", description: "要記錄的文字或網址")
+    var content: String?
+
+    @Parameter(title: "圖片", description: "（選填）一併記錄的圖片",
+               supportedTypeIdentifiers: ["public.image"])
+    var image: IntentFile?
+
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        var entries: [[String: String]] = []
+
+        if let text = content?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+            entries.append(["kind": "text", "value": text])
+        }
+        if let file = image, let name = QuickCopyInbox.storeImage(file.data) {
+            entries.append(["kind": "image", "value": name])
+        }
+
+        guard !entries.isEmpty else { throw AddQuickCopyError.empty }
+        guard QuickCopyInbox.append(entries) else { throw AddQuickCopyError.storageUnavailable }
+
+        return .result(dialog: "已加入 \(entries.count) 筆到常用文字")
     }
 }

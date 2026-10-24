@@ -129,6 +129,7 @@ class LiveActivityManager {
                 content: .init(state: state, staleDate: nil)
             )
             print("[Metro] Started with state: progress=\(state.progress), next=\(state.nextStation)")
+            expandMetroIsland()
             
             // 每 2.5 秒更新一次即時動態，使動態島與鎖屏保持流暢即時推進
             DispatchQueue.main.async {
@@ -141,6 +142,22 @@ class LiveActivityManager {
         }
     }
     
+    /// 退回主畫面後，以「帶提醒的更新」讓動態島自動展開數秒
+    static func expandMetroIsland() {
+        guard let activity = currentActivity else { return }
+        IslandPresenter.leaveThenRun {
+            let state = activity.content.state
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "桃園捷運",
+                    body: "已開始追蹤，下一站 \(state.nextStation)",
+                    sound: .default
+                )
+            )
+        }
+    }
+
     static func updateMetroProgress() {
         guard let activity = currentActivity else { return }
         currentTripSeconds += 20 // 每次前進20秒里程
@@ -241,7 +258,7 @@ class QuickCopyManager {
         }
         let attributes = QuickCopyAttributes(title: "常用速貼庫")
         let contentState = QuickCopyAttributes.ContentState(
-            items: Array(activeItems.prefix(5)),
+            items: Array(activeItems.prefix(6)),
             lastCopiedText: nil,
             updateTimestamp: Date().timeIntervalSince1970
         )
@@ -252,15 +269,29 @@ class QuickCopyManager {
                 content: .init(state: contentState, staleDate: nil)
             )
             DispatchQueue.main.async {
-                NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面即可直接點擊複製")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    // Suspend removed
-                }
+                NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！")
+                expandQuickCopyIsland()
             }
         } catch {
             DispatchQueue.main.async {
                 NotificationManager.evaluateNotificationFeedback("啟動動態島失敗：\(error.localizedDescription)")
             }
+        }
+    }
+
+    /// 退回主畫面後，以「帶提醒的更新」讓動態島自動展開數秒
+    static func expandQuickCopyIsland() {
+        guard let activity = currentActivity else { return }
+        IslandPresenter.leaveThenRun {
+            let state = activity.content.state
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "常用速貼",
+                    body: "點選項目即可複製",
+                    sound: .default
+                )
+            )
         }
     }
 
@@ -281,7 +312,7 @@ class QuickCopyManager {
 
 // MARK: - 原生真實 Face ID 生物辨識管理器
 class BiometricManager {
-    static func authenticate(reason: String = "靠近掃碼器或讀卡機", completion: @escaping (Bool, String?) -> Void) {
+    static func authenticate(reason: String = "驗證身分以使用卡片", completion: @escaping (Bool, String?) -> Void) {
         let context = LAContext()
         context.localizedCancelTitle = "取消"
         context.localizedFallbackTitle = "使用密碼"
@@ -826,7 +857,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     private func handleUnifiedAction(action: String, params: Any?) {
         let act = action.lowercased()
         if act == "auth-faceid" || act == "authfaceid" {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
+            BiometricManager.authenticate(reason: "驗證身分以使用卡片") { [weak self] success, err in
                 if success {
                     self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();", completionHandler: nil)
                 } else {
@@ -1222,7 +1253,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if urlStr.contains("auth-faceid") {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
+            BiometricManager.authenticate(reason: "驗證身分以使用卡片") { [weak self] success, err in
                 if success {
                     self?.evaluateJS("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();")
                 } else {

@@ -177,25 +177,7 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                 }
                 
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 9) {
-                        // 路線與車資行
-                        HStack {
-                            Text("\(context.state.currentStation) → \(context.state.destination)")
-                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                .foregroundColor(Color.white.opacity(0.75))
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 3) {
-                                Image(systemName: "creditcard.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(goldAccent)
-                                Text("扣款 \(context.state.fare)")
-                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                    .foregroundColor(goldAccent)
-                            }
-                        }
-                        
+                    VStack(alignment: .leading, spacing: 8) {
                         // 桃捷精確站距動態軌道 (A12 0% -> A18 63% -> A21 100%)
                         VStack(spacing: 5) {
                             GeometryReader { geo in
@@ -268,7 +250,7 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                             }
                         }
                         
-                        // 下一站到達預告看板（獨立卡片結構，提供充足垂直高度與清晰字體）
+                        // 下一站與車資（單張卡片，節省高度）
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("下一站抵達")
@@ -278,26 +260,27 @@ public struct SuperDashboardWidgetLiveActivity: Widget {
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundColor(.white)
                             }
-                            
+
                             Spacer()
-                            
+
                             VStack(alignment: .trailing, spacing: 2) {
-                                Text("車次型態")
+                                Text("扣款")
                                     .font(.system(size: 9.5, weight: .medium))
                                     .foregroundColor(Color.white.opacity(0.55))
-                                Text(context.attributes.trainType)
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                    .foregroundColor(metroPurpleGlow)
+                                Text(context.state.fare)
+                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                    .foregroundColor(goldAccent)
                             }
                         }
                         .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 7)
                         .background(Color.white.opacity(0.07))
                         .cornerRadius(10)
                     }
                     .padding(.horizontal, 4)
-                    .padding(.top, 6)
-                    .padding(.bottom, 8)
+                    .padding(.top, 4)
+                    .padding(.bottom, 12)
+                    .frame(minHeight: 92)
                 }
             } compactLeading: {
                 HStack(spacing: 4) {
