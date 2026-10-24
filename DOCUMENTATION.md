@@ -228,3 +228,65 @@ interface WalletCard {
 
 ### Q3: 感應畫面為什麼不會自動打勾完成？
 > **說明**：為了模擬真實使用情境並避免誤觸，系統移除了自動打勾計時器。當您開啟感應層並靠近讀卡機時，**點擊螢幕或卡片任意處**即可確認完成感應交易，並播放打勾動畫返回錢包。
+
+
+---
+
+## 7. 目前程式架構與開發狀態（2026-10-25）
+
+### 7.1 執行層與資產流向
+
+```text
+index.html（主編輯來源）
+        │ 同步／比對
+        ▼
+www/index.html（Capacitor Web 資產）
+        │ npx cap copy ios
+        ▼
+ios/App/App/public/index.html（App bundle 來源）
+        │ Xcode build + 安裝
+        ▼
+iOS App：WebView + Swift 原生層
+        ├─ AppDelegate / SceneDelegate
+        ├─ AppShortcuts（App Intents）
+        ├─ Widget / Live Activity
+        └─ Share Extension → 主 App 收件／持久化
+```
+
+- 網頁畫面、Swift 原生捷徑、Widget／Live Activity、Share Extension 各自屬於不同層；一層修改不能推定其他層已更新。
+- Web UI 目前以 `www/index.html` 的提交內容為原生資產基準；三份 HTML 必須比對雜湊，避免建置時把舊檔包進 App。
+- 阿鵝管家 Notion 同步經 Cloudflare Worker 橋接。要驗證同步需檢查實際寫入與回讀結果，單純顯示成功提示不算驗收。
+
+### 7.2 最近已提交的錢包與分享流程修正
+
+- 新增一般卡片時預設白色信用卡樣式；交通卡專用欄位僅應在交通卡類別使用。
+- 移除卡面多餘 NFC 符號，恢復票券個別的動作文字（讀取 `btnText`，預設「加入」）。
+- 刪除錢包卡、舊版卡片與常用文字前加入確認。
+- 調整 Modal 留白；交通卡面採滿版 CSS 嘗試；感應層僅允許垂直捲動。
+- v2.6 更新提示含關閉按鈕與「新增／修復／調整」分區；可由更多 > 系統資訊或點擊品牌標題再次開啟。
+- 分享儲存流程加入持久化確認；`AddQuickCopyIntent` 會開啟主 App 以接收分享資料。
+
+### 7.3 Git 與未追蹤檔案
+
+- 目前工作分支：`experiment/share-confirm-flow`。
+- 最新已推送提交：`7bda2b2`（README／架構文件更新）。
+- `dynamic-island.diff`、`web-wallet-fixes.diff` 是未追蹤差異檔，內容與現有檔案有重疊，尚未整包套用。應逐區比較需求與實際程式，再選擇性整合。
+- `ios/App/SourcePackages/` 是未追蹤目錄，尚未確認是否應提交。
+- 另一台電腦推送的 `main` 提交只改 README；其文件變更已 cherry-pick 到本分支，未把 `main` 的其他程式碼合併進來。
+
+### 7.4 建置與驗收狀態
+
+- 最近已成功執行 Xcode Debug build，並安裝至指定 iPhone。
+- 這只證明該版本可建置及安裝，不代表各功能均已實機驗收。
+- 尚待真機確認：一般新卡不出現交通卡內容、票券按鈕文字與圖示、刪除確認、Modal 版面、感應層不橫向溢出、更新提示入口，以及分享文字／圖片能持久保存並在重啟後存在。
+
+### 7.5 每次交付必須逐層核對
+
+1. 修改的是哪個來源檔，變更是否已提交。
+2. Web 資產是否複製至 Capacitor 專案，三份 HTML 雜湊是否一致。
+3. JavaScript 語法與 `git diff --check` 是否通過。
+4. Xcode build 是否成功，log 路徑為何。
+5. 是否安裝至指定裝置，以及安裝的 Bundle ID。
+6. 哪些功能已實際操作驗證、哪些仍待驗證。
+
+不得以「已修改」代稱「已建置」，不得以「已建置」代稱「已安裝」，也不得以「已安裝」代稱「功能已驗證」。

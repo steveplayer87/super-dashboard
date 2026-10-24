@@ -65,6 +65,42 @@
 
 ---
 
+## 目前實作狀態與架構（2026-10-25）
+
+### 平台分層
+
+- **Web UI／功能來源**：`index.html` 為主編輯來源；`www/index.html` 是 Capacitor WebView 使用的網頁資產，`ios/App/App/public/index.html` 是同步進原生專案的副本。修改後需確認三份內容一致，再執行 `npx cap copy ios`。
+- **原生 iOS 外殼**：`ios/App/App/` 包含 AppDelegate、SceneDelegate、App Shortcuts、Widget／Live Activity 與 Share Extension。原生 Swift 功能與網頁 JavaScript 是兩條不同的執行層，改了其中一層不代表另一層已更新。
+- **持久化**：網頁功能以本機 Web Storage 為主；阿鵝管家 Notion 同步透過 Cloudflare Worker 橋接。資料同步是否成功需以實際回讀確認，不可只憑畫面提示判定。
+- **交付流程**：修改來源 → 同步 Web 資產 → 檢查 bundle 副本 → Xcode build → 安裝真機 → 實際操作驗證。Build 成功不等於所有功能已通過測試。
+
+### 最近已提交的功能修正
+
+- 新增卡片時，普通卡片預設白色信用卡樣式；非交通卡不應被塞入交通卡專用欄位或自動加值文案。
+- 移除卡面不需要的 NFC 圖示；票券動作文字使用各票券自己的 `btnText`，保留如「取得登機證」等專屬按鈕文案。
+- 錢包卡片、舊版卡片與常用文字刪除前增加確認。
+- 壓縮新增／編輯 Modal 的多餘高度；交通卡面嘗試滿版顯示；感應層限制垂直捲動，避免橫向溢出。
+- 版本更新提示調整為可關閉的 v2.6 提示，提供「新增／修復／調整」分類，並可由更多 > 系統資訊或點擊品牌標題重新開啟。
+- 快速分享儲存流程加入持久化確認；`AddQuickCopyIntent` 設為開啟主 App，讓主 App 接收分享佇列。
+
+### 尚未視為驗收完成
+
+- 已成功建置並安裝目前 iOS Debug App；**尚未逐項完成真機功能驗收**，因此不能宣稱上述每個 UI／分享流程都已完全正常。
+- `dynamic-island.diff` 與 `web-wallet-fixes.diff` 仍是未追蹤的差異檔，尚未整包套用；它們與現有提交有重疊，禁止直接整份套用覆蓋。
+- `ios/App/SourcePackages/` 仍是未追蹤資料夾，需先確認內容與用途再決定是否納入版本控制。
+- 目前工作分支為 `experiment/share-confirm-flow`；已推送的最新提交以 GitHub 遠端分支為準，尚未合併至 `main`。
+
+### 發版驗收清單
+
+1. 比對 `index.html`、`www/index.html`、`ios/App/App/public/index.html` 的雜湊值。
+2. 執行 JavaScript 語法檢查與 `git diff --check`。
+3. 執行 Xcode build，記錄實際使用的 scheme、裝置與 log。
+4. 安裝到指定 iPhone，確認啟動的是本次建置的 Bundle ID。
+5. 真機逐項測試新增卡片、票券專屬按鈕、刪除確認、版本提示、分享文字／圖片持久化及重新開啟後資料仍存在。
+6. 只有實際操作通過的項目才標記為「已驗證」；其餘標記為「已修改／待驗證」。
+
+---
+
 ## 本地啟動與部署
 
 ### 本地使用
