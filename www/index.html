@@ -2148,8 +2148,8 @@
   #modalOverlay .modal {
     width: 100%;
     max-width: 410px;
-    height: 640px;
-    max-height: 92vh;
+    height: auto;
+    max-height: 88dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -2157,18 +2157,19 @@
     box-sizing: border-box;
   }
   #modalOverlay .modal-body-content {
-    flex: 1;
+    flex: 0 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    padding: 16px 20px 18px;
+    padding: 12px 20px 10px;
     box-sizing: border-box;
   }
   #modalGeneralSection, #modalAirlineSection {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     box-sizing: border-box;
   }
   .modal-actions {
@@ -3467,7 +3468,7 @@
   #modalGeneralSection, #modalAirlineSection{ flex:1 1 auto !important; min-height:0 !important; flex-direction:column; }
   .modal-scroll{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:16px 20px 14px; }
   .modal-footer{ flex:0 0 auto !important; margin:0 !important; position:relative !important; z-index:2;
-    padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px)) !important; background:var(--panel-raised) !important;
+    padding:8px 20px calc(8px + env(safe-area-inset-bottom,0px)) !important; background:var(--panel-raised) !important;
     border-top:1px solid var(--border) !important; display:flex; flex-direction:column; gap:8px; }
   .modal-footer .confirm{ display:inline-flex; align-items:center; justify-content:center; gap:6px; }
   .modal-footer .confirm.loading{ opacity:.85; pointer-events:none; }
@@ -3500,6 +3501,25 @@
   .metro-remove-btn{ width:100%; margin-top:8px; padding:11px 0; border-radius:12px; border:1px solid rgba(217,86,75,.5); background:rgba(217,86,75,.16); color:#ff9d95; font-size:13.5px; font-weight:700; cursor:pointer; }
   .metro-expired-mask{ position:absolute; inset:0; background:rgba(10,10,12,.62); display:flex; align-items:center; justify-content:center;
     color:#fff; font-size:18px; font-weight:900; letter-spacing:3px; backdrop-filter:grayscale(1); -webkit-backdrop-filter:grayscale(1); }
+
+  .v-card:has(.metro-pass-card-wrap){ padding:0 !important; border:0 !important; overflow:hidden !important; }
+  .v-card:has(.metro-pass-card-wrap) > .v-card-shine{ display:none !important; }
+  .metro-pass-card-wrap img{ width:100% !important; height:100% !important; object-fit:cover !important; }
+  /* 卡片詳情層只允許垂直捲動，不接受左右滑動手勢 */
+  .sense-overlay{ overflow-x:hidden !important; overscroll-behavior-x:none; touch-action:pan-y; }
+  .sense-overlay-card-wrap, .sense-overlay-card-wrap *{ touch-action:pan-y; }
+  #senseCard, #portraitBoardingPass{ max-width:100%; }
+
+  .update-notes-overlay{ position:fixed; inset:0; z-index:260; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(0,0,0,.68); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+  .update-notes-overlay.show{ display:flex; }
+  .update-notes-panel{ position:relative; width:100%; max-width:390px; max-height:82dvh; overflow-y:auto; padding:26px 22px 22px; border-radius:24px; color:var(--text); background:var(--panel-raised); border:1px solid var(--border); box-shadow:0 24px 80px rgba(0,0,0,.45); }
+  .update-notes-close{ position:absolute; top:12px; right:14px; width:34px; height:34px; border:0; border-radius:50%; background:var(--panel-raised-2); color:var(--text); font-size:25px; line-height:1; cursor:pointer; }
+  .update-notes-kicker{ font-size:10px; font-weight:800; letter-spacing:1.8px; color:var(--gold); margin-bottom:8px; }
+  .update-notes-panel h2{ margin:0 42px 20px 0; font-size:22px; line-height:1.25; }
+  .update-notes-list{ display:flex; flex-direction:column; gap:16px; }
+  .update-notes-group strong{ font-size:13px; color:var(--gold); }
+  .update-notes-group ul{ margin:7px 0 0; padding-left:20px; color:var(--text-muted); font-size:13px; line-height:1.65; }
+  .update-notes-group li+li{ margin-top:3px; }
 </style>
 </head>
 <body>
@@ -4251,10 +4271,10 @@
         <div class="section">
           <div class="section-title"><span class="section-icon" style="color:var(--text-muted);" id="iconMoreAbout"></span>系統資訊</div>
           <div class="fin-list">
-            <div class="fin-row" style="display:flex; align-items:center;">
+            <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v2.5 · 極致離線 PWA 核心架構</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v2.6 · 錢包與分享修復</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5164,6 +5184,19 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="update-notes-overlay" id="updateNotesOverlay" role="dialog" aria-modal="true" aria-labelledby="updateNotesTitle">
+  <div class="update-notes-panel">
+    <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
+    <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
+    <h2 id="updateNotesTitle">已更新至 v2.6</h2>
+    <div class="update-notes-list">
+      <div class="update-notes-group"><strong>新增</strong><ul><li>更新公告可關閉，亦可從系統資訊重新開啟</li><li>新增卡片預設使用白色付款卡樣式</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與照片未寫入常用項目</li><li>修復票卡操作名稱與圖示消失</li><li>刪除卡片前增加確認視窗</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>縮小新增／編輯視窗底部留白</li><li>北捷票卡卡面改為滿版顯示</li><li>卡片詳情只允許垂直捲動</li></ul></div>
+    </div>
+  </div>
+</div>
+
 <!-- 全螢幕刷卡/檢視感應層 -->
 <div class="sense-overlay" id="senseOverlay">
   <div class="sense-overlay-card-wrap">
@@ -5700,12 +5733,11 @@ window.safeSetIcon = safeSetIcon;
 
   // 接收自 iOS Share Extension 分享之剪貼簿文字或圖片
   window.handleSharedPasteboardJson = function(data){
-    if(data && data.payload){
-      window.handleSharedPasteboard(data.payload);
-    }
+    if(!data || typeof data.payload !== 'string' || !data.payload) return false;
+    return window.handleSharedPasteboard(data.payload) === true;
   };
   window.handleSharedPasteboard = function(payload){
-    if(!payload) return;
+    if(typeof payload !== 'string' || !payload) return false;
     var isImg = payload.startsWith('data:image');
     var newItem = {
       id: uid('c'),
@@ -5715,10 +5747,15 @@ window.safeSetIcon = safeSetIcon;
     if(!state.copyItems) state.copyItems = [];
     state.copyItems.unshift(newItem);
     saveData();
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if(!Array.isArray(saved.copyItems) || !saved.copyItems.some(function(i){ return i.id === newItem.id; })) return false;
+    } catch(e) { return false; }
     if(typeof switchPage === 'function') switchPage('dashboard');
     if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
     if(typeof renderAll === 'function') renderAll();
-    showToast(isImg ? '已自分享功能存入圖片至常用項目！' : ('已自分享功能存入：' + (payload.length > 25 ? (payload.substring(0, 25) + '...') : payload)));
+    showToast(isImg ? '已存入圖片至常用項目' : ('已存入常用文字：' + (payload.length > 25 ? (payload.substring(0, 25) + '…') : payload)));
+    return true;
   };
 
   // 觸發桃園捷運搭乘 Live Activity
@@ -6589,6 +6626,19 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1400);
   }
 
+  var APP_VERSION = '2.6';
+  function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
+  function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
+  var updateNotesClose = document.getElementById('updateNotesClose');
+  var updateNotesOverlay = document.getElementById('updateNotesOverlay');
+  if(updateNotesClose) updateNotesClose.addEventListener('click', closeUpdateNotes);
+  if(updateNotesOverlay) updateNotesOverlay.addEventListener('click', function(e){ if(e.target === updateNotesOverlay) closeUpdateNotes(); });
+  var aboutVersionRow = document.getElementById('aboutVersionRow');
+  if(aboutVersionRow){ aboutVersionRow.addEventListener('click', openUpdateNotes); aboutVersionRow.style.cursor = 'pointer'; }
+  var brandTitle = document.querySelector('.brand');
+  if(brandTitle) brandTitle.addEventListener('click', openUpdateNotes);
+  try { if(localStorage.getItem('super-dashboard-seen-version') !== APP_VERSION){ localStorage.setItem('super-dashboard-seen-version', APP_VERSION); setTimeout(openUpdateNotes, 650); } } catch(e) { setTimeout(openUpdateNotes, 650); }
+
   // ==================== 儀錶板頁 ====================
   function renderGrid(container, type){
     var items = type === 'copy' ? state.copyItems : state.shortcutItems;
@@ -6881,7 +6931,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '<div class="face">' +
         waveHtml +
         logo +
-        '<svg class="nfc"><use href="#nfc"/></svg>' +
         '<svg class="info"><use href="#info"/></svg>' +
         '<span class="label">' + escapeHtml(label) + '</span>' +
         '<div class="pan">' +
@@ -7668,6 +7717,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var targetAction = e.target.dataset.action || (e.target.parentElement && e.target.parentElement.dataset.action);
         if(state.editMode){
           if(targetAction === 'delete'){
+            if(!window.confirm('確定要刪除「' + (cards[idx].name || '這張卡片') + '」嗎？此操作無法復原。')) return;
             pendingRemove.card.add(cards[idx].id);
             renderWallet();
           } else if(targetAction === 'edit'){
@@ -8138,6 +8188,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         openEditModal('card', card);
         return;
       }
+      if(!window.confirm('確定要刪除「' + (card.name || '這張卡片') + '」嗎？此操作無法復原。')) return;
       pendingRemove.card.add(card.id);
       renderWallet();
     });
@@ -8749,7 +8800,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
 
     var btnTextEl = document.getElementById('airlineBtnText');
-    if(btnTextEl) btnTextEl.textContent = '加入';
+    if(btnTextEl) btnTextEl.textContent = tData.btnText || '加入';
 
     var btnIconEl = document.getElementById('airlineBtnPlaneIcon');
     if(btnIconEl && TICKET_ICONS[tData.passType]){
@@ -8800,7 +8851,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         btnImportAirlinePass.classList.remove('loading');
         if(airlineBtnSpinner) airlineBtnSpinner.style.display = 'none';
         if(airlineBtnPlaneIcon) airlineBtnPlaneIcon.style.display = 'inline-block';
-        if(airlineBtnText) airlineBtnText.textContent = '加入';
+        if(airlineBtnText) airlineBtnText.textContent = tData.btnText || '加入';
 
         var newPass = tData.kind === 'credential' ? Object.assign({ id: uid('k') }, tData.card) : {
           id: uid('k'),
@@ -8918,8 +8969,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(linkToggle){
       linkToggle.classList.remove('active', 'on');
     }
-    setCategory(type === 'card' ? 'transit' : 'other');
-    setTheme('theme-gold');
+    setCategory(type === 'card' ? 'credit' : 'other');
+    setTheme(type === 'card' ? 'theme-kit-white' : 'theme-gold');
     modalOverlay.classList.add('show');
     if(type !== 'card'){ setTimeout(function(){ modalInput.focus(); }, 50); }
   }
@@ -8986,6 +9037,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       var delBtn = document.getElementById('modalItemDeleteBtn');
       if(delBtn){
         delBtn.onclick = function(){
+          if(!window.confirm('確定要刪除「' + (item.name || item.text || '這個項目') + '」嗎？此操作無法復原。')) return;
           if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
           else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
           else if(type === 'account') state.accounts = state.accounts.filter(function(i){ return i.id !== item.id; });
@@ -9112,10 +9164,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var newCard = {
           id: uid('k'), name: val, type: modalCategory, balance: bal2,
           theme: selectedCardTheme,
-          last4: last4Digits,
-          transitNo: 'No. 08' + last4Digits.slice(0,2) + '-' + last4Digits.slice(2) + '02-381',
-          autoTopup: false, linkedAccountId: '', topupAmount: 500, topupThreshold: 100
+          last4: last4Digits
         };
+        if(modalCategory === 'transit'){
+          newCard.transitNo = 'No. 08' + last4Digits.slice(0,2) + '-' + last4Digits.slice(2) + '02-381';
+          newCard.autoTopup = false;
+          newCard.linkedAccountId = '';
+          newCard.topupAmount = 500;
+          newCard.topupThreshold = 100;
+        }
         state.cards.push(newCard);
         activeCardIndex = state.cards.length - 1;
       }
