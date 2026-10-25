@@ -965,6 +965,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = MainViewController()
         window?.makeKeyAndVisible()
+        registerInboxObservers()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
 
@@ -1035,6 +1036,29 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         drainSharedInbox()
     }
 
+    // 收件匣有新內容時（捷徑動作 / 分享延伸寫入後）立即取件
+    private var inboxObserversRegistered = false
+    private func registerInboxObservers() {
+        guard !inboxObserversRegistered else { return }
+        inboxObserversRegistered = true
+        NotificationCenter.default.addObserver(forName: .quickCopyInboxUpdated, object: nil, queue: .main) { [weak self] _ in
+            self?.drainSharedInbox()
+        }
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                        Unmanaged.passUnretained(self).toOpaque(),
+                                        { _, observer, _, _, _ in
+                                            guard let observer = observer else { return }
+                                            let me = Unmanaged<SceneDelegate>.fromOpaque(observer).takeUnretainedValue()
+                                            DispatchQueue.main.async { me.drainSharedInbox() }
+                                        },
+                                        QuickCopyInbox.darwinName as CFString, nil, .deliverImmediately)
+    }
+
+    deinit {
+        CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(), Unmanaged.passUnretained(self).toOpaque())
+        NotificationCenter.default.removeObserver(self)
+    }
+
     // MARK: - App Group 收件匣（Share Extension 寫入，主 App 取出）
     private static let sharedGroupID = "group.com.steveplayer87.superdashboard"
     private static let sharedInboxKey = "sharedInbox"
@@ -1054,13 +1078,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     /// 取出分享收件匣並交給網頁。網頁尚未載入完成時會每 0.5 秒重試（最多約 10 秒），
     /// 且只有在確定投遞時才清空收件匣，避免冷啟動時內容遺失。
+    // 同時多個觸發（回到前景 + 寫入通知）時只跑一輪，避免同一筆被投遞兩次
+    private var draining = false
+    private var drainAgain = false
+
+    private func finishDrain() {
+        draining = false
+        if drainAgain { drainAgain = false; drainSharedInbox() }
+    }
+
     func drainSharedInbox(attempt: Int = 0) {
+        if attempt == 0 {
+            if draining { drainAgain = true; return }
+            draining = true
+        }
         guard let defaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
               let pending = defaults.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
-              !pending.isEmpty else { return }
+              !pending.isEmpty else { finishDrain(); return }
 
         func retry() {
-            guard attempt < 20 else { return }
+            guard attempt < 20 else { finishDrain(); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.drainSharedInbox(attempt: attempt + 1)
             }
@@ -1076,7 +1113,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             // 重新讀取一次再清空，避免多次觸發造成重複投遞
             guard let d = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
                   let entries = d.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
-                  !entries.isEmpty else { return }
+                  !entries.isEmpty else { self.finishDrain(); return }
             // 收到網頁端明確回報「已寫入」後才清空收件匣；失敗時保留並重試。
             self.deliverSharedEntries(entries, web: web) { success in
                 guard success else {
@@ -1084,13 +1121,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                     retry()
                     return
                 }
-                guard let latest = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
-                      let current = latest.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]] else { return }
-                // 僅移除本次已處理的項目，保留分享期間新加入的內容。
-                let remaining = Array(current.dropFirst(min(entries.count, current.count)))
-                if remaining.isEmpty { latest.removeObject(forKey: SceneDelegate.sharedInboxKey) }
-                else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
+                if let latest = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+                   let current = latest.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]] {
+                    // 僅移除本次已處理的項目，保留分享期間新加入的內容。
+                    let remaining = Array(current.dropFirst(min(entries.count, current.count)))
+                    if remaining.isEmpty { latest.removeObject(forKey: SceneDelegate.sharedInboxKey) }
+                    else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
+                }
                 print("[ShareInbox] confirmed persisted \(entries.count) entries")
+                self.finishDrain()
             }
         }
     }

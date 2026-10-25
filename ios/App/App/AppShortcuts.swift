@@ -212,13 +212,27 @@ enum QuickCopyInbox {
         return name
     }
 
+    /// 寫入後立刻通知「已在執行的主 App」去取件。
+    /// 原因：捷徑會把 App 拉到前景，sceneDidBecomeActive 常常比 perform() 寫入更早，
+    /// 那時收件匣還是空的，之後就沒有人再觸發取件。
+    static let darwinName = "com.steveplayer87.superdashboard.inbox-updated"
+    static func notifyApp() {
+        DispatchQueue.main.async { NotificationCenter.default.post(name: .quickCopyInboxUpdated, object: nil) }
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                             CFNotificationName(darwinName as CFString), nil, nil, true)
+    }
+
     static func append(_ entries: [[String: String]]) -> Bool {
-        guard let defaults = UserDefaults(suiteName: groupID) else { return false }
+        // 沒簽到 App Group 時 containerURL 會是 nil；此時寫入會落到私有的偏好檔，分享延伸讀不到，直接視為失敗並回報。
+        guard FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) != nil,
+              let defaults = UserDefaults(suiteName: groupID) else { return false }
         var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
         inbox.append(contentsOf: entries)
         defaults.set(inbox, forKey: inboxKey)
         let saved = defaults.array(forKey: inboxKey) as? [[String: String]] ?? []
-        return saved.count >= inbox.count && Array(saved.suffix(entries.count)) == entries
+        let ok = saved.count >= inbox.count && Array(saved.suffix(entries.count)) == entries
+        if ok { notifyApp() }
+        return ok
     }
 }
 
@@ -271,4 +285,8 @@ struct AddQuickCopyIntent: AppIntent {
 
         return .result(dialog: "已加入 \(entries.count) 筆到常用文字")
     }
+}
+
+extension Notification.Name {
+    static let quickCopyInboxUpdated = Notification.Name("quickCopyInboxUpdated")
 }

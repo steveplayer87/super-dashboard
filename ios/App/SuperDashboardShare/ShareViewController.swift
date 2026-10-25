@@ -177,6 +177,9 @@ class ShareViewController: UIViewController {
             return
         }
         pendingEntries.removeAll()
+        // 若主 App 正在執行，立刻通知它取件（不必等回到前景）
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                             CFNotificationName("com.steveplayer87.superdashboard.inbox-updated" as CFString), nil, nil, true)
         statusLabel.text = "已加入待處理收件匣，開啟超級儀表板即可完成儲存。"
         confirmButton.isHidden = true
         UINotificationFeedbackGenerator().notificationOccurred(.success)
