@@ -741,6 +741,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             "syncDynamicShortcuts",
             "saveImageToPhotos",
             "openExternalUrl",
+            "inboxDiagnostics",
             "superdashboard"
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
@@ -805,6 +806,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "inboxDiagnostics" {
+            let op = (message.body as? [String: Any])?["op"] as? String ?? "status"
+            runInboxDiagnostics(op: op)
+            return
+        }
         if message.name == "superdashboard" {
             if let body = message.body as? [String: Any], let action = body["action"] as? String {
                 handleUnifiedAction(action: action, params: body["params"])
@@ -1097,7 +1103,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
               !pending.isEmpty else { finishDrain(); return }
 
         func retry() {
-            guard attempt < 20 else { finishDrain(); return }
+            guard attempt < 20 else { QuickCopyInbox.logDrain("等待逾時：網頁端尚未就緒（已放棄本輪，下次開啟會再試）"); finishDrain(); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.drainSharedInbox(attempt: attempt + 1)
             }
@@ -1118,6 +1124,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             self.deliverSharedEntries(entries, web: web) { success in
                 guard success else {
                     print("[ShareInbox] web handler did not confirm persistence; inbox retained")
+                    QuickCopyInbox.logDrain("網頁端未確認寫入，已保留收件匣並重試")
                     retry()
                     return
                 }
@@ -1129,6 +1136,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                     else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
                 }
                 print("[ShareInbox] confirmed persisted \(entries.count) entries")
+                QuickCopyInbox.logDrain("成功：已把 \(entries.count) 筆存進常用項目")
                 // 回報確認：讓捷徑動作知道已真正存進常用項目
                 if let ackDefaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID) {
                     var acked = (ackDefaults.array(forKey: QuickCopyInbox.ackKey) as? [String]) ?? []
@@ -1421,5 +1429,78 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func evaluateJS(_ js: String) {
         NotificationManager.evaluateJS(js)
+    }
+}
+
+// MARK: - 收件匣診斷（供網頁「進階偏好 → 收件匣診斷」呼叫）
+extension MainViewController {
+    func runInboxDiagnostics(op: String) {
+        switch op {
+        case "drain":
+            (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.drainSharedInbox()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.pushInboxStatus(note: "已觸發取件") }
+        case "clear":
+            UserDefaults(suiteName: QuickCopyInbox.groupID)?.removeObject(forKey: QuickCopyInbox.inboxKey)
+            pushInboxStatus(note: "已清空收件匣")
+        case "selftest":
+            runInboxSelfTest()
+        default:
+            pushInboxStatus(note: nil)
+        }
+    }
+
+    private func pushInboxStatus(note: String?, selftest: String? = nil) {
+        let gid = QuickCopyInbox.groupID
+        let fm = FileManager.default
+        let container = fm.containerURL(forSecurityApplicationGroupIdentifier: gid)
+        let d = UserDefaults(suiteName: gid)
+        let pending = (d?.array(forKey: QuickCopyInbox.inboxKey) as? [[String: String]])?.count ?? 0
+        let acked = (d?.array(forKey: QuickCopyInbox.ackKey) as? [String])?.count ?? 0
+        var files = 0
+        if let c = container {
+            files = (try? fm.contentsOfDirectory(atPath: c.appendingPathComponent(QuickCopyInbox.inboxFolder).path).count) ?? 0
+        }
+        let at = d?.double(forKey: "diagLastDrainAt") ?? 0
+        let info = Bundle.main.infoDictionary
+        let version = "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
+
+        let probe = "typeof window.handleSharedPasteboard==='function' && typeof window.handleSharedPasteboardJson==='function'"
+        webView?.evaluateJavaScript(probe) { [weak self] ready, _ in
+            var payload: [String: Any] = [
+                "groupAvailable": container != nil,
+                "pending": pending,
+                "acked": acked,
+                "imageFiles": files,
+                "webReady": (ready as? Bool) == true,
+                "lastDrainAt": at,
+                "lastDrainResult": d?.string(forKey: "diagLastDrainResult") ?? "",
+                "version": version
+            ]
+            if let note = note { payload["note"] = note }
+            if let selftest = selftest { payload["selftest"] = selftest }
+            guard let data = try? JSONSerialization.data(withJSONObject: payload),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            self?.webView?.evaluateJavaScript("window.onInboxDiagnostics && window.onInboxDiagnostics(\(json));", completionHandler: nil)
+        }
+    }
+
+    /// 端到端自我測試：寫入一筆測試內容 → 等 App 取件並確認（最多 6 秒）
+    private func runInboxSelfTest() {
+        let id = UUID().uuidString
+        let stamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+        let entry: [String: String] = ["kind": "text", "value": "收件匣自我測試 \(stamp)", "id": id]
+        guard QuickCopyInbox.append([entry]) else {
+            pushInboxStatus(note: nil, selftest: "fail-write")
+            return
+        }
+        var waited = 0.0
+        func poll() {
+            let acked = Set((UserDefaults(suiteName: QuickCopyInbox.groupID)?.array(forKey: QuickCopyInbox.ackKey) as? [String]) ?? [])
+            if acked.contains(id) { self.pushInboxStatus(note: nil, selftest: "ok"); return }
+            waited += 0.3
+            if waited >= 6 { self.pushInboxStatus(note: nil, selftest: "timeout"); return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { poll() }
+        }
+        poll()
     }
 }

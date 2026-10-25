@@ -216,6 +216,13 @@ enum QuickCopyInbox {
     /// 原因：捷徑會把 App 拉到前景，sceneDidBecomeActive 常常比 perform() 寫入更早，
     /// 那時收件匣還是空的，之後就沒有人再觸發取件。
     static let darwinName = "com.steveplayer87.superdashboard.inbox-updated"
+
+    /// 診斷用：記錄最近一次取件的時間與結果
+    static func logDrain(_ result: String) {
+        guard let d = UserDefaults(suiteName: groupID) else { return }
+        d.set(Date().timeIntervalSince1970, forKey: "diagLastDrainAt")
+        d.set(result, forKey: "diagLastDrainResult")
+    }
     static func notifyApp() {
         DispatchQueue.main.async { NotificationCenter.default.post(name: .quickCopyInboxUpdated, object: nil) }
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),

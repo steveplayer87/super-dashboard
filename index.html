@@ -5424,6 +5424,15 @@
 
       <!-- Tab 4: 進階偏好設定 -->
       <div class="hub-section" id="hubTabPreferences">
+        <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+          <div class="settings-label">收件匣診斷</div>
+          <div id="inboxDiagOutput" style="font-size:12px; line-height:1.7; color:var(--text-muted); white-space:pre-line;">載入中…</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="cancel" id="inboxDiagRefresh" style="flex:1; padding:9px 0; border-radius:10px; border:none;">重新整理</button>
+            <button type="button" class="cancel" id="inboxDiagDrain" style="flex:1; padding:9px 0; border-radius:10px; border:none;">立即取件</button>
+            <button type="button" class="confirm" id="inboxDiagTest" style="flex:1; padding:9px 0; border-radius:10px; border:none;">寫入測試</button>
+          </div>
+        </div>
         <div class="settings-row">
           <div style="flex:1;">
             <div class="settings-label">本機隱私保護</div>
@@ -5732,6 +5741,48 @@ window.safeSetIcon = safeSetIcon;
   };
 
   // 接收自 iOS Share Extension 分享之剪貼簿文字或圖片
+
+  // ==================== 收件匣診斷 ====================
+  (function(){
+    var out = document.getElementById('inboxDiagOutput');
+    function post(op){
+      var mh = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.inboxDiagnostics;
+      if(mh){ mh.postMessage({ op: op }); }
+      else if(out){ out.textContent = '此功能僅在原生 App 內可用'; }
+    }
+    function fmt(ts){
+      if(!ts) return '尚無紀錄';
+      var d = new Date(ts * 1000);
+      return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+        ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ':' + ('0'+d.getSeconds()).slice(-2);
+    }
+    window.onInboxDiagnostics = function(r){
+      if(!out || !r) return;
+      var lines = [];
+      lines.push('App Group：' + (r.groupAvailable ? '✅ 可用' : '❌ 未啟用（沒有簽進這個安裝版本）'));
+      lines.push('待處理收件匣：' + r.pending + ' 筆（暫存圖片檔 ' + r.imageFiles + ' 個）');
+      lines.push('累計已確認存入：' + r.acked + ' 筆');
+      lines.push('網頁接收端：' + (r.webReady ? '✅ 就緒' : '❌ 未就緒'));
+      lines.push('最近取件：' + fmt(r.lastDrainAt) + (r.lastDrainResult ? '\n　' + r.lastDrainResult : ''));
+      lines.push('App 版本：' + r.version);
+      if(r.selftest){
+        var m = { ok:'✅ 自我測試成功：已寫入並由 App 確認存進常用項目',
+                  timeout:'⚠️ 自我測試逾時：已寫入收件匣，但 6 秒內沒有被取走確認',
+                  'fail-write':'❌ 自我測試失敗：無法寫入共用收件匣（App Group 未啟用）' };
+        lines.push('\n' + (m[r.selftest] || r.selftest));
+      }
+      if(r.note) lines.push('\n' + r.note);
+      out.textContent = lines.join('\n');
+    };
+    var b1 = document.getElementById('inboxDiagRefresh'), b2 = document.getElementById('inboxDiagDrain'), b3 = document.getElementById('inboxDiagTest');
+    if(b1) b1.addEventListener('click', function(){ post('status'); });
+    if(b2) b2.addEventListener('click', function(){ post('drain'); });
+    if(b3) b3.addEventListener('click', function(){ if(out) out.textContent = '測試中…請稍候'; post('selftest'); });
+    document.querySelectorAll('.hub-pill[data-hub-tab="preferences"]').forEach(function(p){
+      p.addEventListener('click', function(){ post('status'); });
+    });
+  })();
+
   window.handleSharedPasteboardJson = function(data){
     if(!data || typeof data.payload !== 'string' || !data.payload) return false;
     return window.handleSharedPasteboard(data.payload) === true;
