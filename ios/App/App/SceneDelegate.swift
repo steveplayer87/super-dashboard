@@ -1129,6 +1129,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                     else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
                 }
                 print("[ShareInbox] confirmed persisted \(entries.count) entries")
+                // 回報確認：讓捷徑動作知道已真正存進常用項目
+                if let ackDefaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID) {
+                    var acked = (ackDefaults.array(forKey: QuickCopyInbox.ackKey) as? [String]) ?? []
+                    acked.append(contentsOf: entries.compactMap { $0["id"] })
+                    ackDefaults.set(Array(acked.suffix(100)), forKey: QuickCopyInbox.ackKey)
+                }
                 self.finishDrain()
             }
         }

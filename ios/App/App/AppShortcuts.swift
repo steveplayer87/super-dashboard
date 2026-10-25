@@ -222,6 +222,19 @@ enum QuickCopyInbox {
                                              CFNotificationName(darwinName as CFString), nil, nil, true)
     }
 
+    /// 主 App 把內容寫進網頁並確認持久化後，會把該筆 id 記在這裡
+    static let ackKey = "inboxAckedIDs"
+    static func waitForAck(_ ids: [String], timeout: TimeInterval) async -> Bool {
+        guard !ids.isEmpty, let defaults = UserDefaults(suiteName: groupID) else { return false }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            let acked = Set((defaults.array(forKey: ackKey) as? [String]) ?? [])
+            if ids.allSatisfy(acked.contains) { return true }
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+        return false
+    }
+
     static func append(_ entries: [[String: String]]) -> Bool {
         // 沒簽到 App Group 時 containerURL 會是 nil；此時寫入會落到私有的偏好檔，分享延伸讀不到，直接視為失敗並回報。
         guard FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) != nil,
@@ -240,11 +253,13 @@ enum QuickCopyInbox {
 enum AddQuickCopyError: Error, CustomLocalizedStringResourceConvertible {
     case empty
     case storageUnavailable
+    case imageFailed
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
         case .empty: return "沒有可加入的內容，請提供文字、網址或圖片"
         case .storageUnavailable: return "無法寫入共用儲存空間，請確認 App Group 已啟用"
+        case .imageFailed: return "圖片處理失敗，未加入任何內容"
         }
     }
 }
@@ -253,8 +268,8 @@ enum AddQuickCopyError: Error, CustomLocalizedStringResourceConvertible {
 struct AddQuickCopyIntent: AppIntent {
     static var title: LocalizedStringResource = "加入常用文字"
     static var description = IntentDescription("把輸入的文字、網址或圖片記錄到超級儀表板的常用文字")
-    // 讓主 App 前景接收收件匣並實際寫入常用文字，而不是只停留在 App Group 暫存。
-    static var openAppWhenRun: Bool = true
+    // 背景執行，不開啟 App。成功與否由「寫入驗證 + App 回報確認」兩段決定（見 perform）。
+    static var openAppWhenRun: Bool = false
 
     static var parameterSummary: some ParameterSummary {
         Summary("將 \(\.$content) 加入常用文字") {
@@ -274,16 +289,24 @@ struct AddQuickCopyIntent: AppIntent {
         var entries: [[String: String]] = []
 
         if let text = content?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
-            entries.append(["kind": "text", "value": text])
+            entries.append(["kind": "text", "value": text, "id": UUID().uuidString])
         }
-        if let file = image, let name = QuickCopyInbox.storeImage(file.data) {
-            entries.append(["kind": "image", "value": name])
+        if let file = image {
+            guard let name = QuickCopyInbox.storeImage(file.data) else { throw AddQuickCopyError.imageFailed }
+            entries.append(["kind": "image", "value": name, "id": UUID().uuidString])
         }
 
         guard !entries.isEmpty else { throw AddQuickCopyError.empty }
+        // 第一段驗證：寫入共用收件匣並讀回比對，失敗直接報錯
         guard QuickCopyInbox.append(entries) else { throw AddQuickCopyError.storageUnavailable }
 
-        return .result(dialog: "已加入 \(entries.count) 筆到常用文字")
+        // 第二段驗證：App 正在執行時會立刻取件並回報「已存進常用項目」，最多等 4 秒
+        let ids = entries.compactMap { $0["id"] }
+        if await QuickCopyInbox.waitForAck(ids, timeout: 4) {
+            return .result(dialog: "已加入常用文字（\(entries.count) 筆，App 已確認）")
+        }
+        // 內容已安全暫存，但 App 目前不在執行，開啟後會自動加入
+        return .result(dialog: "已暫存 \(entries.count) 筆，開啟超級儀表板後會自動加入（尚未經 App 確認）")
     }
 }
 
