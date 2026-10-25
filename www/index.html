@@ -5783,32 +5783,6 @@ window.safeSetIcon = safeSetIcon;
     });
   })();
 
-  window.handleSharedPasteboardJson = function(data){
-    if(!data || typeof data.payload !== 'string' || !data.payload) return false;
-    return window.handleSharedPasteboard(data.payload) === true;
-  };
-  window.handleSharedPasteboard = function(payload){
-    if(typeof payload !== 'string' || !payload) return false;
-    var isImg = payload.startsWith('data:image');
-    var newItem = {
-      id: uid('c'),
-      text: payload,
-      type: isImg ? 'image' : 'text'
-    };
-    if(!state.copyItems) state.copyItems = [];
-    state.copyItems.unshift(newItem);
-    saveData();
-    try {
-      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if(!Array.isArray(saved.copyItems) || !saved.copyItems.some(function(i){ return i.id === newItem.id; })) return false;
-    } catch(e) { return false; }
-    if(typeof switchPage === 'function') switchPage('dashboard');
-    if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
-    if(typeof renderAll === 'function') renderAll();
-    showToast(isImg ? '已存入圖片至常用項目' : ('已存入常用文字：' + (payload.length > 25 ? (payload.substring(0, 25) + '…') : payload)));
-    return true;
-  };
-
   // 觸發桃園捷運搭乘 Live Activity
   window.triggerLiveActivity = function(){
     window.callNative('start-mrt');
@@ -6676,6 +6650,36 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 1400);
   }
+
+  // ==================== 分享 / 捷徑收件匣 → 常用項目（必須在主範圍內，才能用到 uid / saveData / showToast）====================
+  window.handleSharedPasteboard = function(payload){
+    try{
+      if(typeof payload !== 'string' || !payload) return false;
+      var isImg = payload.indexOf('data:image') === 0;
+      var newItem = { id: uid('c'), text: payload, type: isImg ? 'image' : 'text' };
+      if(!state.copyItems) state.copyItems = [];
+      state.copyItems.unshift(newItem);
+      saveData();
+      // 以實際寫入的儲存內容確認持久化（空間不足時 saveData 會失敗，這裡就會回報 false）
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if(!Array.isArray(saved.copyItems) || !saved.copyItems.some(function(i){ return i.id === newItem.id; })){
+        state.copyItems = state.copyItems.filter(function(i){ return i.id !== newItem.id; });
+        return false;
+      }
+      try{ switchPage('dashboard'); }catch(e1){}
+      try{ renderGrid(copyGrid, 'copy'); }catch(e2){}
+      try{ renderAll(); }catch(e3){}
+      showToast(isImg ? '已存入圖片至常用項目' : ('已存入常用文字：' + (payload.length > 25 ? (payload.substring(0, 25) + '…') : payload)));
+      return true;
+    }catch(err){
+      console.error('handleSharedPasteboard failed', err);
+      return false;
+    }
+  };
+  window.handleSharedPasteboardJson = function(data){
+    if(!data || typeof data.payload !== 'string' || !data.payload) return false;
+    return window.handleSharedPasteboard(data.payload) === true;
+  };
 
   var APP_VERSION = '2.6';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
