@@ -261,12 +261,14 @@ enum AddQuickCopyError: Error, CustomLocalizedStringResourceConvertible {
     case empty
     case storageUnavailable
     case imageFailed
+    case unsupported
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
         case .empty: return "沒有可加入的內容，請提供文字、網址或圖片"
         case .storageUnavailable: return "無法寫入共用儲存空間，請確認 App Group 已啟用"
         case .imageFailed: return "圖片處理失敗，未加入任何內容"
+        case .unsupported: return "不支援這種內容，請提供圖片、文字或網址"
         }
     }
 }
@@ -279,28 +281,38 @@ struct AddQuickCopyIntent: AppIntent {
     static var openAppWhenRun: Bool = false
 
     static var parameterSummary: some ParameterSummary {
-        Summary("將 \(\.$content) 加入常用文字") {
-            \.$image
+        Summary("將 \(\.$input) 加入常用文字") {
+            \.$content
         }
     }
 
-    // 在捷徑裡把「輸入項目」（或任何前一個動作的輸出）拖進這個欄位即可
-    @Parameter(title: "內容", description: "要記錄的文字或網址")
-    var content: String?
+    // 主要輸入：接上前一個動作的輸出（例如「捷徑輸入」的圖片、文字、網址檔案）。
+    // 用「檔案」型別接收，才能拿到圖片本身；若用文字型別，捷徑只會把圖片轉成檔名。
+    @Parameter(title: "輸入項目", description: "要記錄的圖片或文字（接上前一個動作的輸出）",
+               supportedTypeIdentifiers: ["public.data"],
+               inputConnectionBehavior: .connectToPreviousIntentResult)
+    var input: IntentFile?
 
-    @Parameter(title: "圖片", description: "（選填）一併記錄的圖片",
-               supportedTypeIdentifiers: ["public.image"])
-    var image: IntentFile?
+    // 直接輸入文字或網址
+    @Parameter(title: "文字", description: "（選填）直接輸入要記錄的文字或網址")
+    var content: String?
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         var entries: [[String: String]] = []
 
+        if let file = input {
+            let data = file.data
+            if UIImage(data: data) != nil {
+                guard let name = QuickCopyInbox.storeImage(data) else { throw AddQuickCopyError.imageFailed }
+                entries.append(["kind": "image", "value": name, "id": UUID().uuidString])
+            } else if let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+                entries.append(["kind": "text", "value": text, "id": UUID().uuidString])
+            } else {
+                throw AddQuickCopyError.unsupported
+            }
+        }
         if let text = content?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
             entries.append(["kind": "text", "value": text, "id": UUID().uuidString])
-        }
-        if let file = image {
-            guard let name = QuickCopyInbox.storeImage(file.data) else { throw AddQuickCopyError.imageFailed }
-            entries.append(["kind": "image", "value": name, "id": UUID().uuidString])
         }
 
         guard !entries.isEmpty else { throw AddQuickCopyError.empty }
