@@ -736,6 +736,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         guard let wv = self.webView else { return }
         wv.navigationDelegate = self
         wv.uiDelegate = self
+        hideKeyboardNavigationAccessory(in: wv)
 
         let ucc = wv.configuration.userContentController
         let handlers = [
@@ -754,6 +755,21 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
         handlers.forEach { ucc.add(self, name: $0) }
+    }
+
+    // 隱藏 WKWebView 輸入時系統自動加入的「上一欄／下一欄／完成」輔助按鈕。
+    // 使用 UIKit 公開的 UITextInputAssistantItem，不更動鍵盤本體或文字輸入行為。
+    private func hideKeyboardNavigationAccessory(in webView: WKWebView) {
+        func visit(_ view: UIView) {
+            if NSStringFromClass(type(of: view)).contains("WKContentView") {
+                let assistant = (view as UIResponder).inputAssistantItem
+                assistant.leadingBarButtonGroups = []
+                assistant.trailingBarButtonGroups = []
+                assistant.allowsHidingShortcuts = false
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        visit(webView)
     }
 
     // 核心攔截：當 JavaScript 導航或請求 superdashboard:// 時轉發給 handleDeepLink；捷徑 shortcuts:// 與外部連結以系統 Safari 開啟

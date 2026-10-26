@@ -252,10 +252,10 @@
   .cropper-modal-overlay {
     position: fixed; inset: 0; z-index: 99999;
     background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
+    display: flex; align-items: center; justify-content: center; padding: 8px;
   }
   .cropper-frame {
-    width: 100%; aspect-ratio: 1.586 / 1; border-radius: 16px; overflow: hidden;
+    width: 100%; max-width:calc(100vw - 40px); aspect-ratio: 1.586 / 1; border-radius: 16px; overflow: hidden;
     position: relative; background: #000; border: 2px solid var(--amber);
     touch-action: none; cursor: grab; user-select: none;
   }
@@ -3536,7 +3536,7 @@
   .keycap.delete-tile.image-keycap .keycap-photo{ opacity:.38; }
   #imageViewer{ position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.94); display:flex; align-items:center; justify-content:center; padding:18px; }
   #imageViewer img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; }
-  #editImagePreview{ display:none; width:100%; max-height:180px; object-fit:contain; border-radius:12px; background:rgba(0,0,0,.35); margin-bottom:10px; }
+  #editImagePreview{ display:none; width:100%; height:clamp(120px, 34vw, 190px); object-fit:cover; object-position:center; aspect-ratio:1.8/1; border-radius:12px; background:rgba(0,0,0,.35); margin:0 0 10px; opacity:1; }
 
   /* 編輯 / 取消 / 完成 釘選在頂端（常用文字與捷徑共用同一組） */
   .content-header{ position:sticky; top:-12px; z-index:40; margin:-12px 0 8px !important; padding:12px 0 8px; background:var(--bg, #0E0C09); }
@@ -3593,7 +3593,7 @@
     <!-- ===== 頁面一:儀錶板 ===== -->
     <div class="page" id="page-dashboard">
       <div class="section">
-        <div class="section-title"><span class="section-icon teal" id="iconCopySection"></span>常用文字</div>
+        <div class="section-title"><span class="section-icon teal" id="iconCopySection"></span>快捷項目</div>
         <div class="grid" id="copyGrid"></div>
       </div>
       <div class="section">
@@ -5205,11 +5205,11 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v3</h2>
+    <h2 id="updateNotesTitle">已更新至 v3.1</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，支援圖片、文字與網址，並回報是否已確認存入</li><li>分享選單改為自動儲存，不需再按「儲存到超級儀表板」</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，支援圖片、文字與網址，並回報是否已確認存入</li><li>分享選單改為自動儲存，不需再按「儲存到超級儀表板」</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li><li>常用文字區改名為「快捷項目」</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li><li>修復卡片刪除操作、取消可保留，並顯示刪除提示</li><li>修復鍵盤欄位切換工具列、卡片詳情橫向滑動與邊緣回彈</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li><li>放大圖片預覽、縮小新增卡片視窗按鈕與邊線間距</li><li>更新 7-ELEVEN、家樂福、星巴克品牌圖示</li></ul></div>
     </div>
   </div>
 </div>
@@ -6655,7 +6655,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v3';
+  var APP_VERSION = 'v3.1';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -6694,11 +6694,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             openEditModal(type, item);
             return;
           }
-          if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
-          else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
-          saveData();
+          pendingRemove[type].add(item.id);
           renderGrid(container, type);
-          showToast('已刪除項目');
+          showToast('已標記刪除；按完成才會永久刪除');
         };
       } else {
         var isImg = (type === 'copy' && (item.type === 'image' || (item.text && item.text.startsWith('data:image'))));
@@ -7755,13 +7753,17 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     track.querySelectorAll('.wallet-card-slide').forEach(function(slide){
       slide.addEventListener('click', function(e){
         var idx = parseInt(slide.dataset.index, 10);
-        var targetAction = e.target.dataset.action || (e.target.parentElement && e.target.parentElement.dataset.action);
+        var actionNode = e.target.closest ? e.target.closest('[data-action]') : null;
+        var targetAction = actionNode ? actionNode.dataset.action : '';
         if(state.editMode){
           if(targetAction === 'delete'){
-            if(!window.confirm('確定要刪除「' + (cards[idx].name || '這張卡片') + '」嗎？此操作無法復原。')) return;
+            e.stopPropagation();
+            if(!window.confirm('要將「' + (cards[idx].name || '這張卡片') + '」標記為刪除嗎？按「完成」才會永久刪除，按「取消」則保留。')) return;
             pendingRemove.card.add(cards[idx].id);
-            renderWallet();
+            renderEverything();
+            showToast('已標記刪除；按完成才會永久刪除');
           } else if(targetAction === 'edit'){
+            e.stopPropagation();
             openEditModal('card', cards[idx]);
           }
           return;
@@ -8229,9 +8231,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         openEditModal('card', card);
         return;
       }
-      if(!window.confirm('確定要刪除「' + (card.name || '這張卡片') + '」嗎？此操作無法復原。')) return;
+      if(!window.confirm('確定要刪除「' + (card.name || '這張卡片') + '」嗎？按「取消」會保留卡片。')) return;
       pendingRemove.card.add(card.id);
-      renderWallet();
+      renderEverything();
+      showToast('已標記刪除；按完成才會永久刪除');
     });
   }
 
@@ -9037,7 +9040,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(!pv){ pv = document.createElement('img'); pv.id = 'editImagePreview'; pv.alt = ''; modalInput.parentNode.insertBefore(pv, modalInput); }
     pv.style.display = 'none';
     if(type === 'copy' && isImageItem(item)){
-      pv.src = item.text; pv.style.display = 'block';
+      pv.onload = function(){ pv.style.display = 'block'; };
+      pv.onerror = function(){ pv.style.display = 'none'; };
+      pv.style.display = 'none';
+      pv.src = item.text;
+      if(pv.complete && pv.naturalWidth > 0) pv.style.display = 'block';
       modalTitle.textContent = '編輯圖片';
       modalHint.textContent = '可替圖片取名；長按編輯、點一下複製、連點兩下放大檢視';
       modalLabel1.textContent = '圖片名稱（選填）';
@@ -9059,15 +9066,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     modalConfirm.textContent = '儲存';
     var delRow = document.getElementById('modalDeleteRow');
-    if(delRow) delRow.style.display = 'none';
-    if(type === 'copy' && isImageItem(item) && delRow){
-      delRow.style.display = 'block';
-      var imgDel = document.getElementById('modalItemDeleteBtn');
-      if(imgDel) imgDel.onclick = function(){
-        state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
-        saveData(); closeModal(); renderEverything(); showToast('已刪除圖片');
-      };
-    }
+    if(delRow) delRow.style.display = 'block';
+    var modalDeleteBtn = document.getElementById('modalItemDeleteBtn');
+    if(modalDeleteBtn) modalDeleteBtn.onclick = function(){
+      var itemName = item.name || item.text || item.title || '這個項目';
+      if(!window.confirm('確定要刪除「' + String(itemName).slice(0,40) + '」嗎？按「取消」會保留項目。')) return;
+      if(type === 'copy') state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
+      else if(type === 'shortcut') state.shortcutItems = state.shortcutItems.filter(function(i){ return i.id !== item.id; });
+      else if(type === 'account') state.accounts = state.accounts.filter(function(i){ return i.id !== item.id; });
+      else if(type === 'expense') state.expenses = state.expenses.filter(function(i){ return i.id !== item.id; });
+      else if(type === 'card') state.cards = state.cards.filter(function(i){ return i.id !== item.id; });
+      saveData(); closeModal(); resetPending(); renderEverything(); showToast('已刪除「' + String(itemName).slice(0,24) + '」');
+    };
     modalOverlay.classList.add('show');
     if(!(type === 'copy' && isImageItem(item))) setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
@@ -9605,7 +9615,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       // 1. 7-ELEVEN OPEN POINT: 官方標誌 (經典綠底雙色方塊 + 橘紅 7)
       case 'l1':
       case 'openpoint':
-        return '<svg viewBox="0 0 32 32" width="24" height="24"><rect width="32" height="32" rx="6" fill="#007B5F"/><path d="M7 7 H25 V11 L14 25 H8 L18 11 H7 Z" fill="#EE1C25"/><path d="M18 12 H24 V25 H20 V16 H18 Z" fill="#F58220"/><text x="16" y="20" font-family="Arial,sans-serif" font-size="3.2" font-weight="900" fill="#fff" text-anchor="middle">ELEVEN</text></svg>';
+        return '<img src="assets/brands/7-eleven.svg" alt="7-ELEVEN" style="width:22px;height:26px;object-fit:contain;background:#fff;border-radius:3px;padding:1px;box-sizing:border-box;" />';
       // 2. 全家 FamilyMart: 官方標誌 (頂部藍、底部綠、中間白條)
       case 'l2':
       case 'familymart':
@@ -9617,7 +9627,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       // 4. 家樂福 Carrefour: 官方標誌 (紅白藍雙向箭頭 C)
       case 'l4':
       case 'carrefour':
-        return '<svg viewBox="0 0 32 32" width="24" height="24"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M5 8 L13 16 L5 24 Z" fill="#E2001A"/><path d="M27 8 L19 16 L27 24 Z" fill="#00387B"/><path d="M13 11 C15 9 17 9 19 11" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+        return '<img src="assets/brands/carrefour.svg" alt="Carrefour" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
       // 5. 屈臣氏 Watsons: 官方標誌 (湖水綠底 + 經典 W)
       case 'l5':
       case 'watsons':
@@ -9629,7 +9639,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       // 7. 星巴克 Starbucks: 官方標誌 (雙尾賽蓮女神深綠圓標)
       case 'l7':
       case 'starbucks':
-        return '<svg viewBox="0 0 32 32" width="24" height="24"><circle cx="16" cy="16" r="15" fill="#00704A"/><circle cx="16" cy="16" r="13" fill="none" stroke="#fff" stroke-width="1"/><circle cx="16" cy="15" r="4.5" fill="#fff"/><path d="M12 21 C14 24 18 24 20 21" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/><polygon points="16,7 17,9 19,9 17.5,10.5 18,12.5 16,11.2 14,12.5 14.5,10.5 13,9 15,9" fill="#fff"/></svg>';
+        return '<img src="assets/brands/starbucks.svg" alt="Starbucks" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:50%;padding:2px;box-sizing:border-box;" />';
       // 8. 誠品生活 eslite: 官方標誌 (深紅經典直式印章印記)
       case 'l8':
       case 'eslite':
@@ -10899,3 +10909,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
 </body>
 </html>
+
+<style id="wallet-scroll-hardening">
+  html, body { overscroll-behavior-y:none; }
+  .content { overscroll-behavior-y:none; }
+  #walletPage, #walletPage *, .sense-overlay, .sense-overlay-card-wrap { overscroll-behavior-y:none; }
+  .sense-overlay { overflow-x:hidden !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch; }
+  .sense-overlay-card-wrap { touch-action:pan-y; }
+  #modalOverlay .modal-footer, #modalOverlay .modal-actions { padding-left:12px !important; padding-right:12px !important; box-sizing:border-box !important; }
+  #modalOverlay .modal-scroll { overscroll-behavior-y:none !important; }
+</style>
