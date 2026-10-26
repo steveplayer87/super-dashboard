@@ -80,7 +80,7 @@
 - 移除卡面不需要的 NFC 圖示；票券動作文字使用各票券自己的 `btnText`，保留如「取得登機證」等專屬按鈕文案。
 - 錢包卡片、舊版卡片與常用文字刪除前增加確認。
 - 壓縮新增／編輯 Modal 的多餘高度；交通卡面嘗試滿版顯示；感應層限制垂直捲動，避免橫向溢出。
-- 版本更新提示調整為可關閉的 v2.6 提示，提供「新增／修復／調整」分類，並可由更多 > 系統資訊或點擊品牌標題重新開啟。
+- 版本更新提示調整為可關閉的 v3 提示，提供「新增／修復／調整」分類，並可由更多 > 系統資訊或點擊品牌標題重新開啟。
 - 快速分享儲存流程加入持久化確認；`AddQuickCopyIntent` 設為開啟主 App，讓主 App 接收分享佇列。
 
 ### 尚未視為驗收完成
@@ -158,3 +158,8 @@ npx cap open ios
 | **圖標字體** | 內嵌純向量 SVG (Lucide / Brand Logos) | 高清無鋸齒，純向量零 Emoji |
 | **離線存儲** | Web Storage API (localStorage) | 支援 JSON 序列化匯出與還原 |
 | **雲端連動** | Cloudflare Worker + Notion API | 阿鵝生活指標雙向紀錄橋接 |
+
+## 版本規則
+
+- 版本號採「v 加整數」（目前為 v3），App 內更新公告、系統資訊、iOS `MARKETING_VERSION` 與 GitHub 的 git tag 保持一致。
+- 發版流程：更新 `APP_VERSION`（index.html / www/index.html）與 `MARKETING_VERSION`，提交後建立同名 tag（例如 `v3`）。

@@ -3520,6 +3520,26 @@
   .update-notes-group strong{ font-size:13px; color:var(--gold); }
   .update-notes-group ul{ margin:7px 0 0; padding-left:20px; color:var(--text-muted); font-size:13px; line-height:1.65; }
   .update-notes-group li+li{ margin-top:3px; }
+
+  /* ====== 常用項目格子：防止長文字/圖片撐爆版面 ====== */
+  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .keycap{ touch-action: manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; min-width:0; }
+  .keycap.delete-tile{ overflow:hidden !important; }
+  .keycap.delete-tile .label{ max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .keycap.delete-tile .trash-icon{ position:relative; z-index:3; }
+
+  /* 圖片項目：照片塞滿按鈕，只留幾像素圓角邊框 */
+  .keycap.image-keycap{ padding:3px !important; }
+  .keycap-photo{ position:absolute; top:3px; left:3px; width:calc(100% - 6px); height:calc(100% - 6px);
+    object-fit:cover; border-radius:11px; pointer-events:none; display:block; -webkit-user-drag:none; }
+  .keycap.image-keycap .led{ z-index:4; }
+  .keycap.delete-tile.image-keycap .keycap-photo{ opacity:.38; }
+  #imageViewer{ position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.94); display:flex; align-items:center; justify-content:center; padding:18px; }
+  #imageViewer img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; }
+  #editImagePreview{ display:none; width:100%; max-height:180px; object-fit:contain; border-radius:12px; background:rgba(0,0,0,.35); margin-bottom:10px; }
+
+  /* 編輯 / 取消 / 完成 釘選在頂端（常用文字與捷徑共用同一組） */
+  .content-header{ position:sticky; top:-12px; z-index:40; margin:-12px 0 8px !important; padding:12px 0 8px; background:var(--bg, #0E0C09); }
 </style>
 </head>
 <body>
@@ -4274,7 +4294,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v2.6 · 錢包與分享修復</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v3 · 分享與捷徑收件匣</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -4596,9 +4616,6 @@
     </div>
   </div>
 
-  <div id="floatEditDoneBar" style="display:none; position:fixed; bottom:74px; left:50%; transform:translateX(-50%); z-index:99; background:var(--amber); color:#241705; font-weight:800; font-size:14px; padding:10px 28px; border-radius:24px; box-shadow:0 4px 18px rgba(0,0,0,0.6); align-items:center; gap:8px; cursor:pointer;" onclick="if(window._commitEditMode) window._commitEditMode();">
-    <span>完成編輯</span>
-  </div>
 
     <nav class="tabbar">
     <button type="button" class="tab active" data-tab="dashboard" id="tabBtnDashboard" onclick="window.switchPage('dashboard')"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
@@ -5188,11 +5205,11 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v2.6</h2>
+    <h2 id="updateNotesTitle">已更新至 v3</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>更新公告可關閉，亦可從系統資訊重新開啟</li><li>新增卡片預設使用白色付款卡樣式</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與照片未寫入常用項目</li><li>修復票卡操作名稱與圖示消失</li><li>刪除卡片前增加確認視窗</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>縮小新增／編輯視窗底部留白</li><li>北捷票卡卡面改為滿版顯示</li><li>卡片詳情只允許垂直捲動</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，並回報是否已確認存入</li><li>收件匣診斷畫面（更多 &gt; 進階偏好）</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li></ul></div>
     </div>
   </div>
 </div>
@@ -6662,7 +6679,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     try{
       if(typeof payload !== 'string' || !payload) return false;
       var isImg = payload.indexOf('data:image') === 0;
-      var newItem = { id: uid('c'), text: payload, type: isImg ? 'image' : 'text' };
+      var newItem = { id: uid('c'), text: payload, type: isImg ? 'image' : 'text', isLink: !isImg && /^https?:\/\/\S+$/i.test(payload.trim()) };
       if(!state.copyItems) state.copyItems = [];
       state.copyItems.unshift(newItem);
       saveData();
@@ -6687,7 +6704,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = '2.6';
+  var APP_VERSION = 'v3';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -6711,11 +6728,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       var label = type === 'copy' ? item.text : item.name;
       var cap = document.createElement('div');
 
+      var isImgE = (type === 'copy' && (item.type === 'image' || (item.text && item.text.indexOf('data:image') === 0)));
       if(state.editMode){
-        cap.className = 'keycap delete-tile';
+        cap.className = 'keycap delete-tile' + (isImgE ? ' image-keycap' : '');
         cap.innerHTML =
+          (isImgE ? '<img class="keycap-photo" src="' + item.text + '" alt="" />' : '') +
           icon('trash-2','trash-icon') +
-          '<div class="label">' + escapeHtml(label) + '</div>' +
+          (isImgE ? '' : '<div class="label">' + escapeHtml(window.safeTrunc(label, 40)) + '</div>') +
           '<div class="edit-pencil" title="編輯此項目" data-action="edit">' + icon('pencil','pencil-icon') + '</div>';
 
         cap.onclick = function(e){
@@ -6736,17 +6755,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         var isLink = (type === 'copy' && !!item.isLink);
 
         if(isImg){
-          var imgSrc = item.text;
           cap.className = 'keycap image-keycap';
-          cap.style.display = 'flex';
-          cap.style.flexDirection = 'column';
-          cap.style.alignItems = 'center';
-          cap.style.padding = '8px 4px 6px';
           cap.innerHTML =
-            '<div class="led ' + color + '"></div>' +
-            '<img src="' + imgSrc + '" style="width:42px; height:32px; object-fit:contain; border-radius:4px; margin-bottom:4px; background:rgba(0,0,0,0.3);" />' +
-            '<div class="label" style="font-size:10px; margin-bottom:4px;">' + escapeHtml(item.name || '相片項目') + '</div>' +
-            '<button class="btn" style="font-size:9.5px; padding:2px 6px; border-radius:4px; background:rgba(63,169,164,0.15); color:var(--teal); border:1px solid rgba(63,169,164,0.3); pointer-events:auto;" onclick="event.stopPropagation(); window.saveImageToPhotos(\'' + imgSrc + '\');">存至相片</button>';
+            '<img class="keycap-photo" src="' + item.text + '" alt="" />' +
+            '<div class="led ' + color + '"></div>';
         } else {
           cap.className = 'keycap' + (isLink ? ' is-link-tile' : '');
           var linkIconHtml = isLink ? '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="var(--gold)" stroke-width="2.5" style="display:inline-block; vertical-align:-1px; margin-right:3px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>' : '';
@@ -6777,24 +6789,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         cap.addEventListener('touchend', onTouchCancel, { passive: true });
         cap.addEventListener('touchcancel', onTouchCancel, { passive: true });
 
+        // 手勢：點一下複製、長按編輯、連點兩下開啟（網址 / 圖片）
+        var lastTapAt = 0;
         cap.onclick = function(e){
           if(didLongPress){
             didLongPress = false;
             return;
           }
-          if(isImg){
-            doCopy(item, cap.querySelector('.led'));
-          } else if(type === 'copy'){
-            if(isLink){
-              var rawUrl = item.text.trim();
-              if(!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')){
-                rawUrl = 'https://' + rawUrl;
+          if(type === 'copy'){
+            var now = Date.now();
+            if((isLink || isImg) && now - lastTapAt < 320){
+              lastTapAt = 0;
+              if(isImg){ openImageViewer(item.text); }
+              else {
+                var rawUrl = item.text.trim();
+                if(!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')){ rawUrl = 'https://' + rawUrl; }
+                window.openExternalUrl(rawUrl);
+                showToast('已開啟連結');
               }
-              window.openExternalUrl(rawUrl);
-              showToast('已開啟外部連結：' + rawUrl);
-            } else {
-              doCopy(item, cap.querySelector('.led'));
+              return;
             }
+            lastTapAt = now;
+            doCopy(item, cap.querySelector('.led'));
           } else {
             doOpenShortcut(item);
           }
@@ -6811,6 +6827,19 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       container.appendChild(addTile);
     }
   }
+
+  // 全螢幕檢視圖片（連點兩下圖片項目開啟，點一下關閉）
+  function openImageViewer(src){
+    var old = document.getElementById('imageViewer');
+    if(old) old.remove();
+    var v = document.createElement('div');
+    v.id = 'imageViewer';
+    v.innerHTML = '<img alt="" />';
+    v.firstChild.src = src;
+    v.onclick = function(){ v.remove(); };
+    document.body.appendChild(v);
+  }
+  function isImageItem(it){ return !!it && (it.type === 'image' || (typeof it.text === 'string' && it.text.indexOf('data:image') === 0)); }
 
   // 把 data URL 轉成 PNG Blob（iOS 剪貼簿只穩定支援 PNG）
   function dataUrlToPngBlob(src){
@@ -8944,6 +8973,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== 彈窗控制核心 (新增/編輯/預算) ====================
   function configureModalFields(type){
+    var _pv = document.getElementById('editImagePreview'); if(_pv) _pv.style.display = 'none';
     var isCard = (type === 'card');
     var isExpense = (type === 'expense');
 
@@ -9052,7 +9082,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalTitle.textContent = titles[type] || '編輯項目';
     modalHint.textContent = hints[type] || '';
 
-    if(type === 'copy'){
+    var pv = document.getElementById('editImagePreview');
+    if(!pv){ pv = document.createElement('img'); pv.id = 'editImagePreview'; pv.alt = ''; modalInput.parentNode.insertBefore(pv, modalInput); }
+    pv.style.display = 'none';
+    if(type === 'copy' && isImageItem(item)){
+      pv.src = item.text; pv.style.display = 'block';
+      modalTitle.textContent = '編輯圖片';
+      modalHint.textContent = '可替圖片取名；長按編輯、點一下複製、連點兩下放大檢視';
+      modalLabel1.textContent = '圖片名稱（選填）';
+      modalInput.value = item.name || '';
+      var lg = document.getElementById('copyLinkToggleGroup'); if(lg) lg.style.display = 'none';
+    }
+    else if(type === 'copy'){
       modalInput.value = item.text;
       var linkToggle = document.getElementById('copyIsLinkToggle');
       if(linkToggle){
@@ -9068,8 +9109,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalConfirm.textContent = '儲存';
     var delRow = document.getElementById('modalDeleteRow');
     if(delRow) delRow.style.display = 'none';
+    if(type === 'copy' && isImageItem(item) && delRow){
+      delRow.style.display = 'block';
+      var imgDel = document.getElementById('modalItemDeleteBtn');
+      if(imgDel) imgDel.onclick = function(){
+        state.copyItems = state.copyItems.filter(function(i){ return i.id !== item.id; });
+        saveData(); closeModal(); renderEverything(); showToast('已刪除圖片');
+      };
+    }
     modalOverlay.classList.add('show');
-    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
+    if(!(type === 'copy' && isImageItem(item))) setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
 
   function openBudgetModal(){
@@ -9148,6 +9197,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       return;
     }
 
+    if(modalMode === 'edit' && editContext && editContext.type === 'copy'){
+      var imgTarget = state.copyItems.find(function(i){ return i.id === editContext.id; });
+      if(imgTarget && isImageItem(imgTarget)){
+        imgTarget.name = modalInput.value.trim();
+        saveData(); closeModal(); renderEverything(); showToast('已更新圖片');
+        return;
+      }
+    }
     var val = modalInput.value.trim();
     var type = modalMode === 'edit' ? editContext.type : modalTarget;
 
