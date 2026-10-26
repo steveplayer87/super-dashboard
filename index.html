@@ -5556,6 +5556,12 @@
 
 
 <script>
+  // 安全截斷字串：以「字元」為單位（不切斷 emoji），並移除落單的代理字元（會讓 iOS 原生端當機）
+  window.safeTrunc = function(str, n){
+    var t = String(str == null ? '' : str).replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
+    var arr = Array.from(t);
+    return arr.length > n ? arr.slice(0, n).join('') : t;
+  };
   var METRO_PASS_IMAGE_DATA = 'metro_card.jpg';
 
 window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], expenses:[], budget:0, cards:[], cardTx:[], editMode:false };
@@ -5717,7 +5723,7 @@ window.safeSetIcon = safeSetIcon;
       if(!curState || !curState.copyItems) return;
       var top6 = (curState.copyItems || []).filter(function(it){ return !(it.type === 'image' || (it.text || '').indexOf('data:image') === 0); }).slice(0, 6).map(function(item){
         var txt = item.text || '';
-        var lbl = item.name || (txt.length > 10 ? txt.substring(0, 10) + '...' : txt);
+        var lbl = window.safeTrunc(item.name || txt, 10) + (!item.name && Array.from(txt).length > 10 ? '...' : '');
         return {
           id: item.id || ('item_' + Math.random().toString(36).substring(2, 7)),
           label: lbl,
@@ -5936,8 +5942,8 @@ window.safeSetIcon = safeSetIcon;
       var top3 = (curState.copyItems || []).filter(function(it){ return !(it.type === 'image' || (it.text || '').indexOf('data:image') === 0); }).slice(0, 3).map(function(item){
         return {
           id: item.id,
-          name: item.name || item.text.substring(0, 12),
-          text: item.text,
+          name: window.safeTrunc(item.name || item.text, 12),
+          text: window.safeTrunc(item.text, 2000),
           isLink: !!item.isLink
         };
       });

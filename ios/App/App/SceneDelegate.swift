@@ -38,6 +38,15 @@ public struct TaoyuanMetroAttributes: ActivityAttributes {
 }
 
 // MARK: - Quick Copy Live Activity Data Model
+/// 清理來自網頁的字串：重新以 UTF-16 解碼（落單代理字元會被換成 U+FFFD，避免原生 API 取得 NULL 字串而當機）、
+/// 移除控制字元、限制長度、空字串時使用備用文字。
+func cleanedString(_ s: String, max: Int, fallback: String = "") -> String {
+    let rebuilt = String(decoding: Array(s.utf16), as: UTF16.self)
+    let filtered = String(String.UnicodeScalarView(rebuilt.unicodeScalars.filter { $0.value >= 0x20 || $0 == "\n" }))
+    let limited = String(filtered.prefix(max))
+    return limited.isEmpty ? fallback : limited
+}
+
 public struct QuickCopyItemData: Codable, Hashable {
     public var id: String
     public var label: String
@@ -843,9 +852,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         } else if message.name == "syncDynamicShortcuts" {
             if let rawList = message.body as? [[String: Any]] {
                 let items = rawList.map { dict -> QuickCopyItemData in
-                    let id = dict["id"] as? String ?? UUID().uuidString
-                    let text = dict["text"] as? String ?? ""
-                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let id = cleanedString(dict["id"] as? String ?? "", max: 80, fallback: UUID().uuidString)
+                    let text = cleanedString(dict["text"] as? String ?? "", max: 2000)
+                    let label = cleanedString(dict["label"] as? String ?? dict["name"] as? String ?? "", max: 40, fallback: text.isEmpty ? "項目" : String(text.prefix(12)))
                     let isLink = dict["isLink"] as? Bool ?? false
                     return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
@@ -894,9 +903,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     rawList = arr
                 }
                 list = rawList.map { dict in
-                    let id = dict["id"] as? String ?? UUID().uuidString
-                    let text = dict["text"] as? String ?? ""
-                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let id = cleanedString(dict["id"] as? String ?? "", max: 80, fallback: UUID().uuidString)
+                    let text = cleanedString(dict["text"] as? String ?? "", max: 2000)
+                    let label = cleanedString(dict["label"] as? String ?? dict["name"] as? String ?? "", max: 40, fallback: text.isEmpty ? "項目" : String(text.prefix(12)))
                     let isLink = dict["isLink"] as? Bool ?? false
                     return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
@@ -1204,15 +1213,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func updateDynamicQuickActions(items: [QuickCopyItemData]) {
         DispatchQueue.main.async {
+            // 保險：若上一次更新長按選單時當機（旗標還留著），這次先略過並清掉旗標，避免開啟就當機的無限迴圈
+            let flags = UserDefaults.standard
+            if flags.bool(forKey: "qa_sync_inflight") {
+                flags.set(false, forKey: "qa_sync_inflight")
+                QuickCopyInbox.logDrain("上次更新長按選單時當機，本次已略過（請回報）")
+                return
+            }
             var shortcuts: [UIApplicationShortcutItem] = []
             for (idx, item) in items.prefix(3).enumerated() {
-                let title = item.label.isEmpty ? (item.text.isEmpty ? "項目 \(idx + 1)" : item.text) : item.label
+                let title = cleanedString(item.label, max: 40, fallback: "項目 \(idx + 1)")
+                let subtitle = cleanedString(item.text, max: 60)
                 let shortcut = UIApplicationShortcutItem(
-                    type: "copy_dynamic_\(item.id)",
+                    type: "copy_dynamic_\(cleanedString(item.id, max: 80, fallback: "\(idx)"))",
                     localizedTitle: title,
-                    localizedSubtitle: item.text,
+                    localizedSubtitle: subtitle.isEmpty ? nil : subtitle,
                     icon: UIApplicationShortcutIcon(type: .favorite),
-                    userInfo: ["text": item.text as NSString]
+                    userInfo: ["text": cleanedString(item.text, max: 2000) as NSString]
                 )
                 shortcuts.append(shortcut)
             }
@@ -1225,7 +1242,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                     userInfo: nil
                 )
             )
+            flags.set(true, forKey: "qa_sync_inflight")
+            flags.synchronize()
             UIApplication.shared.shortcutItems = shortcuts
+            flags.set(false, forKey: "qa_sync_inflight")
             print("Dynamic quick actions updated with \(shortcuts.count) items")
         }
     }
