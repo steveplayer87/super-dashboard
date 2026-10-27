@@ -38,6 +38,15 @@ public struct TaoyuanMetroAttributes: ActivityAttributes {
 }
 
 // MARK: - Quick Copy Live Activity Data Model
+/// 清理來自網頁的字串：重新以 UTF-16 解碼（落單代理字元會被換成 U+FFFD，避免原生 API 取得 NULL 字串而當機）、
+/// 移除控制字元、限制長度、空字串時使用備用文字。
+func cleanedString(_ s: String, max: Int, fallback: String = "") -> String {
+    let rebuilt = String(decoding: Array(s.utf16), as: UTF16.self)
+    let filtered = String(String.UnicodeScalarView(rebuilt.unicodeScalars.filter { $0.value >= 0x20 || $0 == "\n" }))
+    let limited = String(filtered.prefix(max))
+    return limited.isEmpty ? fallback : limited
+}
+
 public struct QuickCopyItemData: Codable, Hashable {
     public var id: String
     public var label: String
@@ -129,6 +138,7 @@ class LiveActivityManager {
                 content: .init(state: state, staleDate: nil)
             )
             print("[Metro] Started with state: progress=\(state.progress), next=\(state.nextStation)")
+            expandMetroIsland()
             
             // 每 2.5 秒更新一次即時動態，使動態島與鎖屏保持流暢即時推進
             DispatchQueue.main.async {
@@ -141,6 +151,22 @@ class LiveActivityManager {
         }
     }
     
+    /// 退回主畫面後，以「帶提醒的更新」讓動態島自動展開數秒
+    static func expandMetroIsland() {
+        guard let activity = currentActivity else { return }
+        IslandPresenter.leaveThenRun {
+            let state = activity.content.state
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "桃園捷運",
+                    body: "已開始追蹤，下一站 \(state.nextStation)",
+                    sound: .default
+                )
+            )
+        }
+    }
+
     static func updateMetroProgress() {
         guard let activity = currentActivity else { return }
         currentTripSeconds += 20 // 每次前進20秒里程
@@ -241,7 +267,7 @@ class QuickCopyManager {
         }
         let attributes = QuickCopyAttributes(title: "常用速貼庫")
         let contentState = QuickCopyAttributes.ContentState(
-            items: Array(activeItems.prefix(5)),
+            items: Array(activeItems.prefix(6)),
             lastCopiedText: nil,
             updateTimestamp: Date().timeIntervalSince1970
         )
@@ -252,15 +278,29 @@ class QuickCopyManager {
                 content: .init(state: contentState, staleDate: nil)
             )
             DispatchQueue.main.async {
-                NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！退回桌面即可直接點擊複製")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    // Suspend removed
-                }
+                NotificationManager.evaluateNotificationFeedback("常用速貼動態島已開啟！")
+                expandQuickCopyIsland()
             }
         } catch {
             DispatchQueue.main.async {
                 NotificationManager.evaluateNotificationFeedback("啟動動態島失敗：\(error.localizedDescription)")
             }
+        }
+    }
+
+    /// 退回主畫面後，以「帶提醒的更新」讓動態島自動展開數秒
+    static func expandQuickCopyIsland() {
+        guard let activity = currentActivity else { return }
+        IslandPresenter.leaveThenRun {
+            let state = activity.content.state
+            await activity.update(
+                ActivityContent(state: state, staleDate: nil),
+                alertConfiguration: AlertConfiguration(
+                    title: "常用速貼",
+                    body: "點選項目即可複製",
+                    sound: .default
+                )
+            )
         }
     }
 
@@ -281,7 +321,7 @@ class QuickCopyManager {
 
 // MARK: - 原生真實 Face ID 生物辨識管理器
 class BiometricManager {
-    static func authenticate(reason: String = "靠近掃碼器或讀卡機", completion: @escaping (Bool, String?) -> Void) {
+    static func authenticate(reason: String = "驗證身分以使用卡片", completion: @escaping (Bool, String?) -> Void) {
         let context = LAContext()
         context.localizedCancelTitle = "取消"
         context.localizedFallbackTitle = "使用密碼"
@@ -696,6 +736,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         guard let wv = self.webView else { return }
         wv.navigationDelegate = self
         wv.uiDelegate = self
+        hideKeyboardNavigationAccessory(in: wv)
 
         let ucc = wv.configuration.userContentController
         let handlers = [
@@ -714,6 +755,21 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
         handlers.forEach { ucc.add(self, name: $0) }
+    }
+
+    // 隱藏 WKWebView 輸入時系統自動加入的「上一欄／下一欄／完成」輔助按鈕。
+    // 使用 UIKit 公開的 UITextInputAssistantItem，不更動鍵盤本體或文字輸入行為。
+    private func hideKeyboardNavigationAccessory(in webView: WKWebView) {
+        func visit(_ view: UIView) {
+            if NSStringFromClass(type(of: view)).contains("WKContentView") {
+                let assistant = (view as UIResponder).inputAssistantItem
+                assistant.leadingBarButtonGroups = []
+                assistant.trailingBarButtonGroups = []
+                assistant.allowsHidingShortcuts = false
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        visit(webView)
     }
 
     // 核心攔截：當 JavaScript 導航或請求 superdashboard:// 時轉發給 handleDeepLink；捷徑 shortcuts:// 與外部連結以系統 Safari 開啟
@@ -806,9 +862,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         } else if message.name == "syncDynamicShortcuts" {
             if let rawList = message.body as? [[String: Any]] {
                 let items = rawList.map { dict -> QuickCopyItemData in
-                    let id = dict["id"] as? String ?? UUID().uuidString
-                    let text = dict["text"] as? String ?? ""
-                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let id = cleanedString(dict["id"] as? String ?? "", max: 80, fallback: UUID().uuidString)
+                    let text = cleanedString(dict["text"] as? String ?? "", max: 2000)
+                    let label = cleanedString(dict["label"] as? String ?? dict["name"] as? String ?? "", max: 40, fallback: text.isEmpty ? "項目" : String(text.prefix(12)))
                     let isLink = dict["isLink"] as? Bool ?? false
                     return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
@@ -826,7 +882,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     private func handleUnifiedAction(action: String, params: Any?) {
         let act = action.lowercased()
         if act == "auth-faceid" || act == "authfaceid" {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
+            BiometricManager.authenticate(reason: "驗證身分以使用卡片") { [weak self] success, err in
                 if success {
                     self?.webView?.evaluateJavaScript("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();", completionHandler: nil)
                 } else {
@@ -857,9 +913,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     rawList = arr
                 }
                 list = rawList.map { dict in
-                    let id = dict["id"] as? String ?? UUID().uuidString
-                    let text = dict["text"] as? String ?? ""
-                    let label = dict["label"] as? String ?? dict["name"] as? String ?? (text.isEmpty ? "項目" : text)
+                    let id = cleanedString(dict["id"] as? String ?? "", max: 80, fallback: UUID().uuidString)
+                    let text = cleanedString(dict["text"] as? String ?? "", max: 2000)
+                    let label = cleanedString(dict["label"] as? String ?? dict["name"] as? String ?? "", max: 40, fallback: text.isEmpty ? "項目" : String(text.prefix(12)))
                     let isLink = dict["isLink"] as? Bool ?? false
                     return QuickCopyItemData(id: id, label: label, text: text, isLink: isLink)
                 }
@@ -934,6 +990,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = MainViewController()
         window?.makeKeyAndVisible()
+        registerInboxObservers()
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
 
@@ -1004,6 +1061,29 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         drainSharedInbox()
     }
 
+    // 收件匣有新內容時（捷徑動作 / 分享延伸寫入後）立即取件
+    private var inboxObserversRegistered = false
+    private func registerInboxObservers() {
+        guard !inboxObserversRegistered else { return }
+        inboxObserversRegistered = true
+        NotificationCenter.default.addObserver(forName: .quickCopyInboxUpdated, object: nil, queue: .main) { [weak self] _ in
+            self?.drainSharedInbox()
+        }
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                        Unmanaged.passUnretained(self).toOpaque(),
+                                        { _, observer, _, _, _ in
+                                            guard let observer = observer else { return }
+                                            let me = Unmanaged<SceneDelegate>.fromOpaque(observer).takeUnretainedValue()
+                                            DispatchQueue.main.async { me.drainSharedInbox() }
+                                        },
+                                        QuickCopyInbox.darwinName as CFString, nil, .deliverImmediately)
+    }
+
+    deinit {
+        CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(), Unmanaged.passUnretained(self).toOpaque())
+        NotificationCenter.default.removeObserver(self)
+    }
+
     // MARK: - App Group 收件匣（Share Extension 寫入，主 App 取出）
     private static let sharedGroupID = "group.com.steveplayer87.superdashboard"
     private static let sharedInboxKey = "sharedInbox"
@@ -1023,13 +1103,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     /// 取出分享收件匣並交給網頁。網頁尚未載入完成時會每 0.5 秒重試（最多約 10 秒），
     /// 且只有在確定投遞時才清空收件匣，避免冷啟動時內容遺失。
+    // 同時多個觸發（回到前景 + 寫入通知）時只跑一輪，避免同一筆被投遞兩次
+    private var draining = false
+    private var drainAgain = false
+
+    private func finishDrain() {
+        draining = false
+        if drainAgain { drainAgain = false; drainSharedInbox() }
+    }
+
     func drainSharedInbox(attempt: Int = 0) {
+        if attempt == 0 {
+            if draining { drainAgain = true; return }
+            draining = true
+        }
         guard let defaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
               let pending = defaults.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
-              !pending.isEmpty else { return }
+              !pending.isEmpty else { finishDrain(); return }
 
         func retry() {
-            guard attempt < 20 else { return }
+            guard attempt < 20 else { QuickCopyInbox.logDrain("等待逾時：網頁端尚未就緒（已放棄本輪，下次開啟會再試）"); finishDrain(); return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.drainSharedInbox(attempt: attempt + 1)
             }
@@ -1045,21 +1138,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             // 重新讀取一次再清空，避免多次觸發造成重複投遞
             guard let d = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
                   let entries = d.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]],
-                  !entries.isEmpty else { return }
+                  !entries.isEmpty else { self.finishDrain(); return }
             // 收到網頁端明確回報「已寫入」後才清空收件匣；失敗時保留並重試。
             self.deliverSharedEntries(entries, web: web) { success in
                 guard success else {
                     print("[ShareInbox] web handler did not confirm persistence; inbox retained")
+                    QuickCopyInbox.logDrain("網頁端未確認寫入，已保留收件匣並重試")
                     retry()
                     return
                 }
-                guard let latest = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
-                      let current = latest.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]] else { return }
-                // 僅移除本次已處理的項目，保留分享期間新加入的內容。
-                let remaining = Array(current.dropFirst(min(entries.count, current.count)))
-                if remaining.isEmpty { latest.removeObject(forKey: SceneDelegate.sharedInboxKey) }
-                else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
+                if let latest = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+                   let current = latest.array(forKey: SceneDelegate.sharedInboxKey) as? [[String: String]] {
+                    // 僅移除本次已處理的項目，保留分享期間新加入的內容。
+                    let remaining = Array(current.dropFirst(min(entries.count, current.count)))
+                    if remaining.isEmpty { latest.removeObject(forKey: SceneDelegate.sharedInboxKey) }
+                    else { latest.set(remaining, forKey: SceneDelegate.sharedInboxKey) }
+                }
                 print("[ShareInbox] confirmed persisted \(entries.count) entries")
+                QuickCopyInbox.logDrain("成功：已把 \(entries.count) 筆存進常用項目")
+                // 回報確認：讓捷徑動作知道已真正存進常用項目
+                if let ackDefaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID) {
+                    var acked = (ackDefaults.array(forKey: QuickCopyInbox.ackKey) as? [String]) ?? []
+                    acked.append(contentsOf: entries.compactMap { $0["id"] })
+                    ackDefaults.set(Array(acked.suffix(100)), forKey: QuickCopyInbox.ackKey)
+                }
+                self.finishDrain()
             }
         }
     }
@@ -1120,15 +1223,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func updateDynamicQuickActions(items: [QuickCopyItemData]) {
         DispatchQueue.main.async {
+            // 保險：若上一次更新長按選單時當機（旗標還留著），這次先略過並清掉旗標，避免開啟就當機的無限迴圈
+            let flags = UserDefaults.standard
+            if flags.bool(forKey: "qa_sync_inflight") {
+                flags.set(false, forKey: "qa_sync_inflight")
+                QuickCopyInbox.logDrain("上次更新長按選單時當機，本次已略過（請回報）")
+                return
+            }
             var shortcuts: [UIApplicationShortcutItem] = []
             for (idx, item) in items.prefix(3).enumerated() {
-                let title = item.label.isEmpty ? (item.text.isEmpty ? "項目 \(idx + 1)" : item.text) : item.label
+                let title = cleanedString(item.label, max: 40, fallback: "項目 \(idx + 1)")
+                let subtitle = cleanedString(item.text, max: 60)
                 let shortcut = UIApplicationShortcutItem(
-                    type: "copy_dynamic_\(item.id)",
+                    type: "copy_dynamic_\(cleanedString(item.id, max: 80, fallback: "\(idx)"))",
                     localizedTitle: title,
-                    localizedSubtitle: item.text,
+                    localizedSubtitle: subtitle.isEmpty ? nil : subtitle,
                     icon: UIApplicationShortcutIcon(type: .favorite),
-                    userInfo: ["text": item.text as NSString]
+                    userInfo: ["text": cleanedString(item.text, max: 2000) as NSString]
                 )
                 shortcuts.append(shortcut)
             }
@@ -1141,7 +1252,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                     userInfo: nil
                 )
             )
+            flags.set(true, forKey: "qa_sync_inflight")
+            flags.synchronize()
             UIApplication.shared.shortcutItems = shortcuts
+            flags.set(false, forKey: "qa_sync_inflight")
             print("Dynamic quick actions updated with \(shortcuts.count) items")
         }
     }
@@ -1222,7 +1336,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         }
 
         if urlStr.contains("auth-faceid") {
-            BiometricManager.authenticate(reason: "靠近掃碼器或讀卡機") { [weak self] success, err in
+            BiometricManager.authenticate(reason: "驗證身分以使用卡片") { [weak self] success, err in
                 if success {
                     self?.evaluateJS("if(typeof window.onFaceIDSuccess==='function') window.onFaceIDSuccess();")
                 } else {

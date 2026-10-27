@@ -13,6 +13,7 @@ class ShareViewController: UIViewController {
 
     private let statusLabel = UILabel()
     private var didStart = false
+    private var pendingEntries: [[String: String]] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,10 +24,11 @@ class ShareViewController: UIViewController {
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusLabel.textColor = .label
         view.addSubview(statusLabel)
         NSLayoutConstraint.activate([
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -32),
             statusLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
             statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24)
         ])
@@ -125,13 +127,35 @@ class ShareViewController: UIViewController {
                 self.finish(message: "無法讀取分享內容", success: false)
                 return
             }
-            var inbox = (defaults.array(forKey: self.inboxKey) as? [[String: String]]) ?? []
-            inbox.append(contentsOf: entries)
-            defaults.set(inbox, forKey: self.inboxKey)
-            defaults.synchronize()
-
-            self.finish(message: "", success: true)
+            self.pendingEntries = entries
+            self.saveSilently()
         }
+    }
+
+
+    /// 不需要使用者按任何按鈕：寫入收件匣後立刻收起，以震動代替確認
+    private func saveSilently() {
+        guard !pendingEntries.isEmpty,
+              let defaults = UserDefaults(suiteName: groupID) else {
+            finish(message: "找不到待儲存內容，請重新分享", success: false)
+            return
+        }
+        var inbox = (defaults.array(forKey: inboxKey) as? [[String: String]]) ?? []
+        inbox.append(contentsOf: pendingEntries)
+        defaults.set(inbox, forKey: inboxKey)
+        // synchronize() is deprecated and can report an unreliable failure here;
+        // verify the value we just wrote instead of treating its return value as persistence failure.
+        let savedInbox = defaults.array(forKey: inboxKey) as? [[String: String]] ?? []
+        guard savedInbox.count >= inbox.count,
+              Array(savedInbox.suffix(pendingEntries.count)) == pendingEntries else {
+            finish(message: "內容未能寫入共享收件匣，請再試一次", success: false)
+            return
+        }
+        pendingEntries.removeAll()
+        // 若主 App 正在執行，立刻通知它取件（不必等回到前景）
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                             CFNotificationName("com.steveplayer87.superdashboard.inbox-updated" as CFString), nil, nil, true)
+        finish(message: "", success: true)
     }
 
     // MARK: - 圖片處理（用 ImageIO 縮圖，避免大圖吃光 extension 記憶體上限）
