@@ -560,6 +560,7 @@
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace; border-top:1px dashed rgba(212,175,55,.25); padding-top:4px;
   }
   .boarding-h-bottom b{ color:#F3E3B8; }
+  .boarding-expand-btn{display:flex;align-items:center;justify-content:center;min-width:26px;color:var(--gold);}
   .boarding-h-expand-hint{
     font-size:9.5px; color:var(--gold); display:flex; align-items:center; gap:3px;
   }
@@ -2448,12 +2449,12 @@
     color: var(--text-muted);
     line-height: 1.45;
   }
-  .ticket-detail-perks {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
+  .ticket-detail-perks { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .ticket-extra-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:12px; }
+  .ticket-extra-cell{ min-width:0; border:1px solid var(--border); border-radius:9px; padding:9px 10px; background:rgba(255,255,255,.025); }
+  .ticket-extra-label{ font-size:10px; color:var(--text-muted); margin-bottom:4px; }
+  .ticket-extra-value{ font-size:12px; font-weight:750; color:var(--text); overflow-wrap:anywhere; }
+  .ticket-demo-note{ margin-top:9px; font-size:10px; color:var(--text-muted); }
   .ticket-perk-chip {
     font-size: 10.5px;
     background: rgba(255,255,255,0.04);
@@ -3540,6 +3541,40 @@
 
   /* 編輯 / 取消 / 完成 釘選在頂端（常用文字與捷徑共用同一組） */
   .content-header{ position:sticky; top:-12px; z-index:40; margin:-12px 0 8px !important; padding:12px 0 8px; background:var(--bg, #0E0C09); }
+
+  /* ====== 錢包頁：只允許垂直滑動（輪播保留左右），並抑制邊緣回彈 ====== */
+  #page-wallet{ touch-action: pan-y; overscroll-behavior: none; }
+  #page-wallet .card-viewport{ touch-action: pan-x pan-y; }
+  .content:has(#page-wallet:not([style*="display: none"])){ overscroll-behavior: none; }
+
+  /* ====== 錢包卡片：取消會卡頓的放大動畫，改用輕量白色高亮外框 ====== */
+  html body .wallet-card-slide{ transform:none !important; will-change:auto !important; transition:opacity .16s ease !important; opacity:.72 !important; }
+  html body .wallet-card-slide.active{ transform:none !important; opacity:1 !important; }
+  html body .wallet-card-slide::after{ content:''; position:absolute; inset:-3px; border-radius:19px; pointer-events:none; z-index:6;
+    border:2.5px solid rgba(255,255,255,.96); box-shadow:0 0 16px rgba(255,255,255,.28); opacity:0; transition:opacity .16s ease; }
+  html body .wallet-card-slide.active::after{ opacity:1; }
+
+  /* ====== 新增卡片／取得票卡：兩頁固定同樣大小，空白均勻分配，底部留白縮小 ====== */
+  #modalOverlay .modal.modal-fixed{ height:min(700px, 88dvh) !important; max-height:88dvh !important; }
+  .modal-fixed .modal-scroll{ display:flex; flex-direction:column; justify-content:space-evenly; gap:10px; }
+  .modal-footer{ padding:10px 20px 12px !important; }
+
+  /* 自訂圖片卡面：左下標題 */
+  .custom-face-title{ position:absolute; left:16px; right:64px; bottom:14px; font-size:17px; font-weight:800; color:#fff; letter-spacing:.5px;
+    text-shadow:0 1px 6px rgba(0,0,0,.7); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* Loyalty icon frame: neutral white only, square artwork contained without stretching. */
+  .loyalty-item{grid-template-columns:42px minmax(0,1fr)!important;grid-template-rows:auto auto!important;row-gap:4px!important;min-height:66px!important;height:auto!important;max-height:none!important;padding:10px 12px!important;margin-bottom:0!important;display:grid!important;align-items:center!important;justify-content:initial!important;}
+  .loyalty-app-open{grid-column:1!important;grid-row:1 / span 2!important;width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;padding:5px!important;border:0!important;border-radius:11px!important;background:#fff!important;box-shadow:none!important;}
+  .loyalty-app-open img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;background:#fff!important;border:0!important;border-radius:4px!important;padding:0!important;box-sizing:border-box!important;}
+  .loyalty-main-row{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;}
+  .loyalty-sub{grid-column:2!important;grid-row:2!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:8px!important;min-width:0!important;white-space:normal!important;overflow:visible!important;}
+  .loyalty-status-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .loyalty-row-actions{display:flex!important;align-items:center!important;gap:7px!important;flex-shrink:0!important;}
+  .loyalty-check-mark{width:24px!important;height:24px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;flex-shrink:0!important;}
+  .loyalty-add-btn{display:block!important;width:100%!important;margin:12px 0 0!important;padding:12px!important;border:1px dashed var(--border)!important;border-radius:12px!important;background:transparent!important;color:var(--text-muted)!important;}
+  .ticket-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  @media(max-width:360px){.loyalty-main-row{gap:5px!important}.loyalty-name{font-size:12px!important}.loyalty-row-actions{gap:4px!important}.loyalty-pts-badge{font-size:10px!important;padding:3px 5px!important}.loyalty-item{grid-template-columns:38px minmax(0,1fr)!important;column-gap:8px!important}.loyalty-app-open{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important}.ticket-extra-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -4090,6 +4125,7 @@
           <span style="font-size:11.5px; color:var(--gold); font-weight:700; background:rgba(212,175,55,0.12); padding:4px 8px; border-radius:8px; border:1px solid rgba(212,175,55,0.25);" id="loyaltyActiveCountBadge">已啟用 10 個</span>
         </div>
         <div class="loyalty-grid" id="loyaltyGridInTab"></div>
+        <button type="button" class="loyalty-add-btn loyalty-add-member-trigger" id="loyaltyAddMemberBtn">＋ 加入更多會員</button>
       </div>
     </div>
 
@@ -4922,7 +4958,15 @@
                 </button>
                 <button type="button" class="btn-custom-preset" id="btnCustomClear" style="display:none; background:rgba(193,68,60,.15); color:#ff9d95; border-color:rgba(193,68,60,.35); border-radius:12px; padding:8px 12px; font-size:12px;">清除相片</button>
               </div>
-              <div class="custom-image-hint" id="customImageHint">挑選相片後可在卡片尺寸框內自由縮放裁切；亦可點「匯入外部卡片」上傳 HTML / ZIP</div>
+              <div id="customFaceOptions" style="display:none; margin-top:12px;">
+        <span class="field-label">卡面標題（顯示在左下角）</span>
+        <input id="customCardTitleInput" placeholder="留空則使用卡片名稱" maxlength="24">
+        <div class="settings-row" style="margin-top:10px;">
+          <div style="flex:1;"><div class="settings-label">顯示感應符號</div></div>
+          <button type="button" class="toggle active on" id="customNfcToggle"><span class="toggle-knob"></span></button>
+        </div>
+      </div>
+      <div class="custom-image-hint" id="customImageHint">挑選相片後可在卡片尺寸框內自由縮放裁切；亦可點「匯入外部卡片」上傳 HTML / ZIP</div>
             </div>
           </div>
         </div>
@@ -5134,10 +5178,10 @@
             台北(TPE) 直飛 大阪關西(KIX)，JX800 商務艙專屬優先登機。感應時啟動 Face ID 雙重認證解鎖動態 QR Code。
           </div>
           <div class="ticket-detail-perks" id="ticketDetailPerks">
-            <span class="ticket-perk-chip">優先安檢</span>
-            <span class="ticket-perk-chip">貴賓室使用</span>
-            <span class="ticket-perk-chip">32kg 行李額度</span>
+            <span class="ticket-perk-chip">登機提醒</span><span class="ticket-perk-chip">航班狀態</span>
           </div>
+          <div class="ticket-extra-grid" id="ticketExtraGrid" style="display:none;"></div>
+          <div class="ticket-demo-note" id="ticketDemoNote" style="display:none;">以下為介面示範資料，實際航班資訊以航空公司通知為準。</div>
         </div>
 
                 </div>
@@ -5207,9 +5251,9 @@
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
     <h2 id="updateNotesTitle">已更新至 v3.1</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，支援圖片、文字與網址，並回報是否已確認存入</li><li>分享選單改為自動儲存，不需再按「儲存到超級儀表板」</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li><li>常用文字區改名為「快捷項目」</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li><li>修復卡片刪除操作、取消可保留，並顯示刪除提示</li><li>修復鍵盤欄位切換工具列、卡片詳情橫向滑動與邊緣回彈</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li><li>放大圖片預覽、縮小新增卡片視窗按鈕與邊線間距</li><li>更新 7-ELEVEN、家樂福、星巴克品牌圖示</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，支援圖片、文字與網址，並回報是否已確認存入</li><li>分享選單改為自動儲存，不需再按「儲存到超級儀表板」</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li><li>常用文字區改名為「快捷項目」</li><li>自訂圖片卡面：裁切（可雙指縮放）、左下角標題、感應符號開關</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li><li>修復自訂圖片卡面選圖後沒有反應（裁切視窗載入順序錯誤）</li><li>預設卡片卡號改回 ••••，新增卡片才產生隨機卡號</li><li>修復卡片刪除操作、取消可保留，並顯示刪除提示</li><li>修復鍵盤欄位切換工具列、卡片詳情橫向滑動與邊緣回彈</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li><li>放大圖片預覽、縮小新增卡片視窗按鈕與邊線間距</li><li>更新 7-ELEVEN、家樂福、星巴克品牌圖示</li><li>錢包卡片改用白色高亮外框，移除會卡頓的放大動畫；錢包頁只允許垂直滑動並抑制回彈</li><li>新增卡片與取得票卡兩頁固定同樣大小，縮小底部留白</li></ul></div>
     </div>
   </div>
 </div>
@@ -5437,6 +5481,7 @@
           
         </div>
         <div class="loyalty-grid" id="loyaltyHubList"></div>
+        <button type="button" class="loyalty-add-btn loyalty-add-member-trigger" id="loyaltyAddMemberBtnHub">＋ 加入更多會員</button>
       </div>
 
       <!-- Tab 4: 進階偏好設定 -->
@@ -5562,6 +5607,95 @@
   </div>
 </div>
 
+
+<!-- 手動加值確認視窗 (附帶詳細說明與圖示) -->
+<div class="modal-overlay" id="manualTopupModal" style="display:none; z-index:120;">
+  <div class="modal" style="max-width:330px; text-align:center; padding:22px 20px 18px;">
+    <div style="width:52px; height:52px; border-radius:50%; background:rgba(212,175,55,0.15); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--gold);">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+      </svg>
+    </div>
+    <h3 style="font-size:17px; font-weight:700; color:var(--text); margin:0 0 6px 0;">確認進行儲值卡加值</h3>
+    <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 16px; line-height:1.5;" id="topupModalSubtitle">
+      即將從扣款帳戶儲值至目標卡片
+    </p>
+
+    <div style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; text-align:left; margin-bottom:16px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:var(--text-muted);">目標儲值卡</span>
+        <span style="color:var(--text); font-weight:600;" id="topupModalCardName">台北捷運悠遊卡</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:var(--text-muted);">扣款帳戶</span>
+        <span style="color:var(--teal); font-weight:600;" id="topupModalAccountName">國泰銀行</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border); padding-top:6px;">
+        <span style="color:var(--text-muted);">加值金額</span>
+        <span style="color:var(--gold); font-weight:700; font-size:15px;" id="topupModalAmount">+NT$100</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:var(--text-muted);">加值後預估餘額</span>
+        <span style="color:var(--good); font-weight:600;" id="topupModalAfterBalance">NT$350</span>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="display:flex; gap:10px;">
+      <button type="button" class="cancel" id="btnCancelManualTopup" style="flex:1;">取消</button>
+      <button type="button" class="confirm" id="btnConfirmManualTopup" style="flex:1; background:var(--gold); color:#120e06; font-weight:700;">確認加值</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享延伸功能 (Share Extension) 說明彈窗 -->
+<div class="modal-overlay" id="shareExtensionModal" style="display:none; z-index:120;">
+  <div class="modal" style="max-width:350px; text-align:left; padding:22px 20px 18px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <div style="width:40px; height:40px; border-radius:12px; background:rgba(63,169,164,0.15); border:1px solid var(--teal); display:flex; align-items:center; justify-content:center; color:var(--teal);">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+      <div>
+        <h3 style="font-size:16px; font-weight:700; color:var(--text); margin:0;">iOS 分享延伸功能</h3>
+        <span style="font-size:11px; color:var(--teal);">單鍵即存 · 零二次點擊</span>
+      </div>
+    </div>
+    <p style="font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
+      在 Safari 網址列、備忘錄、LINE 或任何 App 點擊系統「分享」圖示時，在 App 圖示排直接點擊 <b>Super Dashboard</b>，內容便會<b>立即存入儀錶板常用項目</b>，完全無需再按任何確認鍵！
+    </p>
+    <div style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:11.5px; color:var(--text-muted); margin-bottom:14px; line-height:1.4;">
+      若在分享面板的第一排沒看到，請滑到最右側點擊「更多」，並將「Super Dashboard」加到常用。
+    </div>
+    <button type="button" class="btn" onclick="document.getElementById('shareExtensionModal').style.display='none'" style="width:100%; padding:9px 0; background:var(--panel-raised); border:1px solid var(--border); color:var(--text); border-radius:10px; cursor:pointer;">我知道了</button>
+  </div>
+</div>
+
+<!-- ===== 卡面相片縮放裁切視窗 ===== -->
+<div id="photoCropperModal" class="cropper-modal-overlay" style="display:none;">
+  <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:22px; padding:20px; max-width:380px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.8); display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:15px; font-weight:800; color:var(--text);">調整卡面照片</div>
+      <button type="button" id="cropperCancelX" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; padding:4px;">✕</button>
+    </div>
+
+    <!-- 裁切框 (標準信用卡長寬比 1.586 : 1) -->
+    <div id="cropperFrame" class="cropper-frame">
+      <img id="cropperImage" src="" alt="縮放調整預覽" style="position:absolute; top:0; left:0; transform-origin:0 0; user-select:none; pointer-events:none; will-change:transform;" />
+      <div style="position:absolute; inset:0; border:1px dashed rgba(255,255,255,0.4); border-radius:14px; pointer-events:none;"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="font-size:11px; color:var(--text-muted);">縮小</span>
+      <input type="range" id="cropperZoomSlider" min="1" max="4" step="0.02" value="1" style="flex:1;" />
+      <span style="font-size:11px; color:var(--text-muted);">放大</span>
+    </div>
+    <div style="font-size:11.5px; color:var(--text-muted); text-align:center;">單指拖曳調整位置，雙指或拉桿縮放</div>
+
+    <div style="display:flex; gap:10px;">
+      <button type="button" id="cropperCancelBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text); cursor:pointer;">取消</button>
+      <button type="button" id="cropperApplyBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--amber); border:none; color:#1a1202; font-weight:800; cursor:pointer;">確認套用</button>
+    </div>
+  </div>
+</div>
 
 <script>
   // 安全截斷字串：以「字元」為單位（不切斷 emoji），並移除落單的代理字元（會讓 iOS 原生端當機）
@@ -6925,7 +7059,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var v = 'c-white';
     var logo = '<svg class="logo"><use href="#mc"/></svg>';
     var label = 'Debit';
-    var last = (card && card.last4) ? card.last4 : '8822';
+    var last = (card && card.last4) ? card.last4 : '••••';
     var name = (card && card.name && card.name !== '新卡片') ? card.name : 'Leonardo De Luca';
     var exp = (card && card.exp) ? card.exp : '2/28';
     var hasWave = false;
@@ -6935,31 +7069,31 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
       hasWave = true;
-      last = (card && card.last4) ? card.last4 : '6644';
+      last = (card && card.last4) ? card.last4 : '••••';
       exp = (card && card.exp) ? card.exp : '8/08';
     } else if(thm.indexOf('visa-dark') !== -1){
       v = 'c-visa-dark visa';
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
-      last = (card && card.last4) ? card.last4 : '6644';
+      last = (card && card.last4) ? card.last4 : '••••';
       exp = (card && card.exp) ? card.exp : '8/08';
     } else if(thm.indexOf('dark') !== -1){
       v = 'c-dark';
       logo = '<svg class="logo"><use href="#mc"/></svg>';
       label = 'Debit';
-      last = (card && card.last4) ? card.last4 : '8822';
+      last = (card && card.last4) ? card.last4 : '••••';
       exp = (card && card.exp) ? card.exp : '2/28';
     } else if(thm.indexOf('silver') !== -1){
       v = 'c-silver';
       logo = '<img class="logo cent" alt="" src="cent_silver.png">';
       label = 'Rewards';
-      last = (card && card.last4) ? card.last4 : '0482';
+      last = (card && card.last4) ? card.last4 : '••••';
       exp = (card && card.exp) ? card.exp : '6/26';
     } else if(thm.indexOf('bronze') !== -1){
       v = 'c-bronze';
       logo = '<img class="logo cent" alt="" src="cent_bronze.png">';
       label = 'Rewards';
-      last = (card && card.last4) ? card.last4 : '0482';
+      last = (card && card.last4) ? card.last4 : '••••';
       exp = (card && card.exp) ? card.exp : '6/26';
     }
 
@@ -7054,6 +7188,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '</svg>' +
     '</div>';
 
+    // 自訂圖片卡面：左下標題 + 可關閉的感應符號
+    if(card.theme === 'theme-custom' && card.customImage){
+      return (card.showNfc !== false ? nfcRightSvg : '') +
+        '<div class="custom-face-title">' + escapeHtml(card.customTitle || card.name || '') + '</div>';
+    }
+
     // 0. Card Kit 擬物卡面 (白色、粉藍 Visa、太空黑、魅紫 Visa、放射銀芒、奢華金銅)
     if(card.theme && (card.theme.indexOf('theme-kit-') !== -1 || card.theme.indexOf('c-') !== -1)){
       return renderCardKitFace(card);
@@ -7118,9 +7258,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             '<span class="info-label">BOARDING</span>' +
             '<span class="info-val">' + escapeHtml(card.boardingTime || '10:30') + '</span>' +
           '</div>' +
-          '<div class="boarding-expand-btn">' +
-            '<span>感應通行</span>' +
-            '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '<div class="boarding-expand-btn" title="掃碼登機" aria-label="掃碼登機">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><path d="M15 15h3v3h3M15 21v-3M21 15v2"/></svg>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -7575,7 +7714,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var histSection = document.getElementById('walletHistorySection');
     var carrierLoyaltyPanel = document.getElementById('carrierLoyaltyPanel');
     var isBoarding = (card.type === 'boarding' || card.type === 'pass');
-    var showFuncNav = !isBoarding;
+    var showFuncNav = isPaymentCard || card.type === 'transit';
 
     if(cardFuncNav){
       cardFuncNav.style.display = showFuncNav ? 'flex' : 'none';
@@ -8477,6 +8616,48 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     sunset: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="190"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="%23ff416c"/><stop offset="50%" stop-color="%238a2387"/><stop offset="100%" stop-color="%23e94057"/></linearGradient></defs><rect width="300" height="190" fill="url(%23g)" opacity="0.85"/><circle cx="150" cy="130" r="45" fill="%23f5d888" opacity="0.6"/></svg>'
   };
 
+  var customCardTitle = '';
+  var customShowNfc = true;
+  function updateCustomMiniFace(){
+    var nm = document.querySelector('#miniCustomCardPreview .mini-card-name');
+    if(nm) nm.textContent = customCardTitle || (modalInput && modalInput.value) || '自訂卡面圖片';
+    var nf = document.querySelector('#miniCustomCardPreview .mini-nfc');
+    if(nf) nf.style.display = customShowNfc ? '' : 'none';
+  }
+  function syncCustomFaceUI(){
+    var opts = document.getElementById('customFaceOptions');
+    if(opts) opts.style.display = customImageData ? 'block' : 'none';
+    var ti = document.getElementById('customCardTitleInput');
+    if(ti) ti.value = customCardTitle;
+    var tg = document.getElementById('customNfcToggle');
+    if(tg){ tg.classList.toggle('on', customShowNfc); tg.classList.toggle('active', customShowNfc); }
+    updateCustomMiniFace();
+  }
+  function resetCustomCard(){
+    customImageData = ''; customCardTitle = ''; customShowNfc = true;
+    var pv = document.getElementById('miniCustomCardPreview'); if(pv) pv.style.backgroundImage = '';
+    var sb = document.getElementById('customCardMiniSub'); if(sb) sb.textContent = '上傳相片或挑選預設';
+    var ut = document.getElementById('btnCustomUploadText'); if(ut) ut.textContent = '選擇相片 / 圖檔';
+    var cl = document.getElementById('btnCustomClear'); if(cl) cl.style.display = 'none';
+    syncCustomFaceUI();
+  }
+  function loadCustomCard(card){
+    resetCustomCard();
+    if(card && card.customImage){
+      customCardTitle = card.customTitle || '';
+      customShowNfc = card.showNfc !== false;
+      updateCustomPreview(card.customImage);
+      var ut = document.getElementById('btnCustomUploadText'); if(ut) ut.textContent = '更換相片';
+      var cl = document.getElementById('btnCustomClear'); if(cl) cl.style.display = 'inline-flex';
+    }
+  }
+  (function(){
+    var ti = document.getElementById('customCardTitleInput');
+    if(ti) ti.addEventListener('input', function(){ customCardTitle = ti.value; updateCustomMiniFace(); });
+    var tg = document.getElementById('customNfcToggle');
+    if(tg) tg.addEventListener('click', function(e){ e.stopPropagation(); customShowNfc = !customShowNfc; syncCustomFaceUI(); });
+  })();
+
   function updateCustomPreview(imgUrl){
     customImageData = imgUrl;
     var preview = document.getElementById('miniCustomCardPreview');
@@ -8486,7 +8667,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       preview.style.backgroundPosition = 'center';
     }
     var sub = document.getElementById('customCardMiniSub');
-    if(sub) sub.textContent = '已套用自訂圖片 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>';
+    if(sub) sub.textContent = '已套用自訂圖片 ✓';
+    syncCustomFaceUI();
   }
 
   var customFileInput = document.getElementById('customCardFileInput');
@@ -8509,16 +8691,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   if(btnCustomClear){
     btnCustomClear.addEventListener('click', function(e){
       e.stopPropagation();
-      customImageData = '';
-      var preview = document.getElementById('miniCustomCardPreview');
-      if(preview){
-        preview.style.backgroundImage = '';
-      }
-      var sub = document.getElementById('customCardMiniSub');
-      if(sub) sub.textContent = '可上傳相片';
-      var uploadText = document.getElementById('btnCustomUploadText');
-      if(uploadText) uploadText.textContent = '選擇相片 / 圖檔';
-      btnCustomClear.style.display = 'none';
+      resetCustomCard();
       showToast('已移除自訂相片');
     });
   }
@@ -8560,33 +8733,50 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     initPosY: 0
   };
 
+  function clampCrop(){
+    var rw = cropState.srcW * cropState.baseScale * cropState.zoom;
+    var rh = cropState.srcH * cropState.baseScale * cropState.zoom;
+    cropState.posX = Math.min(0, Math.max(cropState.frameW - rw, cropState.posX));
+    cropState.posY = Math.min(0, Math.max(cropState.frameH - rh, cropState.posY));
+  }
   function updateCropperTransform(){
     if(!cropperImage) return;
+    clampCrop();
     cropperImage.style.transform = 'translate(' + cropState.posX + 'px, ' + cropState.posY + 'px) scale(' + cropState.zoom + ')';
+  }
+  // 以框中心為基準縮放
+  function setCropZoom(z){
+    z = Math.max(1, Math.min(4, z));
+    var cx = cropState.frameW / 2, cy = cropState.frameH / 2, ratio = z / cropState.zoom;
+    cropState.posX = cx - (cx - cropState.posX) * ratio;
+    cropState.posY = cy - (cy - cropState.posY) * ratio;
+    cropState.zoom = z;
+    if(cropperZoomSlider) cropperZoomSlider.value = String(z);
+    updateCropperTransform();
   }
 
   function openPhotoCropper(dataUrl){
     if(!cropperModal || !cropperImage || !cropperFrame) return;
     cropState.img = new Image();
     cropState.img.onload = function(){
-      cropState.srcW = cropState.img.width;
-      cropState.srcH = cropState.img.height;
-      
-      var frameW = cropperFrame.clientWidth || 300;
-      var frameH = cropperFrame.clientHeight || (frameW / 1.586);
-      
-      var scale = Math.max(frameW / cropState.srcW, frameH / cropState.srcH);
-      cropperImage.style.width = (cropState.srcW * scale) + 'px';
-      cropperImage.style.height = (cropState.srcH * scale) + 'px';
-      
-      cropState.zoom = 1;
-      cropState.posX = (frameW - (cropState.srcW * scale)) / 2;
-      cropState.posY = (frameH - (cropState.srcH * scale)) / 2;
-      
-      if(cropperZoomSlider) cropperZoomSlider.value = '1';
-      cropperImage.src = dataUrl;
-      updateCropperTransform();
+      cropState.srcW = cropState.img.naturalWidth || cropState.img.width;
+      cropState.srcH = cropState.img.naturalHeight || cropState.img.height;
+      // 先顯示再量測，才能取得框的真實尺寸（先前在隱藏狀態量測導致裁切位置錯位）
       cropperModal.style.display = 'flex';
+      requestAnimationFrame(function(){
+        var fw = cropperFrame.clientWidth || 300;
+        var fh = cropperFrame.clientHeight || (fw / 1.586);
+        cropState.frameW = fw; cropState.frameH = fh;
+        cropState.baseScale = Math.max(fw / cropState.srcW, fh / cropState.srcH);
+        cropperImage.style.width = (cropState.srcW * cropState.baseScale) + 'px';
+        cropperImage.style.height = (cropState.srcH * cropState.baseScale) + 'px';
+        cropState.zoom = 1;
+        cropState.posX = (fw - cropState.srcW * cropState.baseScale) / 2;
+        cropState.posY = (fh - cropState.srcH * cropState.baseScale) / 2;
+        if(cropperZoomSlider){ cropperZoomSlider.min = '1'; cropperZoomSlider.max = '4'; cropperZoomSlider.value = '1'; }
+        cropperImage.src = dataUrl;
+        updateCropperTransform();
+      });
     };
     cropState.img.src = dataUrl;
   }
@@ -8599,19 +8789,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   if(cropperCancelX) cropperCancelX.onclick = closePhotoCropper;
 
   if(cropperZoomSlider){
-    cropperZoomSlider.addEventListener('input', function(){
-      cropState.zoom = parseFloat(this.value) || 1;
-      updateCropperTransform();
-    });
+    cropperZoomSlider.addEventListener('input', function(){ setCropZoom(parseFloat(this.value) || 1); });
   }
 
   if(cropperFrame){
+    var pinchStart = 0, pinchZoom0 = 1;
     var onCropDragStart = function(cx, cy){
       cropState.isDragging = true;
-      cropState.startX = cx;
-      cropState.startY = cy;
-      cropState.initPosX = cropState.posX;
-      cropState.initPosY = cropState.posY;
+      cropState.startX = cx; cropState.startY = cy;
+      cropState.initPosX = cropState.posX; cropState.initPosY = cropState.posY;
     };
     var onCropDragMove = function(cx, cy){
       if(!cropState.isDragging) return;
@@ -8619,25 +8805,24 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       cropState.posY = cropState.initPosY + (cy - cropState.startY);
       updateCropperTransform();
     };
-    var onCropDragEnd = function(){
-      cropState.isDragging = false;
-    };
+    var onCropDragEnd = function(){ cropState.isDragging = false; };
+    var dist = function(t){ var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx*dx + dy*dy); };
 
     cropperFrame.addEventListener('mousedown', function(e){ onCropDragStart(e.clientX, e.clientY); });
     window.addEventListener('mousemove', function(e){ onCropDragMove(e.clientX, e.clientY); });
     window.addEventListener('mouseup', onCropDragEnd);
 
     cropperFrame.addEventListener('touchstart', function(e){
-      if(e.touches.length === 1){
-        onCropDragStart(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    }, { passive: true });
+      if(e.touches.length === 1){ onCropDragStart(e.touches[0].clientX, e.touches[0].clientY); }
+      else if(e.touches.length === 2){ cropState.isDragging = false; pinchStart = dist(e.touches); pinchZoom0 = cropState.zoom; }
+    }, { passive: false });
     cropperFrame.addEventListener('touchmove', function(e){
-      if(e.touches.length === 1){
-        onCropDragMove(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    }, { passive: true });
-    cropperFrame.addEventListener('touchend', onCropDragEnd);
+      if(e.cancelable) e.preventDefault();   // 避免背後頁面跟著捲動
+      if(e.touches.length === 1){ onCropDragMove(e.touches[0].clientX, e.touches[0].clientY); }
+      else if(e.touches.length === 2 && pinchStart > 0){ setCropZoom(pinchZoom0 * dist(e.touches) / pinchStart); }
+    }, { passive: false });
+    cropperFrame.addEventListener('touchend', function(e){ if(e.touches.length < 2) pinchStart = 0; onCropDragEnd(); });
+    cropperFrame.addEventListener('touchcancel', function(){ pinchStart = 0; onCropDragEnd(); });
   }
 
   if(cropperApplyBtn){
@@ -8645,24 +8830,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(!cropState.img) return;
       try {
         var canvas = document.createElement('canvas');
-        canvas.width = 634; // 1.586 * 400
-        canvas.height = 400;
+        canvas.width = 634; canvas.height = 400;
         var ctx = canvas.getContext('2d');
-
-        var frameW = cropperFrame.clientWidth || 300;
-        var frameH = cropperFrame.clientHeight || (frameW / 1.586);
-        var ratio = canvas.width / frameW;
-
-        var baseScale = Math.max(frameW / cropState.srcW, frameH / cropState.srcH);
-        var renderedW = cropState.srcW * baseScale * cropState.zoom;
-        var renderedH = cropState.srcH * baseScale * cropState.zoom;
-
-        var drawX = cropState.posX * ratio;
-        var drawY = cropState.posY * ratio;
-        var drawW = renderedW * ratio;
-        var drawH = renderedH * ratio;
-
-        ctx.drawImage(cropState.img, drawX, drawY, drawW, drawH);
+        var ratio = canvas.width / cropState.frameW;
+        var rw = cropState.srcW * cropState.baseScale * cropState.zoom;
+        var rh = cropState.srcH * cropState.baseScale * cropState.zoom;
+        clampCrop();
+        ctx.drawImage(cropState.img, cropState.posX * ratio, cropState.posY * ratio, rw * ratio, rh * ratio);
         var croppedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
         updateCustomPreview(croppedDataUrl);
         setTheme('theme-custom');
@@ -8670,10 +8844,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         if(uploadText) uploadText.textContent = '更換相片';
         if(btnCustomClear) btnCustomClear.style.display = 'inline-flex';
         closePhotoCropper();
-        showToast('卡面相片已完成裁切與縮放！');
+        showToast('卡面相片已完成裁切，可設定左下標題與感應符號');
       } catch(err){
         console.error('Cropper error', err);
         closePhotoCropper();
+        showToast('相片處理失敗，請換一張再試');
       }
     });
   }
@@ -8799,8 +8974,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     starlux: {
       title: '星宇航空國際線登機證',
       provider: 'STARLUX AIRLINES',
-      desc: '星宇航空電子登機證。加入錢包後，航班、航線、登機門與座位會顯示在票卡上，感應時以 Face ID 解鎖動態 QR Code。',
-      perks: ['優先安檢', '貴賓室使用', '32kg 行李額度']
+      desc: '以動態 QR Code 掃碼登機；Face ID 僅用於解鎖票券。下方補充資訊區展示卡面未列出的報到與航班細節。',
+      perks: []
     },
     taipei_metro: {
       title: '台北捷運 24H 都會通票',
@@ -8822,6 +8997,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   };
 
+  TICKET_DETAILS.starlux.extras = [
+    {label:'航廈',value:'第一航廈'},{label:'登機組別',value:'GROUP 2'},{label:'訂位代號',value:'JX8K2Q'},
+    {label:'登機門關閉',value:'起飛前 20 分鐘'},{label:'託運行李',value:'示範：1 件'},{label:'報到提醒',value:'建議提前 2 小時抵達'}
+  ];
   TICKET_DETAILS.age_cred = { title:'成年身分憑證', provider:'ZERO-KNOWLEDGE PROOF', desc:'夜間場所、酒類結帳專用。僅驗證並出示「已滿 18 歲」，絕不洩漏姓名或證號隱私。', perks:['零知識證明','不洩漏個資','即時驗證'] };
   TICKET_DETAILS.guest_cred = { title:'訪客門禁金鑰', provider:'TEMPORARY ACCESS', desc:'生成 2 小時有效之安全加密訪客鑰匙，支援 NFC 輕觸過閘，過期自動作廢。', perks:['2 小時有效','NFC 過閘','過期自動作廢'] };
 
@@ -8855,14 +9034,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var dProv = document.getElementById('ticketDetailProvider');
     var dDesc = document.getElementById('ticketDetailDesc');
     var dPerks = document.getElementById('ticketDetailPerks');
+    var extraGrid = document.getElementById('ticketExtraGrid');
+    var demoNote = document.getElementById('ticketDemoNote');
     if(dTitle) dTitle.textContent = details.title;
     if(dProv) dProv.textContent = details.provider;
     if(dDesc) dDesc.textContent = details.desc;
-    if(dPerks){
-      dPerks.innerHTML = details.perks.map(function(p){
-        return '<span class="ticket-perk-chip">' + escapeHtml(p) + '</span>';
-      }).join('');
-    }
+    if(dPerks){ dPerks.innerHTML = (details.perks || []).map(function(p){ return '<span class="ticket-perk-chip">' + escapeHtml(p) + '</span>'; }).join(''); }
+    if(extraGrid){ var extras = details.extras || []; extraGrid.style.display = extras.length ? 'grid' : 'none'; extraGrid.innerHTML = extras.map(function(x){ return '<div class="ticket-extra-cell"><div class="ticket-extra-label">' + escapeHtml(x.label) + '</div><div class="ticket-extra-value">' + escapeHtml(x.value) + '</div></div>'; }).join(''); }
+    if(demoNote) demoNote.style.display = details.extras ? 'block' : 'none';
   }
 
   var ticketsCarousel = document.getElementById('ticketsCarousel');
@@ -8874,6 +9053,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     });
 
     followCarousel(ticketsCarousel, '.ticket-card-slide', function(el){ return el.dataset.ticket; }, function(){ return currentSelectedTicket; }, function(k){ setTicket(k, true); });
+    setTicket(currentSelectedTicket, true);
   }
 
   var btnImportAirlinePass = document.getElementById('btnImportAirlinePass');
@@ -8933,6 +9113,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     var modalTabBar = document.getElementById('modalTabBar');
     if(modalTabBar) modalTabBar.style.display = isCard ? 'flex' : 'none';
+    var _mm = document.querySelector('#modalOverlay .modal'); if(_mm) _mm.classList.toggle('modal-fixed', isCard);
 
     var modalFieldTheme = document.getElementById('modalFieldTheme');
     if(modalFieldTheme) modalFieldTheme.style.display = isCard ? 'block' : 'none';
@@ -8995,6 +9176,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalTarget = type;
     switchModalTab('general');
     configureModalFields(type);
+    if(type === 'card') resetCustomCard();
     var titles = { copy:'新增文字', shortcut:'新增捷徑', account:'新增帳戶', expense:'新增固定支出', card:'新增卡片' };
     var hints = {
       copy:'這段文字會同時作為按鈕名稱與複製內容',
@@ -9062,7 +9244,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     else if(type === 'shortcut'){ modalInput.value = item.name; modalInput2.value = item.input || ''; }
     else if(type === 'account'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; }
     else if(type === 'expense'){ modalInput.value = item.name; modalInput2.value = item.amount || ''; setCategory(item.category || 'other'); }
-    else if(type === 'card'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; setCategory(item.type || 'other'); setTheme(item.theme || 'theme-gold'); }
+    else if(type === 'card'){ modalInput.value = item.name; modalInput2.value = item.balance || ''; setCategory(item.type || 'other'); setTheme(item.theme || 'theme-gold'); if(item.theme === 'theme-custom') loadCustomCard(item); else resetCustomCard(); }
 
     modalConfirm.textContent = '儲存';
     var delRow = document.getElementById('modalDeleteRow');
@@ -9088,6 +9270,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(modalFieldTheme) modalFieldTheme.style.display = 'none';
     var modalTabBar = document.getElementById('modalTabBar');
     if(modalTabBar) modalTabBar.style.display = 'none';
+    var _mm2 = document.querySelector('#modalOverlay .modal'); if(_mm2) _mm2.classList.remove('modal-fixed');
     var modalField2 = document.getElementById('modalField2');
     if(modalField2) modalField2.style.display = 'none';
     var modalField3 = document.getElementById('modalField3');
@@ -9237,14 +9420,23 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           t5.balance = bal2;
           t5.type = modalCategory;
           t5.theme = selectedCardTheme;
+          if(selectedCardTheme === 'theme-custom' && customImageData){
+            t5.customImage = customImageData; t5.customTitle = customCardTitle.trim(); t5.showNfc = customShowNfc;
+          }
         }
       } else {
+        if(selectedCardTheme === 'theme-custom' && !customImageData){ showToast('請先選擇卡面相片'); return; }
         var last4Digits = String(Math.floor(1000 + Math.random() * 9000));
         var newCard = {
           id: uid('k'), name: val, type: modalCategory, balance: bal2,
           theme: selectedCardTheme,
           last4: last4Digits
         };
+        if(selectedCardTheme === 'theme-custom'){
+          newCard.customImage = customImageData;
+          newCard.customTitle = customCardTitle.trim();
+          newCard.showNfc = customShowNfc;
+        }
         if(modalCategory === 'transit'){
           newCard.transitNo = 'No. 08' + last4Digits.slice(0,2) + '-' + last4Digits.slice(2) + '02-381';
           newCard.autoTopup = false;
@@ -9606,56 +9798,24 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     { id: 'l6', name: '康是美 COSMED 金卡', code: '4829104928', bound: true, color: '#E85A18', points: 850 },
     { id: 'l7', name: '星巴克 Starbucks 星禮程', code: '5928193840', bound: true, color: '#00704A', points: 88 },
     { id: 'l8', name: '誠品 eslite 誠品人卡', code: '6019284758', bound: true, color: '#8B0000', points: 960 },
-    { id: 'l9', name: '寶雅 POYA 點數會員', code: '7102938471', bound: true, color: '#E4007F', points: 1450 },
-    { id: 'l10', name: '遠東 HAPPY GO 集點卡', code: '8291038472', bound: true, color: '#E60012', points: 3200 }
+    { id: 'l9', name: '寶雅 POYA 點數會員', code: '7102938471', bound: true, color: '#E4007F', points: 1450 }
   ];
 
     function getLoyaltyBrandSvg(id){
-    switch(id){
-      // 1. 7-ELEVEN OPEN POINT: 官方標誌 (經典綠底雙色方塊 + 橘紅 7)
-      case 'l1':
-      case 'openpoint':
-        return '<img src="assets/brands/7-eleven.svg" alt="7-ELEVEN" style="width:22px;height:26px;object-fit:contain;background:#fff;border-radius:3px;padding:1px;box-sizing:border-box;" />';
-      // 2. 全家 FamilyMart: 官方標誌 (頂部藍、底部綠、中間白條)
-      case 'l2':
-      case 'familymart':
-        return '<img src="assets/brands/familymart.png" alt="FamilyMart" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 3. 全聯福利中心 (PX Pay): 官方標誌 (經典同心紅藍雙環)
-      case 'l3':
-      case 'pxmart':
-        return '<img src="assets/brands/pxmart.png" alt="PX MART" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 4. 家樂福 Carrefour: 官方標誌 (紅白藍雙向箭頭 C)
-      case 'l4':
-      case 'carrefour':
-        return '<img src="assets/brands/carrefour.svg" alt="Carrefour" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 5. 屈臣氏 Watsons: 官方標誌 (湖水綠底 + 經典 W)
-      case 'l5':
-      case 'watsons':
-        return '<img src="assets/brands/watsons.png" alt="Watsons" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 6. 康是美 COSMED: 官方標誌 (經典粉橘花瓣綻放)
-      case 'l6':
-      case 'cosmed':
-        return '<img src="assets/brands/cosmed.png" alt="COSMED" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 7. 星巴克 Starbucks: 官方標誌 (雙尾賽蓮女神深綠圓標)
-      case 'l7':
-      case 'starbucks':
-        return '<img src="assets/brands/starbucks.svg" alt="Starbucks" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:50%;padding:2px;box-sizing:border-box;" />';
-      // 8. 誠品生活 eslite: 官方標誌 (深紅經典直式印章印記)
-      case 'l8':
-      case 'eslite':
-        return '<img src="assets/brands/eslite.png" alt="eslite" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 9. 寶雅 POYA: 官方標誌 (桃紅底白字 POYA)
-      case 'l9':
-      case 'poya':
-        return '<img src="assets/brands/poya.png" alt="POYA" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      // 10. 遠東 HAPPY GO: 官方標誌 (經典微笑紅點太陽)
-      case 'l10':
-      case 'happygo':
-        return '<img src="assets/brands/happygo.png" alt="HAPPY GO" style="width:24px;height:24px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;box-sizing:border-box;" />';
-      default:
-        return '<svg viewBox="0 0 32 32" width="24" height="24"><rect width="32" height="32" rx="6" fill="var(--panel-raised)"/><circle cx="16" cy="16" r="8" fill="var(--gold)"/></svg>';
+      var files = {
+        l1:'7-eleven.svg', openpoint:'7-eleven.svg',
+        l2:'familymart.png', familymart:'familymart.png',
+        l3:'pxmart.png', pxmart:'pxmart.png',
+        l4:'carrefour.png', carrefour:'carrefour.png',
+        l5:'watsons.png', watsons:'watsons.png',
+        l6:'cosmed.png', cosmed:'cosmed.png',
+        l7:'starbucks.svg', starbucks:'starbucks.svg',
+        l8:'eslite.png', eslite:'eslite.png',
+        l9:'poya.png', poya:'poya.png'
+      };
+      var file = files[id];
+      return file ? '<img src="assets/brands/' + file + '" alt="" />' : '<span aria-hidden="true">＋</span>';
     }
-  }
 
   state.globalSettings = state.globalSettings || {
     carrierCode: '/AB12345',
@@ -9665,9 +9825,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     haptics: true,
     loyaltyCards: DEFAULT_LOYALTY_BRANDS
   };
-  if(!state.globalSettings.loyaltyCards || state.globalSettings.loyaltyCards.length < 10){
-    state.globalSettings.loyaltyCards = DEFAULT_LOYALTY_BRANDS;
-  }
+  if(!state.globalSettings.loyaltyCards || !state.globalSettings.loyaltyCards.length){ state.globalSettings.loyaltyCards = DEFAULT_LOYALTY_BRANDS.map(function(c){ return Object.assign({},c); }); } else { state.globalSettings.loyaltyCards = state.globalSettings.loyaltyCards.filter(function(c){ return c.id !== 'l10' && c.id !== 'happygo' && !/HAPPY\s*GO/i.test(c.name || ''); }); DEFAULT_LOYALTY_BRANDS.forEach(function(d){ if(!state.globalSettings.loyaltyCards.some(function(c){ return c.id === d.id; })) state.globalSettings.loyaltyCards.push(Object.assign({},d)); }); }
   // 舊存檔沒有的設定補上預設值
   if(!state.globalSettings.carrierCode) state.globalSettings.carrierCode = '/AB12345';
   ['carrierAutoBright','privacyProtect','nfcHighSens','haptics','autoCarrier'].forEach(function(k){
@@ -9688,42 +9846,93 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return '<svg viewBox="0 0 ' + (x + 10) + ' 58" width="240" height="58">' + bars + '</svg>';
   }
 
+  var LOYALTY_APP_URLS = {
+    l1:'https://apps.apple.com/tw/app/id1014238801',
+    l2:'https://apps.apple.com/tw/app/familymart/id431477571',
+    l3:'https://apps.apple.com/tw/app/id432477263',
+    l4:'https://apps.apple.com/tw/app/id1014238801',
+    l5:'https://apps.apple.com/tw/app/id477968775',
+    l6:'https://apps.apple.com/tw/app/id1108323834',
+    l7:'https://apps.apple.com/tw/app/starbucks-tw/id829317669',
+    l8:'https://apps.apple.com/tw/app/id1527231018',
+    l9:'https://apps.apple.com/tw/app/id907010134'
+  };
+  var LOYALTY_APP_SCHEMES = {
+    l1:'openpointapp://',
+    l2:'familymart://action.go/point/home',
+    l4:'openpointapp://',
+    l3:'https://iospxpay.page.link/MemberCard'
+  };
+  function openLoyaltyApp(card){
+    var storeUrl = card && (card.appUrl || LOYALTY_APP_URLS[card.id]);
+    if(!storeUrl && card && card.name) storeUrl = 'https://apps.apple.com/tw/search?term=' + encodeURIComponent(card.name);
+    var scheme = card && LOYALTY_APP_SCHEMES[card.id];
+    if(scheme){
+      var fallbackTimer = setTimeout(function(){ if(storeUrl) window.location.href = storeUrl; }, 1200);
+      function onAppVisibility(){ if(document.hidden){ clearTimeout(fallbackTimer); document.removeEventListener('visibilitychange', onAppVisibility); } }
+      document.addEventListener('visibilitychange', onAppVisibility);
+      try{ window.location.href = scheme; }catch(err){ clearTimeout(fallbackTimer); document.removeEventListener('visibilitychange', onAppVisibility); if(storeUrl) window.location.href = storeUrl; }
+      return;
+    }
+    if(storeUrl) window.open(storeUrl, '_blank', 'noopener');
+  }
+  var LOYALTY_DISPLAY_NAMES = {l1:'7-ELEVEN',l2:'全家 FamilyMart',l3:'全聯 PX MART',l4:'家樂福 Carrefour',l5:'屈臣氏 Watsons',l6:'康是美 COSMED',l7:'星巴克 Starbucks',l8:'誠品 eslite',l9:'寶雅 POYA'};
   function renderLoyaltyList(){
     var list = document.getElementById('loyaltyHubList');
     if(!list) return;
-    if(!state.globalSettings.loyaltyCards || state.globalSettings.loyaltyCards.length < 10){
-      state.globalSettings.loyaltyCards = DEFAULT_LOYALTY_BRANDS;
-      saveData();
+    if(!state.globalSettings.loyaltyCards || !state.globalSettings.loyaltyCards.length){
+      state.globalSettings.loyaltyCards = DEFAULT_LOYALTY_BRANDS.map(function(c){ return Object.assign({},c); });
+    } else {
+      var oldCount = state.globalSettings.loyaltyCards.length;
+      state.globalSettings.loyaltyCards = state.globalSettings.loyaltyCards.filter(function(c){ return c.id !== 'l10' && c.id !== 'happygo' && !/HAPPY\s*GO/i.test(c.name || ''); });
+      if(state.globalSettings.loyaltyCards.length !== oldCount) saveData();
     }
     list.innerHTML = state.globalSettings.loyaltyCards.map(function(item){
-      var brandSvg = getLoyaltyBrandSvg(item.id);
-      return '<div class="loyalty-item' + (item.bound ? ' bound' : '') + '">' +
-        '<div class="loyalty-brand-col">' +
-          '<div class="loyalty-icon-badge" style="background:' + item.color + ';">' + brandSvg + '</div>' +
-          '<div style="min-width:0; flex:1;">' +
-            '<div class="loyalty-name">' + escapeHtml(item.name) + '</div>' +
-            '<div class="loyalty-sub">' + (item.bound ? ('卡號: ' + item.code) : '尚未授權綁定') + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<button type="button" class="loyalty-bind-btn' + (item.bound ? ' bound' : '') + '" data-loyalty-id="' + item.id + '">' +
-          (item.bound ? ('<span class="loyalty-pts-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="var(--gold)"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h6M9.5 14.5h5" stroke="#1A1202" stroke-width="1.8" stroke-linecap="round"/></svg> ' + (item.points || 500) + ' 點</span> 已綁定') : '+ 綁定') +
-        '</button>' +
+      var last4 = String(item.code || '').replace(/\D/g,'').slice(-4);
+      var status = item.bound ? ('卡號：•••• ' + (last4 || '未設定')) : '尚未綁定';
+      var displayName = LOYALTY_DISPLAY_NAMES[item.id] || item.name;
+      return '<div class="loyalty-item' + (item.bound ? ' bound' : '') + '" data-loyalty-row="' + escapeHtml(item.id) + '">' +
+        '<button type="button" class="loyalty-app-open" data-loyalty-app="' + escapeHtml(item.id) + '" aria-label="開啟 ' + escapeHtml(displayName) + ' 官方應用程式" title="開啟品牌應用程式">' + getLoyaltyBrandSvg(item.id) + '</button>' +
+        '<div class="loyalty-main-row"><div class="loyalty-name">' + escapeHtml(displayName) + '</div>' +
+        '<div class="loyalty-row-actions"><span class="loyalty-pts-badge">' + (Number(item.points) || 0) + ' 點</span>' +
+        '<span class="loyalty-check-mark" aria-label="' + (item.bound ? '已綁定' : '未綁定') + '">' + (item.bound ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>') + '</span></div></div>' +
+        '<div class="loyalty-sub"><span class="loyalty-status-text">' + status + '</span>' +
+        '<button type="button" class="loyalty-bind-btn' + (item.bound ? ' bound' : '') + '" data-loyalty-id="' + escapeHtml(item.id) + '">' + (item.bound ? '解除' : '綁定') + '</button></div>' +
       '</div>';
     }).join('');
-
-    list.querySelectorAll('.loyalty-bind-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.stopPropagation();
-        var id = btn.dataset.loyaltyId;
-        var card = state.globalSettings.loyaltyCards.find(function(c){ return c.id === id; });
-        if(card){
-          card.bound = !card.bound;
-          saveData();
-          renderLoyaltyList();
-          showToast(card.bound ? ('已成功連線綁定 ' + card.name) : ('已解除綁定 ' + card.name));
-        }
-      });
-    });
+    var count = document.getElementById('loyaltyActiveCountBadge');
+    if(count) count.textContent = '已啟用 ' + state.globalSettings.loyaltyCards.filter(function(c){return !!c.bound;}).length + ' 個';
+  }
+  function handleLoyaltyListClick(e, rerender){
+    var appBtn = e.target.closest ? e.target.closest('[data-loyalty-app]') : null;
+    if(appBtn){
+      e.preventDefault(); e.stopPropagation();
+      var appCard = state.globalSettings.loyaltyCards.find(function(c){ return c.id === appBtn.dataset.loyaltyApp; });
+      if(appCard) openLoyaltyApp(appCard);
+      return;
+    }
+    var btn = e.target.closest ? e.target.closest('.loyalty-bind-btn') : null;
+    if(!btn || btn.disabled) return;
+    e.preventDefault(); e.stopPropagation();
+    var card = state.globalSettings.loyaltyCards.find(function(c){ return c.id === btn.dataset.loyaltyId; });
+    if(!card) return;
+    var wasBound = !!card.bound;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loyalty-bind-spinner" aria-hidden="true"></span>' + (wasBound ? '解除中' : '綁定中');
+    setTimeout(function(){
+      card.bound = !wasBound;
+      if(card.bound && !card.code) card.code = '';
+      saveData();
+      renderLoyaltyList();
+      renderLoyaltyInTab();
+      if(typeof rerender === 'function') rerender();
+      showToast(card.bound ? ('已完成介面示範綁定：' + card.name) : ('已解除綁定：' + card.name));
+    }, 1100);
+  }
+  var loyaltyHubList = document.getElementById('loyaltyHubList');
+  if(loyaltyHubList && !loyaltyHubList.dataset.actionsReady){
+    loyaltyHubList.dataset.actionsReady = '1';
+    loyaltyHubList.addEventListener('click', function(e){ handleLoyaltyListClick(e); });
   }
 
   function openGlobalHub(){
@@ -9840,17 +10049,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
   var loyaltyGridInTab = document.getElementById('loyaltyGridInTab');
   if(loyaltyGridInTab){
-    loyaltyGridInTab.addEventListener('click', function(e){
-      var btn = e.target.closest ? e.target.closest('.loyalty-bind-btn') : null;
-      if(!btn) return;
-      var card = state.globalSettings.loyaltyCards.find(function(c){ return c.id === btn.dataset.loyaltyId; });
-      if(!card) return;
-      card.bound = !card.bound;
-      saveData();
-      renderLoyaltyInTab();
-      showToast(card.bound ? ('已成功連線綁定 ' + card.name) : ('已解除綁定 ' + card.name));
-    });
+    loyaltyGridInTab.addEventListener('click', function(e){ handleLoyaltyListClick(e); });
   }
+  document.querySelectorAll('.loyalty-add-member-trigger').forEach(function(addBtn){
+    addBtn.addEventListener('click', function(){
+      var name = prompt('請輸入會員名稱：');
+      if(!name || !name.trim()) return;
+      var cleanName = name.trim();
+      var url = prompt('選填：官方 App Store 連結（留白則以名稱搜尋）', '');
+      var item = { id:'custom_' + Date.now(), name:cleanName, code:'', bound:false, color:'#ffffff', points:0 };
+      if(url && /^https:\/\//i.test(url.trim())) item.appUrl = url.trim();
+      state.globalSettings.loyaltyCards.push(item);
+      saveData(); renderLoyaltyInTab(); renderLoyaltyList();
+      showToast('已新增會員：' + cleanName);
+    });
+  });
 
   if(typeof window.switchWalletSubTab !== 'function'){
     window.switchWalletSubTab = function(tab){
@@ -10817,96 +11030,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 })();
 
 </script>
-
-<!-- 手動加值確認視窗 (附帶詳細說明與圖示) -->
-<div class="modal-overlay" id="manualTopupModal" style="display:none; z-index:120;">
-  <div class="modal" style="max-width:330px; text-align:center; padding:22px 20px 18px;">
-    <div style="width:52px; height:52px; border-radius:50%; background:rgba(212,175,55,0.15); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--gold);">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
-      </svg>
-    </div>
-    <h3 style="font-size:17px; font-weight:700; color:var(--text); margin:0 0 6px 0;">確認進行儲值卡加值</h3>
-    <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 16px; line-height:1.5;" id="topupModalSubtitle">
-      即將從扣款帳戶儲值至目標卡片
-    </p>
-
-    <div style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; text-align:left; margin-bottom:16px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:var(--text-muted);">目標儲值卡</span>
-        <span style="color:var(--text); font-weight:600;" id="topupModalCardName">台北捷運悠遊卡</span>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:var(--text-muted);">扣款帳戶</span>
-        <span style="color:var(--teal); font-weight:600;" id="topupModalAccountName">國泰銀行</span>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--border); padding-top:6px;">
-        <span style="color:var(--text-muted);">加值金額</span>
-        <span style="color:var(--gold); font-weight:700; font-size:15px;" id="topupModalAmount">+NT$100</span>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:var(--text-muted);">加值後預估餘額</span>
-        <span style="color:var(--good); font-weight:600;" id="topupModalAfterBalance">NT$350</span>
-      </div>
-    </div>
-
-    <div class="modal-actions" style="display:flex; gap:10px;">
-      <button type="button" class="cancel" id="btnCancelManualTopup" style="flex:1;">取消</button>
-      <button type="button" class="confirm" id="btnConfirmManualTopup" style="flex:1; background:var(--gold); color:#120e06; font-weight:700;">確認加值</button>
-    </div>
-  </div>
-</div>
-
-<!-- 分享延伸功能 (Share Extension) 說明彈窗 -->
-<div class="modal-overlay" id="shareExtensionModal" style="display:none; z-index:120;">
-  <div class="modal" style="max-width:350px; text-align:left; padding:22px 20px 18px;">
-    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-      <div style="width:40px; height:40px; border-radius:12px; background:rgba(63,169,164,0.15); border:1px solid var(--teal); display:flex; align-items:center; justify-content:center; color:var(--teal);">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      </div>
-      <div>
-        <h3 style="font-size:16px; font-weight:700; color:var(--text); margin:0;">iOS 分享延伸功能</h3>
-        <span style="font-size:11px; color:var(--teal);">單鍵即存 · 零二次點擊</span>
-      </div>
-    </div>
-    <p style="font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:12px;">
-      在 Safari 網址列、備忘錄、LINE 或任何 App 點擊系統「分享」圖示時，在 App 圖示排直接點擊 <b>Super Dashboard</b>，內容便會<b>立即存入儀錶板常用項目</b>，完全無需再按任何確認鍵！
-    </p>
-    <div style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:11.5px; color:var(--text-muted); margin-bottom:14px; line-height:1.4;">
-      若在分享面板的第一排沒看到，請滑到最右側點擊「更多」，並將「Super Dashboard」加到常用。
-    </div>
-    <button type="button" class="btn" onclick="document.getElementById('shareExtensionModal').style.display='none'" style="width:100%; padding:9px 0; background:var(--panel-raised); border:1px solid var(--border); color:var(--text); border-radius:10px; cursor:pointer;">我知道了</button>
-  </div>
-</div>
-
-<!-- ===== 卡面相片縮放裁切視窗 ===== -->
-<div id="photoCropperModal" class="cropper-modal-overlay" style="display:none;">
-  <div style="background:var(--panel-raised); border:1px solid var(--border); border-radius:22px; padding:20px; max-width:380px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.8); display:flex; flex-direction:column; gap:16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-size:15px; font-weight:800; color:var(--text);">調整卡面照片</div>
-      <button type="button" id="cropperCancelX" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer; padding:4px;">✕</button>
-    </div>
-    
-    <!-- 裁切框 (標準信用卡長寬比 1.586 : 1) -->
-    <div id="cropperFrame" class="cropper-frame">
-      <img id="cropperImage" src="" alt="縮放調整預覽" style="position:absolute; top:0; left:0; transform-origin:0 0; user-select:none; pointer-events:none; will-change:transform;" />
-      <div style="position:absolute; inset:0; border:1px dashed rgba(255,255,255,0.4); border-radius:14px; pointer-events:none;"></div>
-    </div>
-    
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-size:11px; color:var(--text-muted);">縮小</span>
-      <input type="range" id="cropperZoomSlider" min="0.5" max="3" step="0.02" value="1" style="flex:1;" />
-      <span style="font-size:11px; color:var(--text-muted);">放大</span>
-    </div>
-    <div style="font-size:11.5px; color:var(--text-muted); text-align:center;">可在卡片方框內滑動拖曳位置，或拉動拉桿縮放尺寸</div>
-    
-    <div style="display:flex; gap:10px;">
-      <button type="button" id="cropperCancelBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text); cursor:pointer;">取消</button>
-      <button type="button" id="cropperApplyBtn" class="btn" style="flex:1; padding:9px; border-radius:12px; background:var(--amber); border:none; color:#1a1202; font-weight:800; cursor:pointer;">確認套用</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
 
