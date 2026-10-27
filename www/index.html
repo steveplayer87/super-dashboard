@@ -3547,16 +3547,20 @@
   #page-wallet .card-viewport{ touch-action: pan-x pan-y; }
   .content:has(#page-wallet:not([style*="display: none"])){ overscroll-behavior: none; }
 
-  /* ====== 錢包卡片：取消會卡頓的放大動畫，改用輕量白色高亮外框 ====== */
-  html body .wallet-card-slide{ transform:none !important; will-change:auto !important; transition:opacity .16s ease !important; opacity:.72 !important; }
-  html body .wallet-card-slide.active{ transform:none !important; opacity:1 !important; }
-  html body .wallet-card-slide::after{ content:''; position:absolute; inset:-3px; border-radius:19px; pointer-events:none; z-index:6;
-    border:2.5px solid rgba(255,255,255,.96); box-shadow:0 0 16px rgba(255,255,255,.28); opacity:0; transition:opacity .16s ease; }
-  html body .wallet-card-slide.active::after{ opacity:1; }
+  /* Wallet: card stays inside arrow bounds; no animated scaling or expensive glow during swipe. */
+  #cardViewport{padding-left:44px!important;padding-right:44px!important;scroll-padding-left:44px!important;scroll-padding-right:44px!important;scroll-behavior:auto!important;}
+  #cardTrack{gap:10px!important;}
+  html body .wallet-card-slide{flex:0 0 min(76vw, 286px)!important;width:min(76vw, 286px)!important;max-width:calc(100vw - 112px)!important;transform:none!important;will-change:scroll-position!important;transition:opacity .1s linear!important;opacity:.76!important;}
+  html body .wallet-card-slide.active{transform:none!important;opacity:1!important;}
+  html body .wallet-card-slide::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:6;border:2px solid rgba(255,255,255,.96);box-shadow:none;opacity:0;transition:opacity .1s linear;}
+  html body .wallet-card-slide.active::after{opacity:1;}
+  .wallet-card-slide>.v-card{border-radius:inherit!important;overflow:hidden!important;}
+  .wallet-card-slide .v-card .face,.wallet-card-slide .boarding-card-horizontal,.wallet-card-slide .metro-pass-card-wrap{border-radius:inherit!important;overflow:hidden!important;}
+  @media(max-width:390px){html body .wallet-card-slide{flex-basis:calc(100vw - 104px)!important;width:calc(100vw - 104px)!important;max-width:calc(100vw - 104px)!important;}#cardViewport{padding-left:40px!important;padding-right:40px!important;}}
 
   /* ====== 新增卡片／取得票卡：兩頁固定同樣大小，空白均勻分配，底部留白縮小 ====== */
-  #modalOverlay .modal.modal-fixed{ height:min(700px, 88dvh) !important; max-height:88dvh !important; }
-  .modal-fixed .modal-scroll{ display:flex; flex-direction:column; justify-content:space-evenly; gap:10px; }
+  #modalOverlay .modal.modal-fixed{ height:min(700px, 88dvh) !important; max-height:88dvh !important; display:flex!important;flex-direction:column!important;overflow:hidden!important; }
+  .modal-fixed .modal-scroll{ display:flex; flex-direction:column; justify-content:flex-start; gap:10px; }
   .modal-footer{ padding:10px 20px 12px !important; }
 
   /* 自訂圖片卡面：左下標題 */
@@ -3564,17 +3568,21 @@
     text-shadow:0 1px 6px rgba(0,0,0,.7); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   /* Loyalty icon frame: neutral white only, square artwork contained without stretching. */
-  .loyalty-item{grid-template-columns:42px minmax(0,1fr)!important;grid-template-rows:auto auto!important;row-gap:4px!important;min-height:66px!important;height:auto!important;max-height:none!important;padding:10px 12px!important;margin-bottom:0!important;display:grid!important;align-items:center!important;justify-content:initial!important;}
-  .loyalty-app-open{grid-column:1!important;grid-row:1 / span 2!important;width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;padding:5px!important;border:0!important;border-radius:11px!important;background:#fff!important;box-shadow:none!important;}
+  .loyalty-item{grid-template-columns:34px minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:9px!important;row-gap:3px!important;min-height:58px!important;height:auto!important;max-height:none!important;padding:8px 10px!important;margin-bottom:0!important;display:grid!important;align-items:center!important;justify-content:initial!important;}
+  .loyalty-app-open{grid-column:1!important;grid-row:1 / span 2!important;width:34px!important;height:34px!important;min-width:34px!important;max-width:34px!important;padding:4px!important;border:0!important;border-radius:8px!important;background:#fff!important;box-shadow:none!important;}
   .loyalty-app-open img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;background:#fff!important;border:0!important;border-radius:4px!important;padding:0!important;box-sizing:border-box!important;}
-  .loyalty-main-row{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important;}
+  .loyalty-main-row{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;gap:5px!important;min-width:0!important;}
   .loyalty-sub{grid-column:2!important;grid-row:2!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:8px!important;min-width:0!important;white-space:normal!important;overflow:visible!important;}
   .loyalty-status-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-  .loyalty-row-actions{display:flex!important;align-items:center!important;gap:7px!important;flex-shrink:0!important;}
-  .loyalty-check-mark{width:24px!important;height:24px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;flex-shrink:0!important;}
-  .loyalty-add-btn{display:block!important;width:100%!important;margin:12px 0 0!important;padding:12px!important;border:1px dashed var(--border)!important;border-radius:12px!important;background:transparent!important;color:var(--text-muted)!important;}
+  .loyalty-row-actions{display:flex!important;align-items:center!important;gap:5px!important;flex-shrink:0!important;margin-left:auto!important;}
+  .loyalty-name{min-width:0!important;flex:1 1 auto!important;}
+  .loyalty-check-mark{width:20px!important;height:20px!important;min-width:20px!important;padding:0!important;border:1px solid var(--border)!important;background:transparent!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:50%!important;flex-shrink:0!important;cursor:pointer!important;margin-left:2px!important;}
+  .loyalty-check-mark:disabled{opacity:1!important;}
+  .loyalty-bind-spinner{display:block!important;width:11px!important;height:11px!important;border:1.8px solid currentColor!important;border-right-color:transparent!important;border-radius:50%!important;animation:loyaltySpin .65s linear infinite!important;}
+  @keyframes loyaltySpin{to{transform:rotate(360deg)}}
+  .loyalty-add-btn{display:block!important;width:100%!important;margin:8px 0 0!important;padding:10px!important;border:1px dashed var(--border)!important;border-radius:12px!important;background:transparent!important;color:var(--text-muted)!important;}
   .ticket-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  @media(max-width:360px){.loyalty-main-row{gap:5px!important}.loyalty-name{font-size:12px!important}.loyalty-row-actions{gap:4px!important}.loyalty-pts-badge{font-size:10px!important;padding:3px 5px!important}.loyalty-item{grid-template-columns:38px minmax(0,1fr)!important;column-gap:8px!important}.loyalty-app-open{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important}.ticket-extra-grid{grid-template-columns:1fr;}}
+  @media(max-width:360px){.loyalty-main-row{gap:5px!important}.loyalty-name{font-size:12px!important}.loyalty-row-actions{gap:4px!important}.loyalty-pts-badge{font-size:10px!important;padding:3px 5px!important}.loyalty-item{grid-template-columns:32px minmax(0,1fr)!important;column-gap:7px!important}.loyalty-app-open{width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important}.ticket-extra-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -7059,9 +7067,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var v = 'c-white';
     var logo = '<svg class="logo"><use href="#mc"/></svg>';
     var label = 'Debit';
-    var last = (card && card.last4) ? card.last4 : '••••';
+    var last = '••••';
     var name = (card && card.name && card.name !== '新卡片') ? card.name : 'Leonardo De Luca';
-    var exp = (card && card.exp) ? card.exp : '2/28';
+    var exp = 'XX/XX';
     var hasWave = false;
 
     if(thm.indexOf('visa-light') !== -1){
@@ -7069,32 +7077,32 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
       hasWave = true;
-      last = (card && card.last4) ? card.last4 : '••••';
-      exp = (card && card.exp) ? card.exp : '8/08';
+      last = '••••';
+      exp = 'XX/XX';
     } else if(thm.indexOf('visa-dark') !== -1){
       v = 'c-visa-dark visa';
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
-      last = (card && card.last4) ? card.last4 : '••••';
-      exp = (card && card.exp) ? card.exp : '8/08';
+      last = '••••';
+      exp = 'XX/XX';
     } else if(thm.indexOf('dark') !== -1){
       v = 'c-dark';
       logo = '<svg class="logo"><use href="#mc"/></svg>';
       label = 'Debit';
-      last = (card && card.last4) ? card.last4 : '••••';
-      exp = (card && card.exp) ? card.exp : '2/28';
+      last = '••••';
+      exp = 'XX/XX';
     } else if(thm.indexOf('silver') !== -1){
       v = 'c-silver';
       logo = '<img class="logo cent" alt="" src="cent_silver.png">';
       label = 'Rewards';
-      last = (card && card.last4) ? card.last4 : '••••';
-      exp = (card && card.exp) ? card.exp : '6/26';
+      last = '••••';
+      exp = 'XX/XX';
     } else if(thm.indexOf('bronze') !== -1){
       v = 'c-bronze';
       logo = '<img class="logo cent" alt="" src="cent_bronze.png">';
       label = 'Rewards';
-      last = (card && card.last4) ? card.last4 : '••••';
-      exp = (card && card.exp) ? card.exp : '6/26';
+      last = '••••';
+      exp = 'XX/XX';
     }
 
     var waveHtml = hasWave ? BW_SVG : '';
@@ -9895,9 +9903,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         '<button type="button" class="loyalty-app-open" data-loyalty-app="' + escapeHtml(item.id) + '" aria-label="開啟 ' + escapeHtml(displayName) + ' 官方應用程式" title="開啟品牌應用程式">' + getLoyaltyBrandSvg(item.id) + '</button>' +
         '<div class="loyalty-main-row"><div class="loyalty-name">' + escapeHtml(displayName) + '</div>' +
         '<div class="loyalty-row-actions"><span class="loyalty-pts-badge">' + (Number(item.points) || 0) + ' 點</span>' +
-        '<span class="loyalty-check-mark" aria-label="' + (item.bound ? '已綁定' : '未綁定') + '">' + (item.bound ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>') + '</span></div></div>' +
-        '<div class="loyalty-sub"><span class="loyalty-status-text">' + status + '</span>' +
-        '<button type="button" class="loyalty-bind-btn' + (item.bound ? ' bound' : '') + '" data-loyalty-id="' + escapeHtml(item.id) + '">' + (item.bound ? '解除' : '綁定') + '</button></div>' +
+        '<button type="button" class="loyalty-check-mark" data-loyalty-id="' + escapeHtml(item.id) + '" aria-label="' + (item.bound ? '點擊解除綁定' : '點擊綁定') + '" title="' + (item.bound ? '解除綁定' : '綁定會員') + '">' + (item.bound ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>') + '</button></div></div>' +
+        '<div class="loyalty-sub"><span class="loyalty-status-text">' + status + '</span></div>' +
       '</div>';
     }).join('');
     var count = document.getElementById('loyaltyActiveCountBadge');
@@ -9911,14 +9918,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(appCard) openLoyaltyApp(appCard);
       return;
     }
-    var btn = e.target.closest ? e.target.closest('.loyalty-bind-btn') : null;
+    var btn = e.target.closest ? e.target.closest('.loyalty-check-mark, .loyalty-bind-btn') : null;
     if(!btn || btn.disabled) return;
     e.preventDefault(); e.stopPropagation();
     var card = state.globalSettings.loyaltyCards.find(function(c){ return c.id === btn.dataset.loyaltyId; });
     if(!card) return;
     var wasBound = !!card.bound;
     btn.disabled = true;
-    btn.innerHTML = '<span class="loyalty-bind-spinner" aria-hidden="true"></span>' + (wasBound ? '解除中' : '綁定中');
+    btn.innerHTML = '<span class="loyalty-bind-spinner" aria-hidden="true"></span>';
+    btn.title = wasBound ? '解除綁定中' : '綁定中';
     setTimeout(function(){
       card.bound = !wasBound;
       if(card.bound && !card.code) card.code = '';
@@ -11043,5 +11051,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   .sense-overlay { overflow-x:hidden !important; overflow-y:auto !important; -webkit-overflow-scrolling:touch; }
   .sense-overlay-card-wrap { touch-action:pan-y; }
   #modalOverlay .modal-footer, #modalOverlay .modal-actions { padding-left:12px !important; padding-right:12px !important; box-sizing:border-box !important; }
+  #modalAirlineSection .modal-scroll{flex:1 1 auto!important;min-height:0!important;justify-content:flex-start!important;padding-top:12px!important;padding-bottom:10px!important;}
+  #modalAirlineSection .modal-footer{position:sticky!important;bottom:0!important;flex-shrink:0!important;}
   #modalOverlay .modal-scroll { overscroll-behavior-y:none !important; }
 </style>
