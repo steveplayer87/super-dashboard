@@ -5923,6 +5923,9 @@ window.switchPage = function(page) {
     if (page === 'more') {
       window.showMoreSubView('hub');
     }
+    if (page === 'finance' && typeof renderFinance === 'function') {
+      renderFinance();
+    }
     document.querySelectorAll('.tab[data-tab]').forEach(function(t) {
       t.classList.toggle('active', t.dataset.tab === page);
     });
@@ -10242,30 +10245,181 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       window.state = state; state.copyItems = data.copyItems || DEFAULT_DATA.copyItems.slice();
       state.shortcutItems = data.shortcutItems || DEFAULT_DATA.shortcutItems.slice();
       state.accounts = data.accounts || [];
-      state.expenses = (data.expenses && data.expenses.length > 0) ? data.expenses : DEFAULT_DATA.expenses.slice();
-      var ytItem = state.expenses.find(function(e){ return e.id === 'exp_yt' || (e.name && e.name.indexOf('YouTube') !== -1); });
-      if(!ytItem){
-        var defaultYt = DEFAULT_DATA.expenses.find(function(e){ return e.id === 'exp_yt'; });
-        if(defaultYt) state.expenses.push(JSON.parse(JSON.stringify(defaultYt)));
-      } else if(!ytItem.familyDetails){
-        ytItem.isFamily = true;
-        ytItem.amount = 80;
-        ytItem.familyDetails = {
-          role: '家長 (群組管理員)',
-          cycle: '每年續約 (1/1 - 12/31)',
-          renewalDate: '2027/01/01',
-          membersTotal: 6,
-          userShareMonthly: 80,
-          members: [
-            { id:'m0', name:'家長 (自己)', status:'paid', role:'管理員', avatarColor:'#FF9F1C', avatar:'' },
-            { id:'m1', name:'家庭成員 1', status:'paid', role:'成員', avatarColor:'#3FA9A4', avatar:'' },
-            { id:'m2', name:'家庭成員 2', status:'paid', role:'成員', avatarColor:'#3B82F6', avatar:'' },
-            { id:'m3', name:'家庭成員 3', status:'paid', role:'成員', avatarColor:'#A855F7', avatar:'' },
-            { id:'m4', name:'家庭成員 4', status:'paid', role:'成員', avatarColor:'#10B981', avatar:'' },
-            { id:'m5', name:'家庭成員 5', status:'paid', role:'成員', avatarColor:'#94A3B8', avatar:'' }
-          ]
-        };
+      var requiredDefaults = [
+      {
+            "id": "exp_living",
+            "name": "固定生活費",
+            "amount": 3000,
+            "category": "living",
+            "dueDay": 1,
+            "method": "銀行轉帳",
+            "note": "生活基本配額 · 可彈性延後幾天"
+      },
+      {
+            "id": "exp_yt",
+            "name": "YouTube Premium 家庭方案",
+            "amount": 80,
+            "category": "subscription",
+            "dueDay": 1,
+            "method": "信用卡",
+            "note": "每年續約 1/1-12/31 · 我是家長 (共6人)",
+            "isFamily": true,
+            "familyDetails": {
+                  "role": "家長 (群組管理員)",
+                  "cycle": "每年續約 (1/1 - 12/31)",
+                  "renewalDate": "2027/01/01",
+                  "membersTotal": 6,
+                  "userShareMonthly": 80,
+                  "members": [
+                        {
+                              "id": "m0",
+                              "name": "家長 (自己)",
+                              "status": "paid",
+                              "role": "管理員",
+                              "avatarColor": "#FF9F1C",
+                              "avatar": ""
+                        },
+                        {
+                              "id": "m1",
+                              "name": "家庭成員 1",
+                              "status": "paid",
+                              "role": "成員",
+                              "avatarColor": "#3FA9A4",
+                              "avatar": ""
+                        },
+                        {
+                              "id": "m2",
+                              "name": "家庭成員 2",
+                              "status": "paid",
+                              "role": "成員",
+                              "avatarColor": "#3B82F6",
+                              "avatar": ""
+                        },
+                        {
+                              "id": "m3",
+                              "name": "家庭成員 3",
+                              "status": "paid",
+                              "role": "成員",
+                              "avatarColor": "#A855F7",
+                              "avatar": ""
+                        },
+                        {
+                              "id": "m4",
+                              "name": "家庭成員 4",
+                              "status": "paid",
+                              "role": "成員",
+                              "avatarColor": "#10B981",
+                              "avatar": ""
+                        },
+                        {
+                              "id": "m5",
+                              "name": "家庭成員 5",
+                              "status": "paid",
+                              "role": "成員",
+                              "avatarColor": "#94A3B8",
+                              "avatar": ""
+                        }
+                  ]
+            }
+      },
+      {
+            "id": "exp_loan",
+            "name": "就學貸款",
+            "amount": 2466,
+            "category": "loan",
+            "dueDay": 2,
+            "method": "自動扣款",
+            "note": "臺灣銀行帳戶自動扣繳 · 不可延後"
+      },
+      {
+            "id": "exp_spotify",
+            "name": "Spotify 音樂串流",
+            "amount": 20,
+            "category": "subscription",
+            "dueDay": 10,
+            "method": "信用卡",
+            "note": "家庭共享團員分攤"
+      },
+      {
+            "id": "exp_icloud",
+            "name": "iCloud+ 儲存空間 (200GB)",
+            "amount": 90,
+            "category": "subscription",
+            "dueDay": 15,
+            "method": "Apple Pay",
+            "note": "Apple ID 雲端與跨裝置同步"
+      },
+      {
+            "id": "exp_telecom",
+            "name": "中華電信",
+            "amount": 699,
+            "category": "telecom",
+            "dueDay": 20,
+            "method": "信用卡",
+            "note": "可延後至11/2刷卡"
+      },
+      {
+            "id": "exp_health",
+            "name": "健保自付額",
+            "amount": 850,
+            "category": "utilities",
+            "dueDay": 28,
+            "method": "信用卡",
+            "note": "健保公費"
+      },
+      {
+            "id": "exp_insurance",
+            "name": "個人人身保險",
+            "amount": 2000,
+            "category": "insurance",
+            "dueDay": 30,
+            "method": "信用卡",
+            "note": "保險保障 · 可延後或是刷卡"
       }
+];
+      var curExp = (data.expenses && Array.isArray(data.expenses)) ? data.expenses.slice() : [];
+      requiredDefaults.forEach(function(item){
+        var exists = curExp.some(function(e){
+          return e.id === item.id || (e.name && (
+            (item.id === 'exp_loan' && e.name.indexOf('就學貸款') !== -1) ||
+            (item.id === 'exp_telecom' && e.name.indexOf('中華電信') !== -1) ||
+            (item.id === 'exp_health' && e.name.indexOf('健保') !== -1) ||
+            (item.id === 'exp_insurance' && e.name.indexOf('保險') !== -1) ||
+            (item.id === 'exp_living' && e.name.indexOf('生活費') !== -1) ||
+            (item.id === 'exp_icloud' && e.name.indexOf('iCloud') !== -1) ||
+            (item.id === 'exp_spotify' && e.name.indexOf('Spotify') !== -1) ||
+            (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1))
+          ));
+        });
+        if(!exists){
+          curExp.push(JSON.parse(JSON.stringify(item)));
+        } else {
+          var matched = curExp.find(function(e){
+            return e.id === item.id || (e.name && (
+              (item.id === 'exp_loan' && e.name.indexOf('就學貸款') !== -1) ||
+              (item.id === 'exp_telecom' && e.name.indexOf('中華電信') !== -1) ||
+              (item.id === 'exp_health' && e.name.indexOf('健保') !== -1) ||
+              (item.id === 'exp_insurance' && e.name.indexOf('保險') !== -1) ||
+              (item.id === 'exp_living' && e.name.indexOf('生活費') !== -1) ||
+              (item.id === 'exp_icloud' && e.name.indexOf('iCloud') !== -1) ||
+              (item.id === 'exp_spotify' && e.name.indexOf('Spotify') !== -1) ||
+              (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1))
+            ));
+          });
+          if(matched){
+            if(!matched.dueDay) matched.dueDay = item.dueDay;
+            if(!matched.method) matched.method = item.method;
+            if(!matched.note) matched.note = item.note;
+            if(item.isFamily && !matched.familyDetails){
+              matched.isFamily = true;
+              matched.familyDetails = JSON.parse(JSON.stringify(item.familyDetails));
+            }
+          }
+        }
+      });
+      curExp.sort(function(a, b){ return (a.dueDay || 99) - (b.dueDay || 99); });
+      state.expenses = curExp;
+      saveData();
       state.budget = data.budget || 0;
       if(data.globalSettings){ state.globalSettings = data.globalSettings; }
       var rawCards = (data.cards && data.cards.length) ? data.cards : DEFAULT_DATA.cards.slice();
@@ -10292,7 +10446,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.copyItems = DEFAULT_DATA.copyItems.slice();
       state.shortcutItems = DEFAULT_DATA.shortcutItems.slice();
       state.accounts = [];
-      state.expenses = [];
+      state.expenses = JSON.parse(JSON.stringify(DEFAULT_DATA.expenses));
       state.budget = 0;
       state.cards = DEFAULT_DATA.cards.slice();
       state.cardTx = [];
