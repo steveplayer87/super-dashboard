@@ -4455,7 +4455,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v5 · 修正錢包卡片圓角</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v6 · 財務固定支出中樞與 YouTube 家庭訂閱</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5414,11 +5414,11 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v5</h2>
+    <h2 id="updateNotesTitle">已更新至 v6</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>捷徑動作「加入常用文字」：背景加入，支援圖片、文字與網址，並回報是否已確認存入</li><li>分享選單改為自動儲存，不需再按「儲存到超級儀表板」</li><li>圖片項目照片滿版顯示；點一下複製、長按編輯、連點兩下開啟</li><li>台北捷運一日票動態效期與路網圖連結</li><li>常用文字區改名為「快捷項目」</li><li>自訂圖片卡面：裁切（可雙指縮放）、左下角標題、感應符號開關</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復分享文字與圖片、捷徑從未真正存入常用項目</li><li>修復更新長按選單時的閃退與無限當機</li><li>修復圖片項目造成編輯版面崩壞、無法刪除</li><li>修復自訂圖片卡面選圖後沒有反應（裁切視窗載入順序錯誤）</li><li>預設卡片卡號改回 ••••，新增卡片才產生隨機卡號</li><li>修復卡片刪除操作、取消可保留，並顯示刪除提示</li><li>修復鍵盤欄位切換工具列、卡片詳情橫向滑動與邊緣回彈</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>編輯／取消／完成固定在頂端，移除底部完成編輯按鈕</li><li>網址項目改為點一下複製、連點兩下開啟</li><li>放大圖片預覽、縮小新增卡片視窗按鈕與邊線間距</li><li>更新 7-ELEVEN、家樂福、星巴克品牌圖示；會員卡綁定按鈕靠右並顯示轉圈狀態</li><li>錢包卡片改用白色高亮外框，移除會卡頓的放大動畫；錢包頁只允許垂直滑動並抑制回彈；修復錢包卡面圓角裁切，包含自訂卡面與 Card Kit 卡面</li><li>新增卡片與取得票卡兩頁固定同樣大小，縮小底部留白</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出與訂閱中樞：依每月扣款日排程整合學貸、中華電信、健保（$850）、保險、生活費、iCloud+（$90）與 Spotify（$20）</li><li>YouTube Premium 展開式家庭管理：標註家長管理身份、每年 1/1 至 12/31 續約週期、個人月均攤 $80</li><li>6 人家庭成員繳款追蹤表：點擊即可快速切換「已收訖／待收款」並自動保存</li><li>家庭成員自訂名稱與專屬頭像：支援大寫字首微光徽章（6 款專屬字首配色）與個人相片上傳自訂頭像</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復 GitHub Actions 自動構建因 Xcode SPM 快取導致之 Submodule checkout 部署錯誤</li><li>修復家庭訂閱抽屜展開手勢與成員狀態同步問題</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>財務清單加入扣款管道與備註微型標籤，長按可自由修改項目金額</li><li>升級固定支出分類為 5 大核心領域（訂閱、貸款分期、保險、電信、公共規費）</li></ul></div>
     </div>
   </div>
 </div>
@@ -7146,7 +7146,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v5';
+  var APP_VERSION = 'v6';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
