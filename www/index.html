@@ -191,6 +191,123 @@
   .fin-tag{ font-size:10.5px; padding:2px 7px; border-radius:8px; font-weight:600; }
   .fin-tag.cat-insurance{ background:rgba(63,169,164,.18); color:var(--teal); }
   .fin-tag.cat-subscription{ background:rgba(255,159,28,.18); color:var(--amber); }
+  .fin-tag.cat-loan{ background:rgba(235,87,87,.18); color:#f87171; }
+  .fin-tag.cat-insurance{ background:rgba(63,169,164,.18); color:var(--teal); }
+  .fin-tag.cat-telecom{ background:rgba(59,130,246,.18); color:#60a5fa; }
+  .fin-tag.cat-utilities{ background:rgba(168,85,247,.18); color:#c084fc; }
+  .fin-tag.cat-living{ background:rgba(34,197,94,.18); color:#4ade80; }
+  .fin-tag.cat-other{ background:rgba(138,131,119,.18); color:var(--text-muted); }
+
+  .due-day-pill{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:32px; height:20px; padding:0 6px; border-radius:6px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+    font-size:11px; font-weight:700; color:var(--text); font-family:ui-monospace,monospace;
+    margin-right:8px; flex-shrink:0;
+  }
+
+  .fin-row-container{ border-bottom:1px solid var(--border); }
+  .fin-row-container:last-child{ border-bottom:none; }
+  .fin-row-main{
+    display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer;
+    transition:background .15s ease;
+  }
+  .fin-row-main:hover{ background:rgba(255,255,255,0.02); }
+  .fin-row-info{ flex:1; min-width:0; }
+  .fin-row-title-line{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:14.5px; font-weight:600; }
+  .fin-row-subline{ font-size:11.5px; color:var(--text-muted); margin-top:3px; display:flex; align-items:center; gap:6px; }
+  .fin-row-subline span.method-tag{
+    background:rgba(255,255,255,0.05); padding:1px 5px; border-radius:4px; font-size:10.5px;
+  }
+  .expand-chevron{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; background:rgba(255,255,255,0.05);
+    color:var(--text-muted); transition:transform .2s ease, color .2s ease; margin-left:6px;
+  }
+  .expand-chevron.opened{ transform:rotate(180deg); color:var(--amber); background:rgba(255,159,28,0.15); }
+
+  /* 家庭訂閱展開式抽屜與成員頭像 */
+  .family-accordion-drawer{
+    display:none; padding:12px 14px 16px; background:linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%);
+    border-top:1px dashed rgba(255,255,255,0.08); font-size:12px;
+  }
+  .family-accordion-drawer.open{ display:block; }
+  .family-meta-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; margin-bottom:12px;
+  }
+  .family-meta-box{
+    background:var(--panel-raised-2); border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+  }
+  .family-meta-label{ font-size:10.5px; color:var(--text-muted); margin-bottom:2px; }
+  .family-meta-val{ font-size:12.5px; font-weight:700; color:var(--text); }
+  .family-members-title{ font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center; }
+  .family-member-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(155px, 1fr)); gap:8px; }
+  
+  .family-member-card{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; border-radius:10px; background:var(--panel-raised); border:1px solid var(--border);
+    transition:all .15s ease; gap:8px;
+  }
+  .family-member-card:hover{ border-color:rgba(255,255,255,0.18); background:var(--panel-raised-2); }
+  .family-member-card.is-owner{ border-color:rgba(255,159,28,0.35); background:rgba(255,159,28,0.06); }
+
+  .family-member-left{ display:flex; align-items:center; gap:8px; min-width:0; flex:1; cursor:pointer; }
+  .family-member-avatar{
+    width:32px; height:32px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; overflow:hidden;
+    border:1px solid rgba(255,255,255,0.15); box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    user-select:none;
+  }
+  .family-member-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .family-member-meta{ min-width:0; flex:1; }
+  .family-member-name{
+    font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .family-member-role{ font-size:10px; color:var(--text-muted); margin-top:1px; }
+
+  .family-member-actions{ display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .family-member-edit-btn{
+    width:26px; height:26px; border-radius:6px; border:1px solid var(--border);
+    background:var(--panel-raised-2); color:var(--text-muted);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:all .15s ease;
+  }
+  .family-member-edit-btn:hover{ color:var(--text); border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); }
+
+  .family-member-status{
+    padding:3px 7px; border-radius:6px; font-size:11px; font-weight:700; border:none; cursor:pointer;
+    transition:transform .1s ease, filter .15s ease;
+  }
+  .family-member-status:active{ transform:scale(0.95); }
+  .status-paid{ background:rgba(63,169,164,0.18); color:var(--teal); border:1px solid rgba(63,169,164,0.3); }
+  .status-pending{ background:rgba(235,87,87,0.18); color:#f87171; border:1px solid rgba(235,87,87,0.3); }
+  .family-action-hint{ margin-top:10px; font-size:11px; color:var(--text-muted); line-height:1.4; }
+
+  /* 成員自訂獨立彈窗 */
+  #memberEditModalOverlay .modal{
+    max-width:330px; padding:18px 20px; border-radius:18px;
+    background:var(--panel-raised); border:1px solid var(--border); box-shadow:0 16px 40px rgba(0,0,0,0.7);
+  }
+  .member-avatar-preview-wrap{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    margin:12px 0 16px;
+  }
+  .member-avatar-preview{
+    width:64px; height:64px; border-radius:50%; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:800; border:2px solid rgba(255,255,255,0.2);
+    box-shadow:0 4px 14px rgba(0,0,0,0.35); margin-bottom:8px;
+  }
+  .member-avatar-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .member-color-row{
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px;
+  }
+  .member-color-dot{
+    width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .member-color-dot.active{ border-color:#fff; transform:scale(1.15); }
   .fin-tag.cat-other{ background:rgba(138,131,119,.18); color:var(--text-muted); }
   .fin-row.add-row{ color:var(--text-muted); border-top:1px dashed var(--border); cursor:pointer; }
   .plus-icon-sm{ font-size:16px; }
@@ -5251,6 +5368,46 @@
   </div>
 </div>
 
+<!-- 成員自訂與頭像編輯彈窗 -->
+<div class="modal-overlay" id="memberEditModalOverlay" style="display:none; z-index:115;">
+  <div class="modal">
+    <div style="font-size:15px; font-weight:800; color:var(--text); margin-bottom:4px;">自訂成員與頭像</div>
+    <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:12px;">設定成員名稱、代表字母色系或上傳個人相片</div>
+
+    <div class="member-avatar-preview-wrap">
+      <div class="member-avatar-preview" id="memEditAvatarPreview"></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="file" id="memEditFileInput" accept="image/*" style="display:none;">
+        <button type="button" id="btnMemUploadPhoto" style="font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:8px; border:1px solid var(--border); background:var(--panel-raised-2); color:var(--text); cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline-block; vertical-align:-1px; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>上傳相片
+        </button>
+        <button type="button" id="btnMemClearPhoto" style="display:none; font-size:11.5px; padding:5px 10px; border-radius:8px; border:1px solid rgba(235,87,87,0.3); background:rgba(235,87,87,0.12); color:#f87171; cursor:pointer;">清除相片</button>
+      </div>
+    </div>
+
+    <div style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:6px;">選擇純色字首代表色</div>
+    <div class="member-color-row" id="memColorPalette"></div>
+
+    <div style="margin-bottom:12px;">
+      <span class="field-label" style="font-size:12px; margin-bottom:4px; display:block;">成員名稱</span>
+      <input id="memEditNameInput" placeholder="輸入自訂名稱 (例如: 大寶、媽媽)" maxlength="20" style="width:100%; box-sizing:border-box;">
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <span class="field-label" style="font-size:12px; margin-bottom:4px; display:block;">繳款狀態</span>
+      <div class="segmented" style="display:flex; gap:6px;">
+        <button type="button" class="seg-btn" id="memSegPaid" style="flex:1; padding:7px 0;">已收訖</button>
+        <button type="button" class="seg-btn" id="memSegPending" style="flex:1; padding:7px 0;">待收款</button>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="cancel" id="btnMemEditCancel" style="flex:1; padding:10px 0;">取消</button>
+      <button type="button" class="confirm" id="btnMemEditSave" style="flex:1; padding:10px 0;">儲存變更</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="update-notes-overlay" id="updateNotesOverlay" role="dialog" aria-modal="true" aria-labelledby="updateNotesTitle">
@@ -6609,7 +6766,33 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       { id:'s2', name:'整合行動支付 3.0', input:'' }
     ],
     accounts: [],
-    expenses: [],
+    expenses: [
+      { id:'exp_loan', name:'就學貸款', amount:2466, category:'loan', dueDay:2, method:'自動扣款', note:'臺灣銀行帳戶自動扣繳 · 不可延後' },
+      { id:'exp_telecom', name:'中華電信', amount:699, category:'telecom', dueDay:20, method:'信用卡', note:'可延後至11/2刷卡' },
+      { id:'exp_health', name:'健保自付額', amount:850, category:'utilities', dueDay:28, method:'信用卡', note:'健保公費' },
+      { id:'exp_insurance', name:'個人人身保險', amount:2000, category:'insurance', dueDay:30, method:'信用卡', note:'保險保障 · 可延後或是刷卡' },
+      { id:'exp_living', name:'固定生活費', amount:3000, category:'living', dueDay:1, method:'銀行轉帳', note:'生活基本配額 · 可彈性延後幾天' },
+      { id:'exp_icloud', name:'iCloud+ 儲存空間 (200GB)', amount:90, category:'subscription', dueDay:15, method:'Apple Pay', note:'Apple ID 雲端與跨裝置同步' },
+      { id:'exp_yt', name:'YouTube Premium 家庭方案', amount:80, category:'subscription', dueDay:1, method:'信用卡', note:'每年續約 1/1-12/31 · 我是家長 (共6人)',
+        isFamily: true,
+        familyDetails: {
+          role: '家長 (群組管理員)',
+          cycle: '每年續約 (1/1 - 12/31)',
+          renewalDate: '2027/01/01',
+          membersTotal: 6,
+          userShareMonthly: 80,
+          members: [
+            { id:'m0', name:'家長 (自己)', status:'paid', role:'管理員', avatarColor:'#FF9F1C', avatar:'' },
+            { id:'m1', name:'家庭成員 1', status:'paid', role:'成員', avatarColor:'#3FA9A4', avatar:'' },
+            { id:'m2', name:'家庭成員 2', status:'paid', role:'成員', avatarColor:'#3B82F6', avatar:'' },
+            { id:'m3', name:'家庭成員 3', status:'paid', role:'成員', avatarColor:'#A855F7', avatar:'' },
+            { id:'m4', name:'家庭成員 4', status:'paid', role:'成員', avatarColor:'#10B981', avatar:'' },
+            { id:'m5', name:'家庭成員 5', status:'paid', role:'成員', avatarColor:'#94A3B8', avatar:'' }
+          ]
+        }
+      },
+      { id:'exp_spotify', name:'Spotify 音樂串流', amount:20, category:'subscription', dueDay:10, method:'信用卡', note:'家庭共享團員分攤' }
+    ],
     budget: 0,
     cards: [
       { id:'c_easycard', name:'悠遊卡', type:'transit', theme:'theme-gold', balance:500, transitNo:'No. 0824-9102-381', last4:'0381' },
@@ -6630,7 +6813,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
 
   var CATS = {
-    expense: [['insurance','保險'],['subscription','訂閱'],['other','其他']],
+    expense: [['subscription','訂閱'],['loan','貸款分期'],['insurance','保險'],['telecom','電信網路'],['utilities','公共規費'],['living','生活固定'],['other','其他']],
     card: [
       ['transit', '交通卡', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M8 19l-2 3"/><path d="M16 19l2 3"/></svg>'],
       ['credit', '付款卡', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>'],
@@ -6727,7 +6910,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function isNumericCode(text){ return /^[0-9\-\s]+$/.test(text); }
   function formatMoney(n){ return 'NT$' + Math.round(n || 0).toLocaleString(); }
   function catLabel(cat){
-    return { insurance:'保險', subscription:'訂閱', transit:'公車', access:'門禁', car:'車鑰匙', boarding:'登機證', other:'其他' }[cat] || '其他';
+    return { insurance:'保險', subscription:'訂閱', loan:'貸款分期', telecom:'電信', utilities:'規費', living:'生活', transit:'公車', access:'門禁', car:'車鑰匙', boarding:'登機證', other:'其他' }[cat] || '其他';
   }
   function cardTypeIcon(type){ return { transit:'bus', access:'door-open', car:'key', boarding:'plane' }[type] || 'credit-card'; }
   function formatTime(ts){
@@ -6744,6 +6927,172 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }catch(e){}
     return null;
   }
+  
+  // ==================== 家庭成員自訂與頭像彈窗邏輯 ====================
+  var memberEditContext = null;
+  var currentMemAvatarPhoto = '';
+  var currentMemAvatarColor = '#FF9F1C';
+  var currentMemStatus = 'paid';
+  var MEM_PALETTE = ['#FF9F1C', '#3FA9A4', '#3B82F6', '#A855F7', '#10B981', '#94A3B8'];
+
+  var memOverlayEl = document.getElementById('memberEditModalOverlay');
+  var memPreviewEl = document.getElementById('memEditAvatarPreview');
+  var memFileInput = document.getElementById('memEditFileInput');
+  var btnMemUploadPhoto = document.getElementById('btnMemUploadPhoto');
+  var btnMemClearPhoto = document.getElementById('btnMemClearPhoto');
+  var memColorPaletteEl = document.getElementById('memColorPalette');
+  var memNameInput = document.getElementById('memEditNameInput');
+  var memSegPaid = document.getElementById('memSegPaid');
+  var memSegPending = document.getElementById('memSegPending');
+  var btnMemEditCancel = document.getElementById('btnMemEditCancel');
+  var btnMemEditSave = document.getElementById('btnMemEditSave');
+
+  function updateMemPreview(){
+    if(!memPreviewEl) return;
+    var name = (memNameInput ? memNameInput.value : '').trim() || '友';
+    var initial = name.slice(0, 1).toUpperCase();
+    if(currentMemAvatarPhoto){
+      memPreviewEl.innerHTML = '<img src="' + currentMemAvatarPhoto + '" alt="" />';
+      memPreviewEl.style.background = 'transparent';
+      memPreviewEl.style.color = '#fff';
+      if(btnMemClearPhoto) btnMemClearPhoto.style.display = 'inline-block';
+    } else {
+      memPreviewEl.innerHTML = initial;
+      memPreviewEl.style.background = currentMemAvatarColor + '26';
+      memPreviewEl.style.color = currentMemAvatarColor;
+      memPreviewEl.style.borderColor = currentMemAvatarColor;
+      if(btnMemClearPhoto) btnMemClearPhoto.style.display = 'none';
+    }
+  }
+
+  function renderMemPalette(){
+    if(!memColorPaletteEl) return;
+    memColorPaletteEl.innerHTML = '';
+    MEM_PALETTE.forEach(function(c){
+      var dot = document.createElement('div');
+      dot.className = 'member-color-dot' + (c === currentMemAvatarColor ? ' active' : '');
+      dot.style.background = c;
+      dot.addEventListener('click', function(){
+        currentMemAvatarColor = c;
+        currentMemAvatarPhoto = '';
+        renderMemPalette();
+        updateMemPreview();
+      });
+      memColorPaletteEl.appendChild(dot);
+    });
+  }
+
+  function openMemberEditModal(expenseId, memberIndex){
+    var item = (state.expenses || []).find(function(e){ return e.id === expenseId; });
+    if(!item || !item.familyDetails || !item.familyDetails.members) return;
+    var member = item.familyDetails.members[memberIndex];
+    if(!member) return;
+
+    memberEditContext = { expenseId: expenseId, memberIndex: memberIndex };
+    currentMemAvatarPhoto = member.avatar || '';
+    currentMemAvatarColor = member.avatarColor || MEM_PALETTE[memberIndex % MEM_PALETTE.length];
+    currentMemStatus = member.status || 'paid';
+
+    if(memNameInput) memNameInput.value = member.name || '';
+    if(memSegPaid && memSegPending){
+      memSegPaid.classList.toggle('active', currentMemStatus === 'paid');
+      memSegPending.classList.toggle('active', currentMemStatus === 'pending');
+    }
+
+    renderMemPalette();
+    updateMemPreview();
+    if(memOverlayEl) memOverlayEl.style.display = 'flex';
+    if(memNameInput) setTimeout(function(){ memNameInput.focus(); memNameInput.select(); }, 60);
+  }
+
+  function closeMemberEditModal(){
+    if(memOverlayEl) memOverlayEl.style.display = 'none';
+    memberEditContext = null;
+  }
+
+  if(btnMemEditCancel) btnMemEditCancel.addEventListener('click', closeMemberEditModal);
+  if(memOverlayEl){
+    memOverlayEl.addEventListener('click', function(e){
+      if(e.target === memOverlayEl) closeMemberEditModal();
+    });
+  }
+
+  if(memNameInput) memNameInput.addEventListener('input', updateMemPreview);
+
+  if(btnMemUploadPhoto && memFileInput){
+    btnMemUploadPhoto.addEventListener('click', function(){
+      memFileInput.value = '';
+      memFileInput.click();
+    });
+    memFileInput.addEventListener('change', function(e){
+      var file = e.target.files && e.target.files[0];
+      if(!file) return;
+      var reader = new FileReader();
+      reader.onload = function(evt){
+        var img = new Image();
+        img.onload = function(){
+          var canvas = document.createElement('canvas');
+          var maxDim = 120;
+          var w = img.width, h = img.height;
+          if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
+          else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          currentMemAvatarPhoto = canvas.toDataURL('image/jpeg', 0.85);
+          updateMemPreview();
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if(btnMemClearPhoto){
+    btnMemClearPhoto.addEventListener('click', function(){
+      currentMemAvatarPhoto = '';
+      updateMemPreview();
+    });
+  }
+
+  if(memSegPaid) memSegPaid.addEventListener('click', function(){
+    currentMemStatus = 'paid';
+    memSegPaid.classList.add('active');
+    if(memSegPending) memSegPending.classList.remove('active');
+  });
+
+  if(memSegPending) memSegPending.addEventListener('click', function(){
+    currentMemStatus = 'pending';
+    memSegPending.classList.add('active');
+    if(memSegPaid) memSegPaid.classList.remove('active');
+  });
+
+  if(btnMemEditSave){
+    btnMemEditSave.addEventListener('click', function(){
+      if(!memberEditContext) return;
+      var item = (state.expenses || []).find(function(e){ return e.id === memberEditContext.expenseId; });
+      if(!item || !item.familyDetails || !item.familyDetails.members) return;
+      var member = item.familyDetails.members[memberEditContext.memberIndex];
+      if(!member) return;
+
+      var newName = (memNameInput ? memNameInput.value : '').trim();
+      if(!newName){
+        showToast('請輸入成員名稱');
+        return;
+      }
+
+      member.name = newName;
+      member.avatar = currentMemAvatarPhoto;
+      member.avatarColor = currentMemAvatarColor;
+      member.status = currentMemStatus;
+
+      saveData();
+      closeMemberEditModal();
+      renderFinList(expensesList, 'expense');
+      showToast('已更新成員資料！');
+    });
+  }
+
   function saveData(){
     try{
       var curState = window.state || state;
@@ -6994,29 +7343,160 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     items.forEach(function(item){
       if(state.editMode && pendingRemove[type].has(item.id)) return;
-      var row = document.createElement('div');
 
-      if(state.editMode){
-        row.className = 'fin-row delete-row';
-        row.innerHTML = icon('trash-2','row-trash-icon') + '<span class="fin-row-name">' + escapeHtml(item.name) + '</span>';
-        row.addEventListener('click', function(){
-          pendingRemove[type].add(item.id);
-          renderFinList(container, type);
-        });
+      if(type === 'expense'){
+        var wrap = document.createElement('div');
+        wrap.className = 'fin-row-container';
+
+        if(state.editMode){
+          var delRow = document.createElement('div');
+          delRow.className = 'fin-row delete-row';
+          delRow.innerHTML = icon('trash-2','row-trash-icon') + '<span class="fin-row-name">' + escapeHtml(item.name) + '</span>';
+          delRow.addEventListener('click', function(){
+            pendingRemove[type].add(item.id);
+            renderFinList(container, type);
+          });
+          wrap.appendChild(delRow);
+          container.appendChild(wrap);
+          return;
+        }
+
+        var mainRow = document.createElement('div');
+        mainRow.className = 'fin-row-main';
+
+        var dayText = item.dueDay ? (item.dueDay + '日') : '每月';
+        var dayPill = '<span class="due-day-pill">' + dayText + '</span>';
+        var tag = '<span class="fin-tag cat-' + (item.category || 'other') + '">' + catLabel(item.category) + '</span>';
+        var amountText = formatMoney(item.amount);
+
+        var subDetails = [];
+        if(item.method) subDetails.push('<span class="method-tag">' + escapeHtml(item.method) + '</span>');
+        if(item.note) subDetails.push('<span>' + escapeHtml(item.note) + '</span>');
+        var sublineHtml = subDetails.length ? ('<div class="fin-row-subline">' + subDetails.join('') + '</div>') : '';
+
+        var chevronHtml = item.isFamily ? '<span class="expand-chevron" id="chev_' + item.id + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>' : '';
+
+        mainRow.innerHTML = dayPill +
+          '<div class="fin-row-info">' +
+            '<div class="fin-row-title-line">' + escapeHtml(item.name) + tag + '</div>' +
+            sublineHtml +
+          '</div>' +
+          '<span class="fin-row-amount">' + amountText + '</span>' +
+          chevronHtml;
+
+        if(item.isFamily && item.familyDetails){
+          var drawer = document.createElement('div');
+          drawer.className = 'family-accordion-drawer';
+          drawer.id = 'drawer_' + item.id;
+
+          var fd = item.familyDetails;
+          var colors = ['#FF9F1C', '#3FA9A4', '#3B82F6', '#A855F7', '#10B981', '#94A3B8'];
+          var membersHtml = (fd.members || []).map(function(m, idx){
+            var isPaid = m.status === 'paid';
+            var isOwner = idx === 0;
+            var mColor = m.avatarColor || colors[idx % colors.length];
+            var initial = (m.name || '友').trim().slice(0, 1).toUpperCase();
+            var avatarInner = m.avatar ? ('<img src="' + m.avatar + '" alt="" />') : initial;
+            var avatarBg = m.avatar ? 'transparent' : mColor + '26';
+            var avatarTextColor = m.avatar ? '#fff' : mColor;
+
+            return '<div class="family-member-card' + (isOwner ? ' is-owner' : '') + '">' +
+              '<div class="family-member-left" data-action="edit" data-item-id="' + item.id + '" data-member-idx="' + idx + '">' +
+                '<div class="family-member-avatar" style="background:' + avatarBg + '; color:' + avatarTextColor + '; border-color:' + mColor + '55;">' +
+                  avatarInner +
+                '</div>' +
+                '<div class="family-member-meta">' +
+                  '<div class="family-member-name">' + escapeHtml(m.name) + '</div>' +
+                  '<div class="family-member-role">' + (isOwner ? '群組管理員' : '家庭成員') + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="family-member-actions">' +
+                '<button type="button" class="family-member-edit-btn" data-action="edit" data-item-id="' + item.id + '" data-member-idx="' + idx + '" title="自訂名稱與頭像">' +
+                  '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' +
+                '</button>' +
+                '<button type="button" class="family-member-status ' + (isPaid ? 'status-paid' : 'status-pending') + '" data-action="toggle" data-item-id="' + item.id + '" data-member-idx="' + idx + '">' +
+                  (isPaid ? '已收訖' : '待收款') +
+                '</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+
+          drawer.innerHTML =
+            '<div class="family-meta-grid">' +
+              '<div class="family-meta-box"><div class="family-meta-label">管理身份</div><div class="family-meta-val">' + escapeHtml(fd.role || '家長') + '</div></div>' +
+              '<div class="family-meta-box"><div class="family-meta-label">合約週期</div><div class="family-meta-val">' + escapeHtml(fd.cycle || '每年續約') + '</div></div>' +
+              '<div class="family-meta-box"><div class="family-meta-label">家庭總人數</div><div class="family-meta-val">' + (fd.membersTotal || 6) + ' 人</div></div>' +
+              '<div class="family-meta-box"><div class="family-meta-label">個人月均攤</div><div class="family-meta-val">' + formatMoney(item.amount) + ' /月</div></div>' +
+            '</div>' +
+            '<div class="family-members-title">家庭成員繳款追蹤 (點擊切換狀態)</div>' +
+            '<div class="family-member-list" id="memList_' + item.id + '">' + membersHtml + '</div>' +
+            '<div class="family-action-hint">說明：每年 1/1 至 12/31 續約一次，由家長信用卡主扣，其餘成員年繳已納入收費排程。長按可編輯金額。</div>';
+
+          drawer.querySelectorAll('[data-action="toggle"]').forEach(function(btn){
+            btn.addEventListener('click', function(ev){
+              ev.stopPropagation();
+              var mIdx = parseInt(btn.getAttribute('data-member-idx'), 10);
+              if(!isNaN(mIdx) && fd.members && fd.members[mIdx]){
+                fd.members[mIdx].status = (fd.members[mIdx].status === 'paid') ? 'pending' : 'paid';
+                saveData();
+                renderFinList(container, type);
+              }
+            });
+          });
+
+          drawer.querySelectorAll('[data-action="edit"]').forEach(function(el){
+            el.addEventListener('click', function(ev){
+              ev.stopPropagation();
+              var mIdx = parseInt(el.getAttribute('data-member-idx'), 10);
+              var itId = el.getAttribute('data-item-id');
+              openMemberEditModal(itId, mIdx);
+            });
+          });
+
+          mainRow.addEventListener('click', function(e){
+            var isOpen = drawer.classList.contains('open');
+            drawer.classList.toggle('open', !isOpen);
+            var chev = document.getElementById('chev_' + item.id);
+            if(chev) chev.classList.toggle('opened', !isOpen);
+          });
+
+          var pressTimer = null;
+          mainRow.addEventListener('touchstart', function(){ pressTimer = setTimeout(function(){ openEditModal(type, item); }, 500); }, {passive:true});
+          mainRow.addEventListener('touchend', function(){ clearTimeout(pressTimer); }, {passive:true});
+          mainRow.addEventListener('contextmenu', function(e){ e.preventDefault(); openEditModal(type, item); });
+
+          wrap.appendChild(mainRow);
+          wrap.appendChild(drawer);
+        } else {
+          mainRow.addEventListener('click', function(){ openEditModal(type, item); });
+          wrap.appendChild(mainRow);
+        }
+
+        container.appendChild(wrap);
+
       } else {
-        row.className = 'fin-row';
-        var amountText = type === 'account' ? formatMoney(item.balance) : formatMoney(item.amount);
-        var tag = type === 'expense' ? '<span class="fin-tag cat-' + (item.category || 'other') + '">' + catLabel(item.category) + '</span>' : '';
-        row.innerHTML = '<span class="fin-row-name">' + escapeHtml(item.name) + tag + '</span><span class="fin-row-amount">' + amountText + '</span>';
-        row.addEventListener('click', function(){ openEditModal(type, item); });
+        var row = document.createElement('div');
+        if(state.editMode){
+          row.className = 'fin-row delete-row';
+          row.innerHTML = icon('trash-2','row-trash-icon') + '<span class="fin-row-name">' + escapeHtml(item.name) + '</span>';
+          row.addEventListener('click', function(){
+            pendingRemove[type].add(item.id);
+            renderFinList(container, type);
+          });
+        } else {
+          row.className = 'fin-row';
+          var amountText2 = formatMoney(item.balance);
+          row.innerHTML = '<span class="fin-row-name">' + escapeHtml(item.name) + '</span><span class="fin-row-amount">' + amountText2 + '</span>';
+          row.addEventListener('click', function(){ openEditModal(type, item); });
+        }
+        container.appendChild(row);
       }
-      container.appendChild(row);
     });
 
     if(!state.editMode){
       var addRow = document.createElement('div');
       addRow.className = 'fin-row add-row';
-      addRow.innerHTML = icon('plus','plus-icon-sm') + '<span class="fin-row-name">新增' + (type === 'account' ? '帳戶' : '項目') + '</span>';
+      addRow.innerHTML = icon('plus','plus-icon-sm') + '<span class="fin-row-name">新增' + (type === 'account' ? '帳戶' : '固定支出') + '</span>';
       addRow.addEventListener('click', function(){ openAddModal(type); });
       container.appendChild(addRow);
     }
@@ -9762,7 +10242,30 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       window.state = state; state.copyItems = data.copyItems || DEFAULT_DATA.copyItems.slice();
       state.shortcutItems = data.shortcutItems || DEFAULT_DATA.shortcutItems.slice();
       state.accounts = data.accounts || [];
-      state.expenses = data.expenses || [];
+      state.expenses = (data.expenses && data.expenses.length > 0) ? data.expenses : DEFAULT_DATA.expenses.slice();
+      var ytItem = state.expenses.find(function(e){ return e.id === 'exp_yt' || (e.name && e.name.indexOf('YouTube') !== -1); });
+      if(!ytItem){
+        var defaultYt = DEFAULT_DATA.expenses.find(function(e){ return e.id === 'exp_yt'; });
+        if(defaultYt) state.expenses.push(JSON.parse(JSON.stringify(defaultYt)));
+      } else if(!ytItem.familyDetails){
+        ytItem.isFamily = true;
+        ytItem.amount = 80;
+        ytItem.familyDetails = {
+          role: '家長 (群組管理員)',
+          cycle: '每年續約 (1/1 - 12/31)',
+          renewalDate: '2027/01/01',
+          membersTotal: 6,
+          userShareMonthly: 80,
+          members: [
+            { id:'m0', name:'家長 (自己)', status:'paid', role:'管理員', avatarColor:'#FF9F1C', avatar:'' },
+            { id:'m1', name:'家庭成員 1', status:'paid', role:'成員', avatarColor:'#3FA9A4', avatar:'' },
+            { id:'m2', name:'家庭成員 2', status:'paid', role:'成員', avatarColor:'#3B82F6', avatar:'' },
+            { id:'m3', name:'家庭成員 3', status:'paid', role:'成員', avatarColor:'#A855F7', avatar:'' },
+            { id:'m4', name:'家庭成員 4', status:'paid', role:'成員', avatarColor:'#10B981', avatar:'' },
+            { id:'m5', name:'家庭成員 5', status:'paid', role:'成員', avatarColor:'#94A3B8', avatar:'' }
+          ]
+        };
+      }
       state.budget = data.budget || 0;
       if(data.globalSettings){ state.globalSettings = data.globalSettings; }
       var rawCards = (data.cards && data.cards.length) ? data.cards : DEFAULT_DATA.cards.slice();
