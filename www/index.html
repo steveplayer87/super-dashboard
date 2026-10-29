@@ -4455,7 +4455,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v6 · 財務固定支出中樞與 YouTube 家庭訂閱</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v7 · 訂閱版面與預付卡門號</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5416,9 +5416,9 @@
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
     <h2 id="updateNotesTitle">已更新至 v6</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出與訂閱中樞：依每月扣款日排程整合學貸、中華電信、健保（$850）、保險、生活費、iCloud+（$90）與 Spotify（$20）</li><li>YouTube Premium 展開式家庭管理：標註家長管理身份、每年 1/1 至 12/31 續約週期、個人月均攤 $80</li><li>6 人家庭成員繳款追蹤表：點擊即可快速切換「已收訖／待收款」並自動保存</li><li>家庭成員自訂名稱與專屬頭像：支援大寫字首微光徽章（6 款專屬字首配色）與個人相片上傳自訂頭像</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復 GitHub Actions 自動構建因 Xcode SPM 快取導致之 Submodule checkout 部署錯誤</li><li>修復家庭訂閱抽屜展開手勢與成員狀態同步問題</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>財務清單加入扣款管道與備註微型標籤，長按可自由修改項目金額</li><li>升級固定支出分類為 5 大核心領域（訂閱、貸款分期、保險、電信、公共規費）</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
   </div>
 </div>
@@ -6794,7 +6794,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           ]
         }
       },
-      { id:'exp_spotify', name:'Spotify 音樂串流', amount:20, category:'subscription', dueDay:10, method:'信用卡', note:'家庭共享團員分攤' }
+      { id:'exp_spotify', name:'Spotify 音樂串流', amount:20, category:'subscription', dueDay:10, method:'信用卡', note:'家庭共享團員分攤' },
+      { id:'exp_prepaid', name:'預付卡門號（中華電信）', amount:50, category:'telecom', dueDay:7, cycleMonths:6, lastPaid:'2026-09-09', method:'中華電信 App 儲值', note:'每半年的 7 號儲值 $50，保持門號有效' }
     ],
     budget: 0,
     cards: [
@@ -7149,7 +7150,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v6';
+  var APP_VERSION = 'v7';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -7339,9 +7340,58 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(typeof showToast === 'function') showToast('正在啟動 iOS 捷徑：' + item.name);
   }
 
+  // ==================== 固定支出：週期、下次扣款日、圖示 ====================
+  function daysInMonth(y, m){ return new Date(y, m + 1, 0).getDate(); }
+  function todayStart(now){ now = now || new Date(); return new Date(now.getFullYear(), now.getMonth(), now.getDate()); }
+  function isoDate(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function nextDueDate(item, now){
+    var today = todayStart(now);
+    var day = item.dueDay || 1;
+    if(item.cycleMonths && item.cycleMonths > 1 && item.lastPaid){
+      // 週期型：上次繳費日往後推 N 個月，落在設定的日期
+      var lp = new Date(item.lastPaid + 'T00:00:00');
+      var tm = lp.getMonth() + item.cycleMonths;
+      var ty = lp.getFullYear() + Math.floor(tm / 12);
+      var tmm = ((tm % 12) + 12) % 12;
+      return new Date(ty, tmm, Math.min(day, daysInMonth(ty, tmm)));
+    }
+    var d = new Date(today.getFullYear(), today.getMonth(), Math.min(day, daysInMonth(today.getFullYear(), today.getMonth())));
+    if(d < today){
+      var nm = today.getMonth() + 1, ny = today.getFullYear() + Math.floor(nm / 12), nmm = nm % 12;
+      d = new Date(ny, nmm, Math.min(day, daysInMonth(ny, nmm)));
+    }
+    return d;
+  }
+  function daysUntil(d, now){ return Math.round((d - todayStart(now)) / 86400000); }
+  function cycleLabel(item){
+    var n = item.cycleMonths || 1;
+    return n === 1 ? '每月' : n === 6 ? '每半年' : n === 12 ? '每年' : ('每 ' + n + ' 個月');
+  }
+  function monthlyEquivalent(item){ return (item.amount || 0) / (item.cycleMonths || 1); }
+  function md(d){ return (d.getMonth() + 1) + '/' + d.getDate(); }
+  function finIcon(item){
+    var P = {
+      yt:'<rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 9 16 12 10 15"/>',
+      icloud:'<path d="M18 10a4 4 0 0 0-7.9-1A5 5 0 1 0 7 19h11a4.5 4.5 0 0 0 0-9z"/>',
+      spotify:'<circle cx="12" cy="12" r="9"/><path d="M7 10c3.5-1 7-.7 10 1"/><path d="M7.8 13.2c2.7-.7 5.3-.5 7.6.8"/><path d="M8.6 16c2-.5 4-.3 5.8.6"/>',
+      sim:'<path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><rect x="9" y="12" width="6" height="6" rx="1"/>',
+      phone:'<rect x="7" y="2" width="10" height="20" rx="2.5"/><line x1="11" y1="18" x2="13" y2="18"/>',
+      loan:'<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
+      health:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+      shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+      home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+      wallet:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M16 13h2"/><path d="M3 10h18"/>'
+    };
+    var key = ({ exp_yt:'yt', exp_icloud:'icloud', exp_spotify:'spotify', exp_prepaid:'sim', exp_telecom:'phone', exp_loan:'loan', exp_health:'health', exp_insurance:'shield', exp_living:'home' })[item.id]
+      || ({ telecom:'phone', loan:'loan', utilities:'health', insurance:'shield', living:'home' })[item.category] || 'wallet';
+    var cls = ({ exp_yt:' ico-yt', exp_icloud:' ico-icloud', exp_spotify:' ico-spotify' })[item.id] || '';
+    return '<div class="fin-ico cat-' + (item.category || 'other') + cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + P[key] + '</svg></div>';
+  }
+
   // ==================== 財務頁 ====================
   function renderFinList(container, type){
-    var items = type === 'account' ? state.accounts : state.expenses;
+    var items = type === 'account' ? state.accounts
+      : state.expenses.slice().sort(function(a, b){ return nextDueDate(a) - nextDueDate(b); });
     container.innerHTML = '';
 
     items.forEach(function(item){
@@ -7365,27 +7415,51 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         }
 
         var mainRow = document.createElement('div');
-        mainRow.className = 'fin-row-main';
+        mainRow.className = 'fin-row-main fin-card-row';
 
-        var dayText = item.dueDay ? (item.dueDay + '日') : '每月';
-        var dayPill = '<span class="due-day-pill">' + dayText + '</span>';
+        var dueDate = nextDueDate(item);
+        var left = daysUntil(dueDate);
+        var urgency = left < 0 ? ' overdue' : (left <= 3 ? ' soon' : '');
+        var dueText = left < 0 ? ('逾期 ' + (-left) + ' 天') : (left === 0 ? '今天' : (md(dueDate) + ' · ' + left + ' 天'));
         var tag = '<span class="fin-tag cat-' + (item.category || 'other') + '">' + catLabel(item.category) + '</span>';
-        var amountText = formatMoney(item.amount);
+        var dayPart = item.dueDay ? (' ' + item.dueDay + ' 日') : '';
 
-        var subDetails = [];
-        if(item.method) subDetails.push('<span class="method-tag">' + escapeHtml(item.method) + '</span>');
-        if(item.note) subDetails.push('<span>' + escapeHtml(item.note) + '</span>');
-        var sublineHtml = subDetails.length ? ('<div class="fin-row-subline">' + subDetails.join('') + '</div>') : '';
+        var metaParts = [tag, '<span>' + cycleLabel(item) + dayPart + '</span>'];
+        if(item.method) metaParts.push('<span>· ' + escapeHtml(item.method) + '</span>');
+
+        var noteParts = [];
+        if(item.cycleMonths > 1 && item.lastPaid){
+          noteParts.push('上次儲值 ' + md(new Date(item.lastPaid + 'T00:00:00')) + ' · 下次 ' + md(dueDate));
+        }
+        if(item.note) noteParts.push(escapeHtml(item.note));
+        var noteHtml = noteParts.length ? ('<div class="fin-note">' + noteParts.join('<br>') + '</div>') : '';
 
         var chevronHtml = item.isFamily ? '<span class="expand-chevron" id="chev_' + item.id + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>' : '';
 
-        mainRow.innerHTML = dayPill +
+        mainRow.className = 'fin-row-main fin-card-row';
+        mainRow.innerHTML = finIcon(item) +
           '<div class="fin-row-info">' +
-            '<div class="fin-row-title-line">' + escapeHtml(item.name) + tag + '</div>' +
-            sublineHtml +
+            '<div class="fin-name">' + escapeHtml(item.name) + '</div>' +
+            '<div class="fin-meta">' + metaParts.join('') + '</div>' +
+            noteHtml +
+            ((item.cycleMonths > 1 && left <= 14) ? '<button type="button" class="fin-row-action" data-act="paid">標記為已儲值（今天）</button>' : '') +
           '</div>' +
-          '<span class="fin-row-amount">' + amountText + '</span>' +
-          chevronHtml;
+          '<div class="fin-right">' +
+            '<span class="fin-amount">' + formatMoney(item.amount) + '</span>' +
+            '<span class="fin-due' + urgency + '">' + dueText + '</span>' +
+            chevronHtml +
+          '</div>';
+
+        var paidBtn = mainRow.querySelector('[data-act="paid"]');
+        if(paidBtn){
+          paidBtn.addEventListener('click', function(ev){
+            ev.stopPropagation();
+            item.lastPaid = isoDate(new Date());
+            saveData();
+            renderFinList(container, type);
+            showToast('已記錄儲值，下次 ' + md(nextDueDate(item)));
+          });
+        }
 
         if(item.isFamily && item.familyDetails){
           var drawer = document.createElement('div');
@@ -7410,7 +7484,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
                 '</div>' +
                 '<div class="family-member-meta">' +
                   '<div class="family-member-name">' + escapeHtml(m.name) + '</div>' +
-                  '<div class="family-member-role">' + (isOwner ? '群組管理員' : '家庭成員') + '</div>' +
+                  '<div class="family-member-role">' + (isOwner ? '群組管理員' : '成員') + '</div>' +
                 '</div>' +
               '</div>' +
               '<div class="family-member-actions">' +
@@ -7424,6 +7498,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             '</div>';
           }).join('');
 
+          var paidCount = (fd.members || []).filter(function(m){ return m.status === 'paid'; }).length;
           drawer.innerHTML =
             '<div class="family-meta-grid">' +
               '<div class="family-meta-box"><div class="family-meta-label">管理身份</div><div class="family-meta-val">' + escapeHtml(fd.role || '家長') + '</div></div>' +
@@ -7431,9 +7506,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               '<div class="family-meta-box"><div class="family-meta-label">家庭總人數</div><div class="family-meta-val">' + (fd.membersTotal || 6) + ' 人</div></div>' +
               '<div class="family-meta-box"><div class="family-meta-label">個人月均攤</div><div class="family-meta-val">' + formatMoney(item.amount) + ' /月</div></div>' +
             '</div>' +
-            '<div class="family-members-title">家庭成員繳款追蹤 (點擊切換狀態)</div>' +
+            '<div class="family-members-title"><span>成員繳款追蹤</span><span class="family-paid-count">已收 ' + paidCount + ' / ' + (fd.members || []).length + '</span></div>' +
             '<div class="family-member-list" id="memList_' + item.id + '">' + membersHtml + '</div>' +
-            '<div class="family-action-hint">說明：每年 1/1 至 12/31 續約一次，由家長信用卡主扣，其餘成員年繳已納入收費排程。長按可編輯金額。</div>';
+            '<div class="family-action-hint">每年 1/1 – 12/31 續約，由家長信用卡主扣。點右側狀態可切換「已收訖／待收款」，點頭像可自訂名稱與相片。</div>';
 
           drawer.querySelectorAll('[data-action="toggle"]').forEach(function(btn){
             btn.addEventListener('click', function(ev){
@@ -7510,7 +7585,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     accountsTotalEl.textContent = state.accounts.length ? ('總資產 ' + formatMoney(accTotal)) : '';
     renderFinList(accountsList, 'account');
 
-    var expTotal = state.expenses.reduce(function(s,e){ return s + (e.amount || 0); }, 0);
+    var expTotal = Math.round(state.expenses.reduce(function(s,e){ return s + monthlyEquivalent(e); }, 0));
     expensesTotalEl.textContent = state.expenses.length ? ('每月 ' + formatMoney(expTotal)) : '';
     renderFinList(expensesList, 'expense');
 
@@ -10376,6 +10451,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             "method": "信用卡",
             "note": "保險保障 · 可延後或是刷卡"
       }
+,
+      {
+            "id": "exp_prepaid",
+            "name": "預付卡門號（中華電信）",
+            "amount": 50,
+            "category": "telecom",
+            "dueDay": 7,
+            "cycleMonths": 6,
+            "lastPaid": "2026-09-09",
+            "method": "中華電信 App 儲值",
+            "note": "每半年的 7 號儲值 $50，保持門號有效"
+      }
 ];
       var curExp = (data.expenses && Array.isArray(data.expenses)) ? data.expenses.slice() : [];
       requiredDefaults.forEach(function(item){
@@ -10388,7 +10475,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             (item.id === 'exp_living' && e.name.indexOf('生活費') !== -1) ||
             (item.id === 'exp_icloud' && e.name.indexOf('iCloud') !== -1) ||
             (item.id === 'exp_spotify' && e.name.indexOf('Spotify') !== -1) ||
-            (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1))
+            (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1)) ||
+            (item.id === 'exp_prepaid' && e.name.indexOf('預付卡') !== -1)
           ));
         });
         if(!exists){
@@ -10403,7 +10491,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               (item.id === 'exp_living' && e.name.indexOf('生活費') !== -1) ||
               (item.id === 'exp_icloud' && e.name.indexOf('iCloud') !== -1) ||
               (item.id === 'exp_spotify' && e.name.indexOf('Spotify') !== -1) ||
-              (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1))
+              (item.id === 'exp_yt' && (e.name.indexOf('YouTube') !== -1 || e.name.indexOf('YT') !== -1)) ||
+            (item.id === 'exp_prepaid' && e.name.indexOf('預付卡') !== -1)
             ));
           });
           if(matched){
@@ -11711,4 +11800,46 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   #modalAirlineSection .modal-scroll{flex:1 1 auto!important;min-height:0!important;justify-content:flex-start!important;padding-top:12px!important;padding-bottom:10px!important;}
   #modalAirlineSection .modal-footer{position:sticky!important;bottom:0!important;flex-shrink:0!important;}
   #modalOverlay .modal-scroll { overscroll-behavior-y:none !important; }
+
+  /* ====== 固定支出 / 訂閱：卡片式列表 ====== */
+  .fin-list{ border-radius:16px; }
+  .fin-card-row{ gap:12px !important; padding:13px 14px !important; align-items:flex-start !important; }
+  .fin-ico{ width:38px; height:38px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.06); color:var(--text-muted); border:1px solid rgba(255,255,255,.06); }
+  .fin-ico svg{ width:19px; height:19px; }
+  .fin-ico.cat-subscription{ background:rgba(255,159,28,.14); color:var(--amber); }
+  .fin-ico.cat-loan{ background:rgba(235,87,87,.14); color:#f87171; }
+  .fin-ico.cat-insurance{ background:rgba(63,169,164,.14); color:var(--teal); }
+  .fin-ico.cat-telecom{ background:rgba(59,130,246,.14); color:#60a5fa; }
+  .fin-ico.cat-utilities{ background:rgba(168,85,247,.14); color:#c084fc; }
+  .fin-ico.cat-living{ background:rgba(34,197,94,.14); color:#4ade80; }
+  .fin-ico.ico-yt{ background:rgba(255,59,48,.15); color:#ff5a4f; }
+  .fin-ico.ico-icloud{ background:rgba(76,155,255,.15); color:#6aaeff; }
+  .fin-ico.ico-spotify{ background:rgba(29,185,84,.15); color:#2bd16a; }
+  .fin-name{ font-size:14.5px; font-weight:700; color:var(--text); line-height:1.3; word-break:break-word; }
+  .fin-meta{ margin-top:4px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:11.5px; color:var(--text-muted); }
+  .fin-meta .fin-tag{ font-size:10.5px; }
+  .fin-note{ margin-top:5px; font-size:11px; line-height:1.5; color:var(--text-muted); opacity:.92; }
+  .fin-right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+  .fin-amount{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14.5px; font-weight:700; white-space:nowrap; color:var(--text); }
+  .fin-due{ font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.06); color:var(--text-muted); white-space:nowrap; }
+  .fin-due.soon{ background:rgba(255,159,28,.16); color:var(--amber); }
+  .fin-due.overdue{ background:rgba(235,87,87,.18); color:#f87171; }
+  .fin-row-action{ margin-top:9px; padding:8px 12px; border-radius:10px; border:1px solid rgba(59,130,246,.42); background:rgba(59,130,246,.14);
+    color:#7db6ff; font-size:12px; font-weight:700; cursor:pointer; width:100%; }
+  .fin-row-action:active{ transform:scale(.98); }
+
+  /* 家庭訂閱抽屜：成員列改單欄，文字不再被擠成直排 */
+  .family-accordion-drawer{ padding:14px 14px 16px !important; }
+  .family-meta-grid{ grid-template-columns:repeat(2, minmax(0,1fr)) !important; }
+  .family-meta-box{ border-radius:10px !important; padding:9px 11px !important; }
+  .family-members-title{ font-size:12px !important; color:var(--text) !important; margin-bottom:10px !important; }
+  .family-paid-count{ font-size:11px; font-weight:700; color:var(--teal); background:rgba(63,169,164,.14); padding:2px 9px; border-radius:999px; }
+  .family-member-list{ grid-template-columns:1fr !important; gap:7px !important; }
+  .family-member-card{ padding:9px 12px !important; }
+  .family-member-meta{ min-width:0; flex:1; }
+  .family-member-name{ font-size:13px !important; }
+  .family-member-role{ white-space:nowrap; font-size:10.5px !important; }
+  .family-member-status{ white-space:nowrap; flex-shrink:0; }
+  .family-action-hint{ line-height:1.6 !important; }
 </style>
