@@ -165,5 +165,5 @@ npx cap open ios
 
 ## 版本規則
 
-- 版本號採「v 加整數」（目前為 v3），App 內更新公告、系統資訊、iOS `MARKETING_VERSION` 與 GitHub 的 git tag 保持一致。
+- 版本號採「v 加整數」（目前為 v7），App 內更新公告、系統資訊、iOS `MARKETING_VERSION` 與 GitHub 的 git tag 保持一致。
 - 發版流程：更新 `APP_VERSION`（index.html / www/index.html）與 `MARKETING_VERSION`，提交後建立同名 tag（例如 `v3`）。
