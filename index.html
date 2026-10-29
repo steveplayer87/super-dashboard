@@ -5417,7 +5417,7 @@
     <h2 id="updateNotesTitle">已更新至 v6</h2>
     <div class="update-notes-list">
       <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
   </div>
@@ -6852,6 +6852,29 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var modalField2 = document.getElementById('modalField2');
   var modalLabel2 = document.getElementById('modalLabel2');
   var modalInput2 = document.getElementById('modalInput2');
+  // 純數字欄位：只顯示數字鍵盤，並過濾掉非數字字元
+  function setNumericMode(el, on){
+    if(!el) return;
+    if(on){
+      el.setAttribute('inputmode', 'numeric');
+      el.setAttribute('pattern', '[0-9]*');
+      el.setAttribute('enterkeyhint', 'done');
+      el.dataset.numeric = '1';
+    } else {
+      el.setAttribute('inputmode', 'text');
+      el.removeAttribute('pattern');
+      el.removeAttribute('enterkeyhint');
+      delete el.dataset.numeric;
+    }
+  }
+  [document.getElementById('modalInput'), modalInput2].forEach(function(el){
+    if(el) el.addEventListener('input', function(){
+      if(el.dataset.numeric === '1'){
+        var v = el.value.replace(/[^0-9]/g, '');
+        if(v !== el.value) el.value = v;
+      }
+    });
+  });
   var modalField3 = document.getElementById('modalField3');
   var modalFieldTheme = document.getElementById('modalFieldTheme');
   var themeSeg = document.getElementById('themeSeg');
@@ -7006,7 +7029,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     renderMemPalette();
     updateMemPreview();
     if(memOverlayEl) memOverlayEl.style.display = 'flex';
-    if(memNameInput) setTimeout(function(){ memNameInput.focus(); memNameInput.select(); }, 60);
   }
 
   function closeMemberEditModal(){
@@ -7388,6 +7410,75 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return '<div class="fin-ico cat-' + (item.category || 'other') + cls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + P[key] + '</svg></div>';
   }
 
+  // ==================== iOS 風格左滑刪除 ====================
+  function attachSwipeDelete(wrap, row, onDelete){
+    wrap.classList.add('swipe-wrap');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'swipe-del-btn';
+    btn.innerHTML = icon('trash-2', 'swipe-trash') + '<span>刪除</span>';
+    wrap.insertBefore(btn, wrap.firstChild);
+
+    var REVEAL = 88, startX = 0, startY = 0, base = 0, curX = 0;
+    var dragging = false, decided = false, horizontal = false;
+    function setX(x, animate){
+      row.style.transition = animate ? 'transform .22s cubic-bezier(.2,.8,.2,1)' : 'none';
+      row.style.transform = x ? ('translateX(' + x + 'px)') : '';
+    }
+    function close(){ wrap._open = false; curX = 0; setX(0, true); }
+    wrap._closeSwipe = close;
+
+    row.addEventListener('touchstart', function(e){
+      if(e.touches.length !== 1) return;
+      document.querySelectorAll('.swipe-wrap').forEach(function(w){ if(w !== wrap && w._open && w._closeSwipe) w._closeSwipe(); });
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      base = wrap._open ? -REVEAL : 0; curX = base;
+      dragging = true; decided = false; horizontal = false;
+    }, { passive: true });
+    row.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      var t = e.touches[0], mx = t.clientX - startX, my = t.clientY - startY;
+      if(!decided){
+        if(Math.abs(mx) < 6 && Math.abs(my) < 6) return;
+        decided = true; horizontal = Math.abs(mx) > Math.abs(my);
+      }
+      if(!horizontal) return;
+      if(e.cancelable) e.preventDefault();
+      var x = base + mx;
+      x = Math.max(-REVEAL - 24, Math.min(0, x));
+      curX = x; setX(x, false);
+    }, { passive: false });
+    row.addEventListener('touchend', function(){
+      if(!dragging) return;
+      dragging = false;
+      if(horizontal){
+        wrap._swipedAt = Date.now();
+        if(curX < -REVEAL / 2){ wrap._open = true; curX = -REVEAL; setX(-REVEAL, true); }
+        else { close(); }
+      }
+    });
+    row.addEventListener('touchcancel', function(){ dragging = false; if(!wrap._open) setX(0, true); });
+    // 滑動後不要誤觸點擊；已展開時，點一下先收合
+    row.addEventListener('click', function(e){
+      if(wrap._swipedAt && Date.now() - wrap._swipedAt < 380){ e.stopImmediatePropagation(); e.preventDefault(); return; }
+      if(wrap._open){ e.stopImmediatePropagation(); e.preventDefault(); close(); }
+    }, true);
+    btn.addEventListener('click', function(e){ e.stopPropagation(); onDelete(); });
+  }
+
+  function deleteFinItem(type, item){
+    var nm = String(item.name || '這個項目').slice(0, 40);
+    if(!window.confirm('確定要刪除「' + nm + '」嗎？按「取消」會保留項目。')) {
+      document.querySelectorAll('.swipe-wrap').forEach(function(w){ if(w._open && w._closeSwipe) w._closeSwipe(); });
+      return;
+    }
+    if(type === 'account') state.accounts = state.accounts.filter(function(i){ return i.id !== item.id; });
+    else state.expenses = state.expenses.filter(function(i){ return i.id !== item.id; });
+    saveData();
+    renderFinance();
+    showToast('已刪除「' + nm.slice(0, 24) + '」');
+  }
+
   // ==================== 財務頁 ====================
   function renderFinList(container, type){
     var items = type === 'account' ? state.accounts
@@ -7449,6 +7540,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             '<span class="fin-due' + urgency + '">' + dueText + '</span>' +
             chevronHtml +
           '</div>';
+
+        var rowWrap = document.createElement('div');
+        rowWrap.appendChild(mainRow);
+        attachSwipeDelete(rowWrap, mainRow, function(){ deleteFinItem(type, item); });
 
         var paidBtn = mainRow.querySelector('[data-act="paid"]');
         if(paidBtn){
@@ -7541,13 +7636,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           var pressTimer = null;
           mainRow.addEventListener('touchstart', function(){ pressTimer = setTimeout(function(){ openEditModal(type, item); }, 500); }, {passive:true});
           mainRow.addEventListener('touchend', function(){ clearTimeout(pressTimer); }, {passive:true});
+          mainRow.addEventListener('touchmove', function(){ clearTimeout(pressTimer); }, {passive:true});
           mainRow.addEventListener('contextmenu', function(e){ e.preventDefault(); openEditModal(type, item); });
 
-          wrap.appendChild(mainRow);
+          wrap.appendChild(rowWrap);
           wrap.appendChild(drawer);
         } else {
           mainRow.addEventListener('click', function(){ openEditModal(type, item); });
-          wrap.appendChild(mainRow);
+          wrap.appendChild(rowWrap);
         }
 
         container.appendChild(wrap);
@@ -7567,7 +7663,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           row.innerHTML = '<span class="fin-row-name">' + escapeHtml(item.name) + '</span><span class="fin-row-amount">' + amountText2 + '</span>';
           row.addEventListener('click', function(){ openEditModal(type, item); });
         }
-        container.appendChild(row);
+        if(!state.editMode){
+          var accWrap = document.createElement('div');
+          accWrap.appendChild(row);
+          attachSwipeDelete(accWrap, row, function(){ deleteFinItem(type, item); });
+          container.appendChild(accWrap);
+        } else {
+          container.appendChild(row);
+        }
       }
     });
 
@@ -9128,7 +9231,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       modalInput.placeholder = '例如:悠遊卡、住家門禁、愛車鑰匙';
       modalLabel2.textContent = '起始金額 (交通卡才會扣款，其他可為 0)';
       modalInput2.placeholder = '例如:500';
-      modalInput2.setAttribute('inputmode','decimal');
+      setNumericMode(modalInput2, true);
     }
   }
 
@@ -9673,6 +9776,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== 彈窗控制核心 (新增/編輯/預算) ====================
   function configureModalFields(type){
+    setNumericMode(modalInput, false); setNumericMode(modalInput2, false);
     var _pv = document.getElementById('editImagePreview'); if(_pv) _pv.style.display = 'none';
     var isCard = (type === 'card');
     var isExpense = (type === 'expense');
@@ -9706,25 +9810,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       modalInput.placeholder = '例如:機車mode';
       modalLabel2.textContent = 'Input 參數(選填,傳給捷徑的「輸入」)';
       modalInput2.placeholder = '留空則不帶參數';
-      modalInput2.setAttribute('inputmode','text');
+      setNumericMode(modalInput2, false);
     } else if(type === 'account'){
       modalLabel1.textContent = '帳戶 / 電子支付名稱';
       modalInput.placeholder = '例如:國泰銀行、LINE Pay';
       modalLabel2.textContent = '目前餘額';
       modalInput2.placeholder = '例如:35000';
-      modalInput2.setAttribute('inputmode','decimal');
+      setNumericMode(modalInput2, true);
     } else if(type === 'expense'){
       modalLabel1.textContent = '項目名稱';
       modalInput.placeholder = '例如:機車保險、Netflix';
       modalLabel2.textContent = '每月金額';
       modalInput2.placeholder = '例如:299';
-      modalInput2.setAttribute('inputmode','decimal');
+      setNumericMode(modalInput2, true);
     } else if(type === 'card'){
       modalLabel1.textContent = '卡片名稱';
       modalInput.placeholder = '例如:悠遊卡、住家門禁、愛車鑰匙';
       modalLabel2.textContent = '起始餘額(公車捷運類型才會扣款,其他可留 0)';
       modalInput2.placeholder = '例如:500';
-      modalInput2.setAttribute('inputmode','decimal');
+      setNumericMode(modalInput2, true);
     }
   }
 
@@ -9765,7 +9869,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     setCategory(type === 'card' ? 'credit' : 'other');
     setTheme(type === 'card' ? 'theme-kit-white' : 'theme-gold');
     modalOverlay.classList.add('show');
-    if(type !== 'card'){ setTimeout(function(){ modalInput.focus(); }, 50); }
   }
 
   function openEditModal(type, item){
@@ -9827,7 +9930,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       saveData(); closeModal(); resetPending(); renderEverything(); showToast('已刪除「' + String(itemName).slice(0,24) + '」');
     };
     modalOverlay.classList.add('show');
-    if(!(type === 'copy' && isImageItem(item))) setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
 
   function openBudgetModal(){
@@ -9848,7 +9950,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     modalHint.textContent = '用來估算固定支出是否超支';
     modalLabel1.textContent = '每月預算金額';
     modalInput.placeholder = '例如:20000';
-    modalInput.setAttribute('inputmode','decimal');
+    setNumericMode(modalInput, true);
+    setNumericMode(modalInput, true);
     modalInput.value = state.budget ? String(state.budget) : '';
     modalConfirm.textContent = '儲存';
     var delRow = document.getElementById('modalDeleteRow');
@@ -9875,7 +9978,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }
     }
     modalOverlay.classList.add('show');
-    setTimeout(function(){ modalInput.focus(); modalInput.select(); }, 50);
   }
   var budgetEditBtn = document.getElementById('budgetEditBtn');
   if(budgetEditBtn){
@@ -11842,4 +11944,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   .family-member-role{ white-space:nowrap; font-size:10.5px !important; }
   .family-member-status{ white-space:nowrap; flex-shrink:0; }
   .family-action-hint{ line-height:1.6 !important; }
+
+  /* ====== iOS 風格：列表項目左滑出現刪除 ====== */
+  .swipe-wrap{ position:relative; overflow:hidden; }
+  .swipe-wrap > .fin-row, .swipe-wrap > .fin-row-main{ position:relative; background:var(--panel-raised); touch-action:pan-y; will-change:transform; }
+  .swipe-wrap > .fin-row{ border-bottom:1px solid var(--border) !important; }
+  .swipe-del-btn{ position:absolute; top:0; right:0; bottom:0; width:88px; border:none; background:#E5484D; color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:12px; font-weight:700; cursor:pointer; }
+  .swipe-del-btn svg{ width:20px; height:20px; }
+  .swipe-del-btn:active{ background:#c93a3f; }
 </style>

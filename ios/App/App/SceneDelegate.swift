@@ -700,11 +700,39 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         setupDelegatesAndHandlers()
+        hideFormAccessoryBar()
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupDelegatesAndHandlers()
+        hideFormAccessoryBar()
+        // 鍵盤即將出現時再確認一次（網頁內容檢視可能是之後才建立的）
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.hideFormAccessoryBar()
+        }
+    }
+
+    /// 隱藏鍵盤上方的「上一個／下一個／完成」表單工具列：
+    /// 讓 WKWebView 的內容檢視改用一個「沒有 inputAccessoryView」的子類別。
+    func hideFormAccessoryBar() {
+        guard let content = webView?.scrollView.subviews.first(where: { String(describing: type(of: $0)).hasPrefix("WKContent") }) else { return }
+        let baseName = String(describing: type(of: content))
+        if baseName.hasSuffix("_NoAccessory") { return }
+        let subclassName = baseName + "_NoAccessory"
+        var subclass: AnyClass? = NSClassFromString(subclassName)
+        if subclass == nil {
+            guard let base = object_getClass(content),
+                  let created = objc_allocateClassPair(base, subclassName, 0) else { return }
+            let block: @convention(block) (AnyObject) -> AnyObject? = { _ in nil }
+            class_addMethod(created, #selector(getter: UIResponder.inputAccessoryView), imp_implementationWithBlock(block), "@@:")
+            objc_registerClassPair(created)
+            subclass = created
+        }
+        if let subclass = subclass {
+            object_setClass(content, subclass)
+            content.reloadInputViews()
+        }
     }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
