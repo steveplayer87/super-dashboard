@@ -4505,7 +4505,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v8 · 系統速貼鍵盤與互動通知</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v7 · 訂閱版面與預付卡門號</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5464,9 +5464,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v12</h2>
+    <h2 id="updateNotesTitle">已更新至 v7</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>移除自訂鍵盤的鍵盤切換按鈕，改由系統原生操作切換</li><li>新增鍵盤共享資料讀取診斷，區分未讀取、空資料與格式錯誤</li><li>新增系統剪貼簿直寫：點擊常用文字即由 iOS 原生剪貼簿接收，不必切換自訂鍵盤</li><li>修正速貼鍵盤清單同步：App 啟動載入資料後會再次同步完整清單至 App Group</li><li>左上「超級儀錶板」標題改為一鍵返回儀表板主頁</li><li>新增通用互動通知 API：模組可設定通知內容、動作按鈕與文字回覆，回覆事件會回送儀表板</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
@@ -5900,9 +5900,14 @@
       3. 點選「加入主畫面」並選擇儲存的相片即可！
     </div>
 
-    <div style="display:flex; gap:10px;">
-      <button type="button" class="btn" onclick="document.getElementById('appIconModal').style.display='none'" style="flex:1; padding:10px 0; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text); border-radius:12px; cursor:pointer;">關閉</button>
-      <a id="appIconModalDownloadBtn" href="" download="" target="_blank" class="btn done" style="flex:1; padding:10px 0; background:var(--amber); border-color:var(--amber); color:#241705; font-weight:800; border-radius:12px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">開啟原圖下載</a>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button type="button" class="btn done" id="appIconModalApplyNativeBtn" onclick="window.applyCurrentAppIconNative()" style="width:100%; padding:11px 0; background:var(--amber); border-color:var(--amber); color:#241705; font-weight:800; border-radius:12px; cursor:pointer; font-size:13.5px; box-shadow:0 4px 14px rgba(255,159,28,0.25);">
+        一鍵套用為原生 App 圖標
+      </button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn" onclick="document.getElementById('appIconModal').style.display='none'" style="flex:1; padding:9px 0; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text); border-radius:10px; cursor:pointer; font-size:12px;">關閉</button>
+        <a id="appIconModalDownloadBtn" href="" download="" target="_blank" class="btn" style="flex:1; padding:9px 0; background:var(--panel-raised); border:1px solid var(--border); color:var(--text-muted); border-radius:10px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; font-size:12px;">開啟原圖</a>
+      </div>
     </div>
   </div>
 </div>
@@ -6099,21 +6104,6 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
-  // 將完整文字清單同步至 App Group，鍵盤與主 App 共用同一份資料。
-  window.syncKeyboardQuickCopy = function(){
-    var curState = window.state || (typeof state !== 'undefined' ? state : null);
-    if(!curState || !Array.isArray(curState.copyItems) || !window.callNative) return 0;
-    var items = curState.copyItems.filter(function(it){
-      return it && it.type !== 'image' && !(it.text || '').startsWith('data:image') && !!(it.text || '');
-    }).map(function(item){
-      var text = item.text || '';
-      return {id:item.id || '', label:item.name || item.label || text.slice(0,24), text:text,
-        category:item.category || '未分類', type:item.type || 'text'};
-    });
-    window.callNative('sync-keyboard-quick-copy', {items:items});
-    return items.length;
-  };
-
   // 同步前六常用項目至動態島 (包含 label, name, text, isLink 並自動退回桌面)
   window.syncQuickCopyLiveActivity = function(showMsg){
     try {
@@ -6137,11 +6127,6 @@ window.safeSetIcon = safeSetIcon;
           { id: 'c3', label: '9879-2456', name: '9879-2456', text: '9879-2456', isLink: false }
         ];
       }
-      // 完整清單同步給系統鍵盤；動態島仍維持原本前六筆。
-      var allKeyboardItems = (curState.copyItems || []).filter(function(it){ return it.type !== 'image' && !(it.text || '').startsWith('data:image'); }).map(function(item){
-        return { id:item.id, name:item.name || item.label || item.text, label:item.name || item.label || item.text, text:item.text || '', category:item.category || '未分類', type:item.type || 'text', isLink:!!item.isLink };
-      });
-      window.callNative('sync-keyboard-quick-copy', { items: allKeyboardItems });
       window.callNative('sync-quick-copy', { items: top6 });
       if(showMsg !== false && typeof showToast === 'function'){
         showToast('常用速貼動態島已開啟！即刻退回桌面查看');
@@ -6192,9 +6177,12 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
+  var currentSelectedIconKey = 'obsidian-gold';
+
   window.openAppIconPreview = function(key){
     var meta = APP_ICON_METAS[key];
     if(!meta) return;
+    currentSelectedIconKey = key;
     var modal = document.getElementById('appIconModal');
     var img = document.getElementById('appIconModalImg');
     var title = document.getElementById('appIconModalTitle');
@@ -6208,6 +6196,24 @@ window.safeSetIcon = safeSetIcon;
       btn.download = meta.file.split('/').pop();
     }
     if(modal) modal.style.display = 'flex';
+  };
+
+  window.applyCurrentAppIconNative = function(){
+    var iconMap = {
+      'obsidian-gold': 'AppIcon-ObsidianGold',
+      'aerospace-titanium': 'AppIcon-AerospaceTitanium',
+      'stealth-black': 'AppIcon-StealthBlack',
+      'cosmic-teal': 'AppIcon-CosmicTeal',
+      'heritage-amber': 'AppIcon-HeritageAmber',
+      'guardian-crest': 'AppIcon-GuardianCrest'
+    };
+    var nativeName = iconMap[currentSelectedIconKey] || 'default';
+    if(typeof window.callNative === 'function'){
+      window.callNative('set-app-icon', { name: nativeName });
+      if(typeof showToast === 'function') showToast('已發送原生圖標切換請求');
+    } else {
+      window.location.href = 'superdashboard://set-app-icon?name=' + encodeURIComponent(nativeName);
+    }
   };
 
   // 觸發情境卡片通知
@@ -6267,17 +6273,6 @@ window.safeSetIcon = safeSetIcon;
     } catch(e){
       try { window.location.href = fullUrl; } catch(err){}
     }
-  };
-
-  // 通用通知互動 API：任何模組可定義 workflow、按鈕及文字回覆。
-  window.scheduleDashboardInteraction = function(config){
-    if(!config || !config.workflowId) throw new Error('workflowId is required');
-    window.callNative('schedule-interactive-notification', config);
-  };
-  window.onDashboardNotificationEvents = function(events){
-    (events || []).forEach(function(event){
-      if(typeof window.dispatchEvent === 'function') window.dispatchEvent(new CustomEvent('dashboardnotificationresponse', { detail:event }));
-    });
   };
 
   window.triggerCardActionNotification = function(delay){
@@ -6973,7 +6968,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
 
   var CATS = {
-    copy: [['personal','個人'],['work','工作'],['address','地址'],['account','帳號代碼'],['shopping','購物'],['other','其他']],
     expense: [['subscription','訂閱'],['loan','貸款分期'],['insurance','保險'],['telecom','電信網路'],['utilities','公共規費'],['living','生活固定'],['other','其他']],
     card: [
       ['transit', '交通卡', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M8 19l-2 3"/><path d="M16 19l2 3"/></svg>'],
@@ -7285,8 +7279,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         cards: curState.cards, cardTx: curState.cardTx,
         globalSettings: curState.globalSettings
       }));
-      // 每次資料儲存時同步完整速貼至 App Group，系統鍵盤不依賴手動啟動動態島。
-      if(window.syncKeyboardQuickCopy) window.syncKeyboardQuickCopy();
     }catch(e){
       console.error('儲存失敗', e);
       try{ showToast('儲存空間已滿，請刪除一些圖片項目'); }catch(e3){}
@@ -7331,7 +7323,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v12';
+  var APP_VERSION = 'v7';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -7341,16 +7333,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var aboutVersionRow = document.getElementById('aboutVersionRow');
   if(aboutVersionRow){ aboutVersionRow.addEventListener('click', openUpdateNotes); aboutVersionRow.style.cursor = 'pointer'; }
   var brandTitle = document.querySelector('.brand');
-  if(brandTitle){
-    brandTitle.style.cursor = 'pointer';
-    brandTitle.setAttribute('role','button');
-    brandTitle.setAttribute('aria-label','返回儀表板首頁');
-    brandTitle.addEventListener('click', function(){
-      closeUpdateNotes();
-      if(typeof window.switchPage === 'function') window.switchPage('dashboard');
-      window.scrollTo({top:0, behavior:'smooth'});
-    });
-  }
+  if(brandTitle) brandTitle.addEventListener('click', openUpdateNotes);
   try { if(localStorage.getItem('super-dashboard-seen-version') !== APP_VERSION){ localStorage.setItem('super-dashboard-seen-version', APP_VERSION); setTimeout(openUpdateNotes, 650); } } catch(e) { setTimeout(openUpdateNotes, 650); }
 
   // ==================== 儀錶板頁 ====================
@@ -7503,22 +7486,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }
       return;
     }
-    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard){
-      window.callNative('copy-to-clipboard', {text:item.text});
-    } else {
+    try{
+      await navigator.clipboard.writeText(item.text);
+    }catch(e){
       try{
-        await navigator.clipboard.writeText(item.text);
-      }catch(e){
-        try{
-          var ta = document.createElement('textarea');
-          ta.value = item.text;
-          ta.style.position = 'fixed'; ta.style.opacity = '0';
-          document.body.appendChild(ta);
-          ta.focus(); ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-        }catch(e2){ return; }
-      }
+        var ta = document.createElement('textarea');
+        ta.value = item.text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }catch(e2){ return; }
     }
     if(ledEl){
       ledEl.classList.add('flash');
@@ -9964,7 +9943,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(modalField2) modalField2.style.display = (type === 'copy') ? 'none' : 'block';
 
     var modalField3 = document.getElementById('modalField3');
-    if(modalField3) modalField3.style.display = (type === 'copy' || isExpense || isCard) ? 'block' : 'none';
+    if(modalField3) modalField3.style.display = (isExpense || isCard) ? 'block' : 'none';
 
     var expressGroup = document.getElementById('expressTransitGroup');
     if(expressGroup) expressGroup.style.display = (isCard && modalCategory === 'transit') ? 'block' : 'none';
@@ -9972,7 +9951,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var copyLinkGroup = document.getElementById('copyLinkToggleGroup');
     if(copyLinkGroup) copyLinkGroup.style.display = (type === 'copy') ? 'block' : 'none';
 
-    if(type === 'copy' || isExpense || isCard) buildCategorySeg(type);
+    if(isExpense || isCard) buildCategorySeg(type);
 
     if(type === 'copy'){
       modalLabel1.textContent = '內容';
@@ -10076,7 +10055,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
     else if(type === 'copy'){
       modalInput.value = item.text;
-      setCategory(item.category || 'other');
       var linkToggle = document.getElementById('copyIsLinkToggle');
       if(linkToggle){
         linkToggle.classList.toggle('active', !!item.isLink);
@@ -10229,10 +10207,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         if(t){
           t.text = val;
           t.isLink = isLinkVal;
-          t.category = modalCategory || 'other';
         }
       } else {
-        state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal, category: modalCategory || 'other' });
+        state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal });
       }
 
     } else if(type === 'shortcut'){
@@ -10817,12 +10794,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.cardTx = [];
       saveData();
     }
-
-  // 初始化完成後再同步一次，確保資料載入後的完整清單進入 iOS App Group。
-  setTimeout(function(){
-    var count = window.syncKeyboardQuickCopy ? window.syncKeyboardQuickCopy() : 0;
-    console.log('[QuickCopy] App Group sync requested:', count, 'items');
-  }, 500);
 
   // ==================== 全域設定中樞 (Global Hub) 邏輯 ====================
   var DEFAULT_LOYALTY_BRANDS = [

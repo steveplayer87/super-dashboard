@@ -1423,6 +1423,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         let urlStr = url.absoluteString
         print("Handling deep link: \(urlStr)")
 
+        if urlStr.contains("set-app-icon") {
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let iconName = components?.queryItems?.first(where: { $0.name == "name" })?.value
+            let target = (iconName == "default" || iconName == "AppIcon-ObsidianGold" || iconName == nil || iconName == "") ? nil : iconName
+            DispatchQueue.main.async {
+                if UIApplication.shared.supportsAlternateIcons {
+                    UIApplication.shared.setAlternateIconName(target) { err in
+                        if let err = err {
+                            print("[AppIcon] Error setting alternate icon: \(err.localizedDescription)")
+                        } else {
+                            print("[AppIcon] Successfully set alternate icon to: \(String(describing: target))")
+                        }
+                    }
+                } else {
+                    print("[AppIcon] Alternate icons not supported on this device.")
+                }
+            }
+            return
+        }
+
         if urlStr.contains("shared-inbox") {
             drainSharedInbox()
             return
