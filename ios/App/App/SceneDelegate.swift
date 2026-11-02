@@ -777,6 +777,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.drainDashboardNotificationEvents()
+        // WebView 完成載入且資料初始化後，由原生端主動要求同步，避免 JS 啟動時序漏掉。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            webView.evaluateJavaScript("(function(){ if(typeof window.syncKeyboardQuickCopy==='function'){ var n=window.syncKeyboardQuickCopy(); console.log('[QuickCopy] native didFinish sync:', n); return n; } return -1; })()", completionHandler: { result, error in
+                if let error = error { NSLog("[QuickCopy] didFinish sync JS error: %@", error.localizedDescription) }
+                else { NSLog("[QuickCopy] didFinish sync requested: %@", String(describing: result)) }
+            })
+        }
         if let target = NotificationManager.pendingTarget {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 if target == "WALLET_LAST" {
