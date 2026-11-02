@@ -991,9 +991,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                         "text": text,
                         "category": item["category"] as? String ?? "未分類"]
             }
-            if let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard"),
-               let data = try? JSONSerialization.data(withJSONObject: keyboardItems) {
+            if let data = try? JSONSerialization.data(withJSONObject: keyboardItems),
+               let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard") {
                 shared.set(data, forKey: "keyboardQuickCopyItems")
+                shared.synchronize()
+                if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.steveplayer87.superdashboard") {
+                    try? data.write(to: container.appendingPathComponent("keyboardQuick_copy.json"), options: .atomic)
+                }
             }
             return
         }

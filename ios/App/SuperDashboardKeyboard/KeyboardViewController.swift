@@ -27,9 +27,13 @@ final class KeyboardViewController: UIInputViewController {
         status.text = "尚無速貼資料，請先開啟超級儀表板同步"; status.font = .systemFont(ofSize: 12); status.textAlignment = .center; status.textColor = .secondaryLabel
         let top = UIStackView(); top.axis = .horizontal; top.alignment = .center
         let title = UILabel(); title.text = "超級速貼"; title.font = .boldSystemFont(ofSize: 15)
-        let next = UIButton(type: .system); next.setTitle("⌨︎", for: .normal); next.addTarget(self, action: #selector(nextKeyboard), for: .touchUpInside)
-        top.addArrangedSubview(title); top.addArrangedSubview(UIView()); top.addArrangedSubview(next)
-        root.addArrangedSubview(top); root.addArrangedSubview(tabs); root.addArrangedSubview(grid); root.addArrangedSubview(status)
+        top.addArrangedSubview(title); top.addArrangedSubview(UIView())
+        let bottom = UIStackView(); bottom.axis = .horizontal; bottom.alignment = .center
+        let globe = UIButton(type: .system); globe.setTitle("🌐", for: .normal); globe.titleLabel?.font = .systemFont(ofSize: 21)
+        globe.addTarget(self, action: #selector(handleGlobeDown(_:with:)), for: .touchDown)
+        globe.addTarget(self, action: #selector(handleGlobeUp(_:with:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        bottom.addArrangedSubview(globe); bottom.addArrangedSubview(UIView())
+        root.addArrangedSubview(top); root.addArrangedSubview(tabs); root.addArrangedSubview(grid); root.addArrangedSubview(status); root.addArrangedSubview(bottom)
         view.addSubview(root)
         NSLayoutConstraint.activate([root.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),root.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),root.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),root.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -8),view.heightAnchor.constraint(equalToConstant: 260)])
         reloadItems()
@@ -37,7 +41,10 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) { super.viewWillAppear(animated); reloadItems() }
     private func reloadItems() {
-        let data = UserDefaults(suiteName: groupID)?.data(forKey: storeKey)
+        let defaultsData = UserDefaults(suiteName: groupID)?.data(forKey: storeKey)
+        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
+        let fileData = container.flatMap { try? Data(contentsOf: $0.appendingPathComponent("keyboardQuick_copy.json")) }
+        let data = defaultsData ?? fileData
         items = (try? data.map { try JSONDecoder().decode([ClipItem].self, from: $0) }) ?? []
         categories = ["全部"] + Array(Set(items.map{$0.category})).filter{ !$0.isEmpty }.sorted()
         if !categories.contains(selectedCategory) { selectedCategory = "全部" }
@@ -59,5 +66,10 @@ final class KeyboardViewController: UIInputViewController {
         }
         status.text = items.isEmpty ? "尚無速貼資料，請先開啟超級儀表板同步" : "\(visible.count) 筆速貼 · 點擊即可輸入"
     }
-    @objc private func nextKeyboard(){ advanceToNextInputMode() }
+    @objc private func handleGlobeDown(_ sender: UIButton, with event: UIEvent) {
+        handleInputModeList(from: sender, with: event)
+    }
+    @objc private func handleGlobeUp(_ sender: UIButton, with event: UIEvent) {
+        handleInputModeList(from: sender, with: event)
+    }
 }

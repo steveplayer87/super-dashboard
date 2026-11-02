@@ -5414,7 +5414,7 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v9</h2>
+    <h2 id="updateNotesTitle">已更新至 v10</h2>
     <div class="update-notes-list">
       <div class="update-notes-group"><strong>新增</strong><ul><li>新增系統剪貼簿直寫：點擊常用文字即由 iOS 原生剪貼簿接收，不必切換自訂鍵盤</li><li>修正速貼鍵盤清單同步：App 啟動載入資料後會再次同步完整清單至 App Group</li><li>左上「超級儀錶板」標題改為一鍵返回儀表板主頁</li><li>新增通用互動通知 API：模組可設定通知內容、動作按鈕與文字回覆，回覆事件會回送儀表板</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
@@ -7206,7 +7206,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v9';
+  var APP_VERSION = 'v10';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
