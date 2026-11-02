@@ -21,6 +21,7 @@
 		E5C718C8306D49FF00A673DB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5C718C7306D49FF00A673DB /* SwiftUI.framework */; };
 		E5C718D7306D4A0000A673DB /* SuperDashboardWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5C718C3306D49FF00A673DB /* SuperDashboardWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E5C728D7306D4A0000A673DB /* SuperDashboardShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5C728C3306D49FF00A673DB /* SuperDashboardShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0286A838C29F42AAA18E4290 /* SuperDashboardKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 96CFA31430DA4ABCB8D2E63A /* SuperDashboardKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,7 @@
 			remoteGlobalIDString = E5C728C2306D49FF00A673DB;
 			remoteInfo = SuperDashboardShareExtension;
 		};
+		2029481A5B234992BF85DE3D /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = 504EC2FC1FED79650016851F /* Project object */; proxyType = 1; remoteGlobalIDString = F1EE135158F749F9BAF881B7; remoteInfo = SuperDashboardKeyboard; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +51,7 @@
 			files = (
 				E5C718D7306D4A0000A673DB /* SuperDashboardWidgetExtension.appex in Embed Foundation Extensions */,
 				E5C728D7306D4A0000A673DB /* SuperDashboardShareExtension.appex in Embed Foundation Extensions */,
+				0286A838C29F42AAA18E4290 /* SuperDashboardKeyboard.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -72,9 +75,12 @@
 		E5C718C5306D49FF00A673DB /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		E5C718C7306D49FF00A673DB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		E5C728C3306D49FF00A673DB /* SuperDashboardShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SuperDashboardShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		96CFA31430DA4ABCB8D2E63A /* SuperDashboardKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SuperDashboardKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+A5A86B506BB546E29FEC21BB /* SuperDashboardKeyboard exceptions */ = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (Info.plist, Keyboard.entitlements, ); target = F1EE135158F749F9BAF881B7 /* SuperDashboardKeyboard */; };
+
 		E5C718DB306D4A0000A673DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -92,6 +98,8 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (A5A86B506BB546E29FEC21BB /* SuperDashboardKeyboard exceptions */, ); explicitFileTypes = {}; explicitFolders = (); path = SuperDashboardKeyboard; sourceTree = "<group>"; };
+
 		E5C718C9306D49FF00A673DB /* SuperDashboardWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (E5C718DB306D4A0000A673DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SuperDashboardWidget; sourceTree = "<group>"; };
 		E5C728C9306D49FF00A673DB /* SuperDashboardShare */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (E5C728DB306D4A0000A673DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SuperDashboardShare; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -121,6 +129,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DAB8E6810E174774B7AEA346 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -189,6 +198,7 @@
 			dependencies = (
 				E5C728E1306D4A0000A673DB /* PBXTargetDependency */,
 				E5C718D6306D4A0000A673DB /* PBXTargetDependency */,
+				BC04246644784842B2B79014 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -242,6 +252,7 @@
 			productReference = E5C728C3306D49FF00A673DB /* SuperDashboardShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		F1EE135158F749F9BAF881B7 /* SuperDashboardKeyboard */ = {isa = PBXNativeTarget; buildConfigurationList = 67C6CA7935BF485DAEC6F391 /* Build configuration list for PBXNativeTarget "SuperDashboardKeyboard" */; buildPhases = (5A9402E3B24F41A590EFCA7C /* Sources */, DAB8E6810E174774B7AEA346 /* Frameworks */,); buildRules = (); dependencies = (); fileSystemSynchronizedGroups = (A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */,); name = SuperDashboardKeyboard; productName = SuperDashboardKeyboard; productReference = 96CFA31430DA4ABCB8D2E63A /* SuperDashboardKeyboard.appex */; productType = "com.apple.product-type.app-extension"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -285,6 +296,7 @@
 				504EC3031FED79650016851F /* App */,
 				E5C718C2306D49FF00A673DB /* SuperDashboardWidgetExtension */,
 				E5C728C2306D49FF00A673DB /* SuperDashboardShareExtension */,
+				F1EE135158F749F9BAF881B7 /* SuperDashboardKeyboard */,
 			);
 		};
 /* End PBXProject section */
@@ -344,6 +356,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A9402E3B24F41A590EFCA7C /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -357,6 +370,7 @@
 			target = E5C728C2306D49FF00A673DB /* SuperDashboardShareExtension */;
 			targetProxy = E5C728E0306D4A0000A673DB /* PBXContainerItemProxy */;
 		};
+		BC04246644784842B2B79014 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = F1EE135158F749F9BAF881B7 /* SuperDashboardKeyboard */; targetProxy = 2029481A5B234992BF85DE3D; };
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -503,7 +517,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -527,7 +541,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -563,7 +577,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardWidget;
@@ -606,7 +620,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -646,7 +660,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardShare;
@@ -686,7 +700,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 7;
+				MARKETING_VERSION = 8;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -700,6 +714,9 @@
 		};
 /* End XCBuildConfiguration section */
 
+006FEA066C1F4F70A9E0F33D /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 8; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+51858C49FA184E25B3187F6E /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 8; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+67C6CA7935BF485DAEC6F391 /* Build configuration list for PBXNativeTarget "SuperDashboardKeyboard" */ = {isa = XCConfigurationList; buildConfigurations = (006FEA066C1F4F70A9E0F33D /* Debug */, 51858C49FA184E25B3187F6E /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* Begin XCConfigurationList section */
 		504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */ = {
 			isa = XCConfigurationList;

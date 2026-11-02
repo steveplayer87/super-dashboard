@@ -4455,7 +4455,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v7 · 訂閱版面與預付卡門號</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v8 · 系統速貼鍵盤與互動通知</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5414,9 +5414,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v7</h2>
+    <h2 id="updateNotesTitle">已更新至 v8</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>新增「儀表板速貼」系統鍵盤：從常用速貼同步文字項目，可在其他 App 的輸入欄位直接插入</li><li>新增通用互動通知 API：模組可設定通知內容、動作按鈕與文字回覆，回覆事件會回送儀表板</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
@@ -6049,6 +6049,11 @@ window.safeSetIcon = safeSetIcon;
           { id: 'c3', label: '9879-2456', name: '9879-2456', text: '9879-2456', isLink: false }
         ];
       }
+      // 完整清單同步給系統鍵盤；動態島仍維持原本前六筆。
+      var allKeyboardItems = (curState.copyItems || []).filter(function(it){ return it.type !== 'image' && !(it.text || '').startsWith('data:image'); }).map(function(item){
+        return { id:item.id, name:item.name || item.label || item.text, label:item.name || item.label || item.text, text:item.text || '', category:item.category || '未分類', type:item.type || 'text', isLink:!!item.isLink };
+      });
+      window.callNative('sync-keyboard-quick-copy', { items: allKeyboardItems });
       window.callNative('sync-quick-copy', { items: top6 });
       if(showMsg !== false && typeof showToast === 'function'){
         showToast('常用速貼動態島已開啟！即刻退回桌面查看');
@@ -6122,6 +6127,17 @@ window.safeSetIcon = safeSetIcon;
     } catch(e){
       try { window.location.href = fullUrl; } catch(err){}
     }
+  };
+
+  // 通用通知互動 API：任何模組可定義 workflow、按鈕及文字回覆。
+  window.scheduleDashboardInteraction = function(config){
+    if(!config || !config.workflowId) throw new Error('workflowId is required');
+    window.callNative('schedule-interactive-notification', config);
+  };
+  window.onDashboardNotificationEvents = function(events){
+    (events || []).forEach(function(event){
+      if(typeof window.dispatchEvent === 'function') window.dispatchEvent(new CustomEvent('dashboardnotificationresponse', { detail:event }));
+    });
   };
 
   window.triggerCardActionNotification = function(delay){
@@ -6817,6 +6833,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
 
   var CATS = {
+    copy: [['personal','個人'],['work','工作'],['address','地址'],['account','帳號代碼'],['shopping','購物'],['other','其他']],
     expense: [['subscription','訂閱'],['loan','貸款分期'],['insurance','保險'],['telecom','電信網路'],['utilities','公共規費'],['living','生活固定'],['other','其他']],
     card: [
       ['transit', '交通卡', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="M8 19l-2 3"/><path d="M16 19l2 3"/></svg>'],
@@ -7128,6 +7145,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         cards: curState.cards, cardTx: curState.cardTx,
         globalSettings: curState.globalSettings
       }));
+      // 每次資料儲存時同步完整速貼至 App Group，系統鍵盤不依賴手動啟動動態島。
+      if(window.callNative && Array.isArray(curState.copyItems)){
+        var keyboardItems = curState.copyItems.filter(function(it){ return it.type !== 'image' && !(it.text || '').startsWith('data:image'); }).map(function(it){
+          var text = it.text || '';
+          return {id:it.id || '', label:it.name || it.label || text.slice(0,24), text:text, category:it.category || '未分類', type:it.type || 'text'};
+        });
+        window.callNative('sync-keyboard-quick-copy', {items:keyboardItems});
+      }
     }catch(e){
       console.error('儲存失敗', e);
       try{ showToast('儲存空間已滿，請刪除一些圖片項目'); }catch(e3){}
@@ -7172,7 +7197,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v7';
+  var APP_VERSION = 'v8';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -9792,7 +9817,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(modalField2) modalField2.style.display = (type === 'copy') ? 'none' : 'block';
 
     var modalField3 = document.getElementById('modalField3');
-    if(modalField3) modalField3.style.display = (isExpense || isCard) ? 'block' : 'none';
+    if(modalField3) modalField3.style.display = (type === 'copy' || isExpense || isCard) ? 'block' : 'none';
 
     var expressGroup = document.getElementById('expressTransitGroup');
     if(expressGroup) expressGroup.style.display = (isCard && modalCategory === 'transit') ? 'block' : 'none';
@@ -9800,7 +9825,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var copyLinkGroup = document.getElementById('copyLinkToggleGroup');
     if(copyLinkGroup) copyLinkGroup.style.display = (type === 'copy') ? 'block' : 'none';
 
-    if(isExpense || isCard) buildCategorySeg(type);
+    if(type === 'copy' || isExpense || isCard) buildCategorySeg(type);
 
     if(type === 'copy'){
       modalLabel1.textContent = '內容';
@@ -9904,6 +9929,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
     else if(type === 'copy'){
       modalInput.value = item.text;
+      setCategory(item.category || 'other');
       var linkToggle = document.getElementById('copyIsLinkToggle');
       if(linkToggle){
         linkToggle.classList.toggle('active', !!item.isLink);
@@ -10056,9 +10082,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         if(t){
           t.text = val;
           t.isLink = isLinkVal;
+          t.category = modalCategory || 'other';
         }
       } else {
-        state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal });
+        state.copyItems.push({ id: uid('c'), text: val, isLink: isLinkVal, category: modalCategory || 'other' });
       }
 
     } else if(type === 'shortcut'){

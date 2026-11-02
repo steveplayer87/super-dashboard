@@ -454,6 +454,46 @@ class NotificationManager {
         center.setNotificationCategories([cardCategory, replyCategory])
     }
 
+    // MARK: - 通用互動通知引擎
+    static func scheduleInteractive(_ payload: [String: Any]) {
+        let center = UNUserNotificationCenter.current()
+        let workflowID = payload["workflowId"] as? String ?? UUID().uuidString
+        let title = payload["title"] as? String ?? "超級儀表板"
+        let body = payload["body"] as? String ?? "有一項待處理事項"
+        let categoryID = "DASHBOARD_" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        let rawActions = payload["actions"] as? [[String: Any]] ?? []
+        var actions: [UNNotificationAction] = rawActions.prefix(3).compactMap { item in
+            guard let id = item["id"] as? String, let label = item["title"] as? String else { return nil }
+            return UNNotificationAction(identifier: "DASH_" + id, title: label, options: [.foreground])
+        }
+        if payload["allowsTextReply"] as? Bool == true {
+            actions.append(UNTextInputNotificationAction(identifier: "DASH_TEXT_REPLY", title: "輸入回覆", options: [.foreground], textInputButtonTitle: "傳送", textInputPlaceholder: payload["replyPlaceholder"] as? String ?? "輸入回覆…"))
+        }
+        let category = UNNotificationCategory(identifier: categoryID, actions: actions, intentIdentifiers: [], options: [.customDismissAction])
+        center.getNotificationCategories { existing in
+            center.setNotificationCategories(existing.union([category]))
+            let content = UNMutableNotificationContent()
+            content.title = title; content.body = body; content.sound = .default; content.categoryIdentifier = categoryID
+            var info: [String: Any] = ["workflowId": workflowID, "categoryId": categoryID]
+            if let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) { info["dashboardPayload"] = json }
+            content.userInfo = info
+            let seconds = max(1, (payload["delay"] as? NSNumber)?.doubleValue ?? 1)
+            center.add(UNNotificationRequest(identifier: "dashboard_" + workflowID, content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)))
+        }
+    }
+
+    static func recordInteraction(_ response: UNNotificationResponse) {
+        let info = response.notification.request.content.userInfo
+        guard let workflowID = info["workflowId"] as? String else { return }
+        var event: [String: Any] = ["id": UUID().uuidString, "workflowId": workflowID, "actionId": response.actionIdentifier, "timestamp": ISO8601DateFormatter().string(from: Date()), "status": "pending"]
+        if let text = response as? UNTextInputNotificationResponse { event["text"] = text.userText }
+        if let raw = info["dashboardPayload"] { event["payload"] = raw }
+        let defaults = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard")
+        var queue = defaults?.array(forKey: "dashboardNotificationEvents") as? [[String: Any]] ?? []
+        queue.append(event); defaults?.set(queue, forKey: "dashboardNotificationEvents")
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName("com.steveplayer87.superdashboard.notification-event" as CFString), nil, nil, true)
+    }
+
     // 檢查通知授權狀態並同步給前端診斷
     static func checkAndReportStatus() {
         let center = UNUserNotificationCenter.current()
@@ -736,6 +776,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.drainDashboardNotificationEvents()
         if let target = NotificationManager.pendingTarget {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 if target == "WALLET_LAST" {
@@ -931,6 +972,22 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             return
         }
 
+        if act == "sync-keyboard-quick-copy", let dict = params as? [String: Any], let raw = dict["items"] as? [[String: Any]] {
+            let keyboardItems: [[String: String]] = raw.compactMap { item in
+                guard let text = item["text"] as? String, !text.isEmpty,
+                      (item["type"] as? String != "image"), !text.hasPrefix("data:image") else { return nil }
+                return ["id": item["id"] as? String ?? UUID().uuidString,
+                        "label": item["label"] as? String ?? item["name"] as? String ?? String(text.prefix(24)),
+                        "text": text,
+                        "category": item["category"] as? String ?? "未分類"]
+            }
+            if let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard"),
+               let data = try? JSONSerialization.data(withJSONObject: keyboardItems) {
+                shared.set(data, forKey: "keyboardQuickCopyItems")
+            }
+            return
+        }
+
         if act == "sync-quick-copy" || act == "syncquickcopy" {
             if #available(iOS 16.2, *) {
                 var list: [QuickCopyItemData] = []
@@ -956,6 +1013,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // Suspend removed
             }
+            return
+        }
+
+        if act == "schedule-interactive-notification", let payload = params as? [String: Any] {
+            NotificationManager.scheduleInteractive(payload)
             return
         }
 
@@ -1087,6 +1149,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         drainSharedInbox()
+        drainDashboardNotificationEvents()
+    }
+
+    fileprivate func drainDashboardNotificationEvents() {
+        guard let defaults = UserDefaults(suiteName: SceneDelegate.sharedGroupID),
+              let events = defaults.array(forKey: "dashboardNotificationEvents") as? [[String: Any]], !events.isEmpty,
+              let data = try? JSONSerialization.data(withJSONObject: events) else { return }
+        let encoded = data.base64EncodedString()
+        guard let web = currentMainWebView() else { return }
+        web.evaluateJavaScript("if(typeof window.onDashboardNotificationEvents==='function'){window.onDashboardNotificationEvents(JSON.parse(decodeURIComponent(escape(atob('\(encoded)')))));true}else{false}") { result, error in
+            if error == nil, (result as? Bool) == true { defaults.removeObject(forKey: "dashboardNotificationEvents") }
+        }
     }
 
     // 收件匣有新內容時（捷徑動作 / 分享延伸寫入後）立即取件
@@ -1454,6 +1528,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let actionId = response.actionIdentifier
         print("[Notification] SceneDelegate didReceive action: \(actionId)")
+        if response.notification.request.content.userInfo["workflowId"] != nil {
+            NotificationManager.recordInteraction(response)
+            if actionId == UNNotificationDefaultActionIdentifier { NotificationManager.pendingTarget = "MORE_PAGE" }
+            completionHandler()
+            return
+        }
 
         if actionId == "ACTION_REPLY", let textResponse = response as? UNTextInputNotificationResponse {
             let replyText = textResponse.userText
