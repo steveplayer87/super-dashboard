@@ -950,6 +950,16 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
     private func handleUnifiedAction(action: String, params: Any?) {
         let act = action.lowercased()
+        if act == "copy-to-clipboard" {
+            let dict = params as? [String: Any]
+            let text = dict?["text"] as? String ?? ""
+            guard !text.isEmpty else { return }
+            DispatchQueue.main.async {
+                UIPasteboard.general.string = text
+                self.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('已複製到系統剪貼簿');", completionHandler: nil)
+            }
+            return
+        }
         if act == "auth-faceid" || act == "authfaceid" {
             BiometricManager.authenticate(reason: "驗證身分以使用卡片") { [weak self] success, err in
                 if success {
