@@ -13,6 +13,8 @@ final class KeyboardViewController: UIInputViewController {
     private var items: [ClipItem] = []
     private var categories: [String] = []
     private var selectedCategory = "全部"
+    private var hasSharedData = false
+    private var decodeFailed = false
     private let root = UIStackView()
     private let tabs = UIStackView()
     private let grid = UIStackView()
@@ -28,12 +30,7 @@ final class KeyboardViewController: UIInputViewController {
         let top = UIStackView(); top.axis = .horizontal; top.alignment = .center
         let title = UILabel(); title.text = "超級速貼"; title.font = .boldSystemFont(ofSize: 15)
         top.addArrangedSubview(title); top.addArrangedSubview(UIView())
-        let bottom = UIStackView(); bottom.axis = .horizontal; bottom.alignment = .center
-        let globe = UIButton(type: .system); globe.setTitle("🌐", for: .normal); globe.titleLabel?.font = .systemFont(ofSize: 21)
-        globe.addTarget(self, action: #selector(handleGlobeDown(_:with:)), for: .touchDown)
-        globe.addTarget(self, action: #selector(handleGlobeUp(_:with:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-        bottom.addArrangedSubview(globe); bottom.addArrangedSubview(UIView())
-        root.addArrangedSubview(top); root.addArrangedSubview(tabs); root.addArrangedSubview(grid); root.addArrangedSubview(status); root.addArrangedSubview(bottom)
+        root.addArrangedSubview(top); root.addArrangedSubview(tabs); root.addArrangedSubview(grid); root.addArrangedSubview(status)
         view.addSubview(root)
         NSLayoutConstraint.activate([root.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),root.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),root.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),root.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -8),view.heightAnchor.constraint(equalToConstant: 260)])
         reloadItems()
@@ -45,7 +42,12 @@ final class KeyboardViewController: UIInputViewController {
         let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
         let fileData = container.flatMap { try? Data(contentsOf: $0.appendingPathComponent("keyboardQuick_copy.json")) }
         let data = defaultsData ?? fileData
-        items = (try? data.map { try JSONDecoder().decode([ClipItem].self, from: $0) }) ?? []
+        hasSharedData = data != nil
+        decodeFailed = false
+        if let data = data {
+            do { items = try JSONDecoder().decode([ClipItem].self, from: data) }
+            catch { items = []; decodeFailed = true; status.text = "速貼資料格式錯誤：\(error.localizedDescription)" }
+        } else { items = [] }
         categories = ["全部"] + Array(Set(items.map{$0.category})).filter{ !$0.isEmpty }.sorted()
         if !categories.contains(selectedCategory) { selectedCategory = "全部" }
         render()
@@ -64,12 +66,9 @@ final class KeyboardViewController: UIInputViewController {
             }
             while row.arrangedSubviews.count < 3 { row.addArrangedSubview(UIView()) }; grid.addArrangedSubview(row)
         }
-        status.text = items.isEmpty ? "尚無速貼資料，請先開啟超級儀表板同步" : "\(visible.count) 筆速貼 · 點擊即可輸入"
-    }
-    @objc private func handleGlobeDown(_ sender: UIButton, with event: UIEvent) {
-        handleInputModeList(from: sender, with: event)
-    }
-    @objc private func handleGlobeUp(_ sender: UIButton, with event: UIEvent) {
-        handleInputModeList(from: sender, with: event)
+        if !items.isEmpty { status.text = "已載入 \(items.count) 筆 · 顯示 \(visible.count) 筆" }
+        else if !hasSharedData { status.text = "未讀到共享資料（App Group）" }
+        else if decodeFailed { /* Keep the decoding error visible. */ }
+        else { status.text = "共享資料為空（已讀取）" }
     }
 }
