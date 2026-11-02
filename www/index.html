@@ -4443,7 +4443,7 @@
           <div class="fin-list">
             <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
               <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">AI 原創配樂匯入後在此播放</div></div>
-              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" onclick="window.toggleFarmMusic()"><span class="toggle-knob"></span></button>
+              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" disabled title="AI 配樂尚未匯入"><span class="toggle-knob"></span></button>
             </div>
             <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
               <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">全部介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">總開關</div></div>
@@ -4462,7 +4462,7 @@
               <button class="toggle on active sfx-toggle" data-sfx="delete" aria-pressed="true" onclick="window.toggleFarmSfxType('delete',this)"><span class="toggle-knob"></span></button>
             </div>
           </div>
-          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">音樂需由使用者手動啟動；切到背景會暫停。</div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">AI 原創配樂尚未完成製作；目前先提供可分別控制的介面音效。</div>
         </div>
         <!-- App Icon -->
         <div class="section" style="margin-top:20px;">
@@ -7411,12 +7411,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   // 原創輕農場配樂：Web Audio 合成，無第三方遊戲音樂素材
   (function(){
     var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true, sfxTypes={button:true,switch:true,success:true,delete:true};
-    var notes=[523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,659.25,783.99,987.77,880,783.99,659.25,587.33];
+    
     function audio(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.16;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume();return true;}
     function tone(freq,dur,vol,type,when){if(!audio())return;var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,when);g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),when+.025);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);o.start(when);o.stop(when+dur+.03);}
-    function tick(){if(!musicOn||!audio())return;var t=ctx.currentTime;var n=notes[step%notes.length];tone(n,.42,.075,'sine',t);if(step%4===0){tone(n/2,.72,.035,'triangle',t);tone(notes[(step+2)%notes.length]*1.5,.18,.018,'sine',t+.08);}step++;timer=setTimeout(tick,390);}
+    function tick(){clearTimeout(timer);}
     function paint(id,on){var b=document.getElementById(id);if(b){b.classList.toggle('on',!!on);b.classList.toggle('active',!!on);b.setAttribute('aria-pressed',on?'true':'false');}}
-    window.toggleFarmMusic=function(){musicOn=!musicOn;paint('farmMusicToggle',musicOn);try{localStorage.setItem('sd-farm-music',musicOn?'1':'0');}catch(e){}if(musicOn){if(audio()){master.gain.setTargetAtTime(.16,ctx.currentTime,.12);clearTimeout(timer);tick();}}else{clearTimeout(timer);if(master&&ctx)master.gain.setTargetAtTime(.0001,ctx.currentTime,.08);}};
+    window.toggleFarmMusic=function(){musicOn=!musicOn;paint('farmMusicToggle',musicOn);try{localStorage.setItem('sd-farm-music',musicOn?'1':'0');}catch(e){}if(musicOn){musicOn=false;paint('farmMusicToggle',false);showToast('AI 配樂尚未匯入，暫不播放合成音樂');}else{clearTimeout(timer);}};
     window.toggleFarmSfx=function(){sfxOn=!sfxOn;paint('farmSfxToggle',sfxOn);try{localStorage.setItem('sd-farm-sfx',sfxOn?'1':'0');}catch(e){}};
     window.toggleFarmSfxType=function(k,b){sfxTypes[k]=!sfxTypes[k];b.classList.toggle('on',sfxTypes[k]);b.classList.toggle('active',sfxTypes[k]);b.setAttribute('aria-pressed',sfxTypes[k]?'true':'false');try{localStorage.setItem('sd-sfx-'+k,sfxTypes[k]?'1':'0');}catch(e){}};
     window.playFarmSfx=function(kind){kind=kind||'button';if(!sfxOn||!sfxTypes[kind]||!audio())return;var t=ctx.currentTime;if(kind==='success'){tone(784,.14,.08,'sine',t);tone(1046,.22,.07,'sine',t+.09);}else if(kind==='switch'){tone(660,.07,.045,'triangle',t);}else if(kind==='delete'){tone(330,.11,.06,'triangle',t);tone(220,.14,.045,'sine',t+.06);}else{tone(587,.055,.035,'sine',t);}};
