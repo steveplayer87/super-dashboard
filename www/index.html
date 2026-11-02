@@ -4285,7 +4285,6 @@
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
               </div>
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">穿搭沙盒</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">衣櫥靈感拼貼</div>
             </div>
             <!-- 3. 即將推出: 金鑰掌控中心 -->
             <div class="mini-app-item disabled" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:16px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0.6; position:relative;">
@@ -4294,25 +4293,10 @@
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
               </div>
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">金鑰掌控</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雙重認證中心</div>
             </div>
           </div>
         </div>
 
-        <div class="section" style="margin-top:20px;">
-          <div class="section-title"><span class="section-icon teal">♫</span>農場日常音樂</div>
-          <div class="fin-list">
-            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
-              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">輕柔背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">原創木琴、鈴音與柔和合成器循環</div></div>
-              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" onclick="window.toggleFarmMusic()"><span class="toggle-knob"></span></button>
-            </div>
-            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
-              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">點擊、切換與完成提示音</div></div>
-              <button type="button" class="toggle on active" id="farmSfxToggle" aria-pressed="true" onclick="window.toggleFarmSfx()"><span class="toggle-knob"></span></button>
-            </div>
-          </div>
-          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">首次開啟需點擊音樂開關；切換至背景時會自動暫停。</div>
-        </div>
         <!-- iOS 原生延伸功能中樞與清單 -->
         <div class="section" style="margin-top:24px;">
           <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
@@ -4454,58 +4438,69 @@
           </div>
         </div>
 
-        <!-- App Icon 替換專區 (6款旗艦質感) -->
+        <div class="section" style="margin-top:20px;">
+          <div class="section-title"><span class="section-icon teal">♫</span>農場日常音樂</div>
+          <div class="fin-list">
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">AI 原創配樂匯入後在此播放</div></div>
+              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" onclick="window.toggleFarmMusic()"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">全部介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">總開關</div></div>
+              <button type="button" class="toggle on active" id="farmSfxToggle" aria-pressed="true" onclick="window.toggleFarmSfx()"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">按鈕音效</span>
+              <button class="toggle on active sfx-toggle" data-sfx="button" aria-pressed="true" onclick="window.toggleFarmSfxType('button',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">頁籤切換</span>
+              <button class="toggle on active sfx-toggle" data-sfx="switch" aria-pressed="true" onclick="window.toggleFarmSfxType('switch',this)"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">成功提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="success" aria-pressed="true" onclick="window.toggleFarmSfxType('success',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">刪除提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="delete" aria-pressed="true" onclick="window.toggleFarmSfxType('delete',this)"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">音樂需由使用者手動啟動；切到背景會暫停。</div>
+        </div>
+        <!-- App Icon -->
         <div class="section" style="margin-top:20px;">
           <div class="section-title">
             <span class="section-icon gold" style="display:inline-flex; align-items:center; justify-content:center;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="4"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            </span>可替換 App Icon · 旗艦風格庫
+            </span>App icon
           </div>
-          <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 12px 2px;">
-            點擊任一款式可開啟 1024×1024 高解析原圖，長按即可儲存至 iPhone 相簿；支援 iOS「捷徑」自訂圖標或 Safari「加入主畫面」。
-          </p>
           <div class="app-icon-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('dinosaur-classic')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
+              <img src="assets/icons/icon-original-dinosaur.png" style="width:58px;height:58px;border-radius:13px;margin-bottom:8px;" alt="原版恐龍" />
+              <div style="font-size:12px;font-weight:700;color:var(--teal);">原版恐龍</div>
+            </div>
+
             <!-- 1. 黑曜金 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-obsidian-gold.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="黑曜金" />
               <div style="font-size:12px; font-weight:700; color:#F5D888;">黑曜金</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">流金刻度儀表</div>
             </div>
             <!-- 2. 航太鈦銀 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-aerospace-titanium.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="航太鈦銀" />
               <div style="font-size:12px; font-weight:700; color:#E3EFFB;">航太鈦銀</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雷雕 HUD 準心</div>
-            </div>
-            <!-- 3. 極夜幽靈 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('stealth-black')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
-              <img src="assets/icons/icon-stealth-black.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="極夜幽靈" />
-              <div style="font-size:12px; font-weight:700; color:#EDE6D6;">極夜幽靈</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">啞光深黑凹雕</div>
             </div>
             <!-- 4. 星宇青綠 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-cosmic-teal.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="星宇青綠" />
               <div style="font-size:12px; font-weight:700; color:var(--teal);">星宇青綠</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">薄荷星芒光環</div>
             </div>
             <!-- 5. 復古工業 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-heritage-amber.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="復古工業" />
               <div style="font-size:12px; font-weight:700; color:var(--amber);">復古工業</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">經典機械錶盤</div>
-            </div>
-            <!-- 原版恐龍圖標（重設為預設圖標） -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('original-dinosaur')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
-              <img src="assets/icons/icon-original-dinosaur.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="原版恐龍" />
-              <div style="font-size:12px; font-weight:700; color:var(--teal);">原版恐龍</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">經典預設圖標</div>
             </div>
             <!-- 7. 守護徽章 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-guardian-crest.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="守護徽章" />
               <div style="font-size:12px; font-weight:700; color:#8CE8E3;">守護徽章</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">阿鵝夥伴盾徽</div>
             </div>
           </div>
         </div>
@@ -4548,7 +4543,7 @@
       </div>
 
       <!-- 阿鵝管家 專屬子頁面 -->
-      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:#000000; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
                 <!-- 系統級手勢返回左側感應條 -->
         <div id="gooseLeftEdgeHandle" style="position:fixed; top:0; left:0; width:35px; height:100%; z-index:100; pointer-events:auto;"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
@@ -5499,11 +5494,11 @@
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
 
-    <h2 id="updateNotesTitle">已更新至 v14</h2>
+    <h2 id="updateNotesTitle">已更新至 v15</h2>
 
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>新增原創輕農場循環配樂與介面音效，可在「更多」獨立開關</li><li>原版恐龍 App Icon 回歸圖標庫，可一鍵還原預設圖標</li><li>通知加入 App 圖示紅色數字徽章，開啟 App 後清除</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>Mini App 改為固定底層的右側覆蓋頁，滑動返回時不再縮放或推移「更多」首頁</li><li>鍵盤表情分類列開關改用錢包快速交通卡同款樣式</li><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>App icon 改為直接點選切換，原版恐龍圖標從舊版 Git 歷史還原並置於首位</li><li>音效新增按鈕、頁籤切換、成功、刪除四種獨立開關</li><li>通知徽章改為依序累加，顯示目前通知數量</li><li>新增原創輕農場循環配樂與介面音效，可在「更多」獨立開關</li><li>原版恐龍 App Icon 回歸圖標庫，可一鍵還原預設圖標</li><li>通知加入 App 圖示紅色數字徽章，開啟 App 後清除</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>Mini App 覆蓋整個畫面與原標題列，加入自己的返回列；移除重複手勢監聽，底層 More 不再縮放</li><li>音樂設定移至視覺主題風格下方</li><li>Mini App 改為固定底層的右側覆蓋頁，滑動返回時不再縮放或推移「更多」首頁</li><li>鍵盤表情分類列開關改用錢包快速交通卡同款樣式</li><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
   </div>
@@ -5687,7 +5682,7 @@
       </div>
     </div>
     
-    <button class="dino-action-btn" id="dinoJumpBtn">讓恐龍跳一下！</button>
+    <button class="dino-action-btn" id="dinoJumpBtn">暴龍大跳躍</button>
   </div>
 </div>
 
@@ -6039,7 +6034,7 @@ window.showMoreSubView = function(view) {
     if (!gooseSubView) return;
 
     if (view === 'goose') {
-      if (moreHubView) moreHubView.style.display = 'block';
+      if (moreHubView) { moreHubView.style.display = 'block'; moreHubView.style.transform='none'; moreHubView.style.opacity='1'; }
       document.body.classList.add('goose-view-active');
       gooseSubView.style.backgroundColor = 'var(--panel)';
       gooseSubView.style.opacity = '1';
@@ -6247,6 +6242,7 @@ window.safeSetIcon = safeSetIcon;
 
   // ==================== App Icon 預覽與下載彈窗 ====================
   var APP_ICON_METAS = {
+    'dinosaur-classic': { title: '原版恐龍', desc: '', file: 'assets/icons/icon-original-dinosaur.png' },
     'original-dinosaur': { title: '原版恐龍 · 經典預設', desc: '超級儀表板最初的恐龍圖標；套用後還原預設 App Icon', file: 'assets/icons/icon-original-dinosaur.png' },
     'obsidian-gold': {
       title: '黑曜金 · 尊榮黑卡',
@@ -6280,26 +6276,9 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
-  var currentSelectedIconKey = 'obsidian-gold';
+  var currentSelectedIconKey = 'dinosaur-classic';
 
-  window.openAppIconPreview = function(key){
-    var meta = APP_ICON_METAS[key];
-    if(!meta) return;
-    currentSelectedIconKey = key;
-    var modal = document.getElementById('appIconModal');
-    var img = document.getElementById('appIconModalImg');
-    var title = document.getElementById('appIconModalTitle');
-    var desc = document.getElementById('appIconModalDesc');
-    var btn = document.getElementById('appIconModalDownloadBtn');
-    if(img) img.src = meta.file;
-    if(title) title.textContent = meta.title;
-    if(desc) desc.textContent = meta.desc;
-    if(btn){
-      btn.href = meta.file;
-      btn.download = meta.file.split('/').pop();
-    }
-    if(modal) modal.style.display = 'flex';
-  };
+  window.applyAppIcon = function(key){ currentSelectedIconKey=key; window.applyCurrentAppIconNative(); };
 
   window.applyCurrentAppIconNative = function(){
     var iconMap = {
@@ -6309,12 +6288,13 @@ window.safeSetIcon = safeSetIcon;
       'cosmic-teal': 'AppIcon-CosmicTeal',
       'heritage-amber': 'AppIcon-HeritageAmber',
       'guardian-crest': 'AppIcon-GuardianCrest',
-      'original-dinosaur': 'default'
+      'original-dinosaur': 'default',
+      'dinosaur-classic': 'AppIcon-DinosaurClassic'
     };
     var nativeName = iconMap[currentSelectedIconKey] || 'default';
     if(typeof window.callNative === 'function'){
-      window.callNative('set-app-icon', { name: nativeName });
-      if(typeof showToast === 'function') showToast('已發送原生圖標切換請求');
+      window.location.href = 'superdashboard://set-app-icon?name=' + encodeURIComponent(nativeName);
+      if(typeof showToast === 'function') showToast('正在切換 App icon');
     } else {
       window.location.href = 'superdashboard://set-app-icon?name=' + encodeURIComponent(nativeName);
     }
@@ -7430,7 +7410,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // 原創輕農場配樂：Web Audio 合成，無第三方遊戲音樂素材
   (function(){
-    var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true;
+    var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true, sfxTypes={button:true,switch:true,success:true,delete:true};
     var notes=[523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,659.25,783.99,987.77,880,783.99,659.25,587.33];
     function audio(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.16;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume();return true;}
     function tone(freq,dur,vol,type,when){if(!audio())return;var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,when);g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),when+.025);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);o.start(when);o.stop(when+dur+.03);}
@@ -7438,15 +7418,16 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     function paint(id,on){var b=document.getElementById(id);if(b){b.classList.toggle('on',!!on);b.classList.toggle('active',!!on);b.setAttribute('aria-pressed',on?'true':'false');}}
     window.toggleFarmMusic=function(){musicOn=!musicOn;paint('farmMusicToggle',musicOn);try{localStorage.setItem('sd-farm-music',musicOn?'1':'0');}catch(e){}if(musicOn){if(audio()){master.gain.setTargetAtTime(.16,ctx.currentTime,.12);clearTimeout(timer);tick();}}else{clearTimeout(timer);if(master&&ctx)master.gain.setTargetAtTime(.0001,ctx.currentTime,.08);}};
     window.toggleFarmSfx=function(){sfxOn=!sfxOn;paint('farmSfxToggle',sfxOn);try{localStorage.setItem('sd-farm-sfx',sfxOn?'1':'0');}catch(e){}};
-    window.playFarmSfx=function(kind){if(!sfxOn||!audio())return;var t=ctx.currentTime;if(kind==='success'){tone(784,.14,.08,'sine',t);tone(1046,.22,.07,'sine',t+.09);}else if(kind==='switch'){tone(660,.07,.045,'triangle',t);}else{tone(587,.055,.035,'sine',t);}};
+    window.toggleFarmSfxType=function(k,b){sfxTypes[k]=!sfxTypes[k];b.classList.toggle('on',sfxTypes[k]);b.classList.toggle('active',sfxTypes[k]);b.setAttribute('aria-pressed',sfxTypes[k]?'true':'false');try{localStorage.setItem('sd-sfx-'+k,sfxTypes[k]?'1':'0');}catch(e){}};
+    window.playFarmSfx=function(kind){kind=kind||'button';if(!sfxOn||!sfxTypes[kind]||!audio())return;var t=ctx.currentTime;if(kind==='success'){tone(784,.14,.08,'sine',t);tone(1046,.22,.07,'sine',t+.09);}else if(kind==='switch'){tone(660,.07,.045,'triangle',t);}else if(kind==='delete'){tone(330,.11,.06,'triangle',t);tone(220,.14,.045,'sine',t+.06);}else{tone(587,.055,.035,'sine',t);}};
     document.addEventListener('click',function(e){var el=e.target.closest('button,.mini-app-item,.app-icon-item,.fin-row,.tab-btn,.nav-item');if(!el||el.id==='farmMusicToggle'||el.id==='farmSfxToggle')return;window.playFarmSfx(el.dataset.sound||'tap');},true);
     document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(timer);if(ctx&&master)master.gain.setTargetAtTime(.0001,ctx.currentTime,.08);}else if(musicOn&&audio()){master.gain.setTargetAtTime(.16,ctx.currentTime,.15);tick();}});
-    try{musicOn=localStorage.getItem('sd-farm-music')==='1';sfxOn=localStorage.getItem('sd-farm-sfx')!=='0';}catch(e){}
+    try{musicOn=localStorage.getItem('sd-farm-music')==='1';sfxOn=localStorage.getItem('sd-farm-sfx')!=='0';['button','switch','success','delete'].forEach(function(k){sfxTypes[k]=localStorage.getItem('sd-sfx-'+k)!=='0';});}catch(e){}
     document.addEventListener('DOMContentLoaded',function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);});
     setTimeout(function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);},1000);
   })();
 
-  var APP_VERSION = 'v14';
+  var APP_VERSION = 'v15';
 
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
@@ -10485,7 +10466,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       dinoActor.innerHTML = isDuck ? DUCK_ACTOR_SVG : DINO_ACTOR_SVG;
       dinoActor.classList.toggle('duck-walking', isDuck);
     }
-    var jumpBtnText = document.querySelector('#dinoJumpBtn span:last-child');
+    var jumpBtnText = document.getElementById('dinoJumpBtn');
     if(jumpBtnText){
       jumpBtnText.textContent = isDuck ? '拍拍翅膀嘎嘎叫' : '暴龍大跳躍';
     }
@@ -11419,70 +11400,43 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== Mini App 系統級指尖騰空滑動返回手勢 ====================
   function initMiniAppSwipeBack() {
-    var subView = document.getElementById('gooseSubView');
-    var hubView = document.getElementById('moreHubView');
-    if (!subView || !hubView) return;
-
-    var startX = 0, startY = 0, currentX = 0, isDragging = false;
-
-    subView.addEventListener('touchstart', function(e) {
-      if (e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      // 支援自左側邊緣滑動，或在頁面上方捏住往右拖曳
-      if (touch.clientX < 80 || touch.clientY < 180) {
-        startX = touch.clientX;
-        startY = touch.clientY;
-        currentX = startX;
-        isDragging = true;
-        subView.style.transition = 'none';
-
+    var sub = document.getElementById('gooseSubView');
+    if (!sub || sub.dataset.swipeReady) return;
+    sub.dataset.swipeReady = '1';
+    var sx=0, sy=0, dx=0, active=false, horizontal=false;
+    sub.addEventListener('touchstart', function(e){
+      if(e.touches.length!==1 || sub.style.display==='none') return;
+      var t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; active=(sx<36); horizontal=false;
+    }, {passive:true});
+    sub.addEventListener('touchmove', function(e){
+      if(!active || e.touches.length!==1) return;
+      var t=e.touches[0], x=t.clientX-sx, y=t.clientY-sy;
+      if(!horizontal && x>8 && Math.abs(x)>Math.abs(y)*1.25) horizontal=true;
+      if(horizontal && x>0){
+        dx=x;
+        sub.style.transition='none';
+        sub.style.transform='translate3d('+x+'px,0,0)';
       }
-    }, { passive: true });
-
-    subView.addEventListener('touchmove', function(e) {
-      if (!isDragging || e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      var dx = touch.clientX - startX;
-      var dy = touch.clientY - startY;
-
-      // 如果主要是水平向右滑動
-      if (dx > 0 && Math.abs(dx) > Math.abs(dy) * 0.8) {
-        currentX = touch.clientX;
-        var progress = Math.min(1, dx / 280);
-        // 只移動上層 Mini App；底層 More 完全不改動
-        subView.style.transform = 'translate3d(' + Math.max(0, dx) + 'px, 0, 0)';
+    }, {passive:true});
+    function finish(){
+      if(!active)return; active=false;
+      if(horizontal && dx>Math.min(120,window.innerWidth*.28)){
+        sub.style.transition='transform .24s cubic-bezier(.2,.9,.4,1)';
+        sub.style.transform='translate3d(100%,0,0)';
+        var done=function(){
+          sub.style.display='none'; sub.style.transform='translate3d(100%,0,0)';
+          sub.style.transition=''; sub.style.opacity=''; document.body.classList.remove('goose-view-active');
+        };
+        sub.addEventListener('transitionend',done,{once:true});
+        setTimeout(done,300);
+      } else if(horizontal){
+        sub.style.transition='transform .22s ease-out'; sub.style.transform='translate3d(0,0,0)';
+        setTimeout(function(){sub.style.transition='';},240);
       }
-    }, { passive: true });
-
-    subView.addEventListener('touchend', function(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      var dx = currentX - startX;
-
-      if (dx > 90) {
-        // 超過門檻：流暢滑出並回到更多首頁
-        subView.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.24s ease';
-        subView.style.transform = 'translate3d(100vw, 0, 0)';
-        subView.style.opacity = '0';
-        setTimeout(function() {
-          subView.style.display = 'none';
-          document.body.classList.remove('goose-view-active');
-          subView.style.transform = '';
-          subView.style.opacity = '';
-
-        }, 260);
-      } else {
-        // 未過門檻：彈性回彈復原
-        subView.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1)';
-        subView.style.transform = 'translate3d(0, 0, 0)';
-        subView.style.borderRadius = '';
-        subView.style.boxShadow = '';
-        setTimeout(function() {
-          subView.style.transition = '';
-
-        }, 300);
-      }
-    });
+      dx=0; horizontal=false;
+    }
+    sub.addEventListener('touchend',finish,{passive:true});
+    sub.addEventListener('touchcancel',finish,{passive:true});
   }
 
   // 阿鵝寫真集照片上傳動態持久化邏輯
@@ -11885,113 +11839,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function initMorePageAndGooseButler() {
     updateGooseDisplay();
-
-  // 支援 iOS 系統級手勢右滑返回 (Interactive Swipe-Back Gesture)
-  (function initGooseSwipeBack() {
-    var gooseView = document.getElementById('gooseSubView');
-    var moreHub = document.getElementById('moreHubView');
-    if (!gooseView) return;
-
-    var startX = 0, startY = 0, currentDiff = 0, isDragging = false;
-
-    function handleStart(e) {
-      if (e.touches.length !== 1) return;
-      var t = e.touches[0];
-      // 支援左邊緣 80px 內觸發手勢返回
-      if (t.clientX <= 80) {
-        startX = t.clientX;
-        startY = t.clientY;
-        isDragging = false;
-        currentDiff = 0;
-      }
-    }
-
-    function handleMove(e) {
-      if (!startX) return;
-      var t = e.touches[0];
-      var diffX = t.clientX - startX;
-      var diffY = t.clientY - startY;
-
-      if (!isDragging) {
-        if (diffX > 10 && Math.abs(diffX) > Math.abs(diffY)) {
-          isDragging = true;
-          if (moreHub) {
-            moreHub.style.display = 'block';
-            moreHub.style.opacity = '0.7';
-            moreHub.style.transform = 'scale(0.96)';
-          }
-        } else if (Math.abs(diffY) > 10) {
-          startX = 0;
-          return;
-        }
-      }
-
-      if (isDragging && diffX > 0) {
-        currentDiff = diffX;
-        var screenW = window.innerWidth || 375;
-        var progress = Math.min(diffX / screenW, 1);
-        
-        // 阿鵝頁面右移並帶有輕微縮小騰空感 (Pinch / Floating Effect)
-        var scale = 1 - progress * 0.06;
-        gooseView.style.transition = 'none';
-        gooseView.style.transform = 'translateX(' + diffX + 'px) scale(' + scale + ')';
-        gooseView.style.boxShadow = '-12px 0 32px rgba(0,0,0,0.6)';
-
-        // 底層「更多中樞」同步放大回彈 (iOS 系統級平行位移視差)
-        if (moreHub) {
-          moreHub.style.transition = 'none';
-          moreHub.style.transform = 'scale(' + (0.96 + progress * 0.04) + ')';
-          moreHub.style.opacity = (0.7 + progress * 0.3);
-        }
-      }
-    }
-
-    function handleEnd(e) {
-      if (!isDragging) { startX = 0; return; }
-      isDragging = false;
-      var screenW = window.innerWidth || 375;
-      var shouldPop = currentDiff > (screenW * 0.28);
-
-      if (shouldPop) {
-        // 完成滑出動畫
-        gooseView.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-        gooseView.style.transform = 'translateX(100%) scale(0.94)';
-        if (moreHub) {
-          moreHub.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-          moreHub.style.transform = 'scale(1)';
-          moreHub.style.opacity = '1';
-        }
-        setTimeout(function() {
-          window.showMoreSubView('hub');
-        }, 220);
-      } else {
-        // 取消並回彈原位
-        gooseView.style.transition = 'transform 0.2s ease-out';
-        gooseView.style.transform = 'translateX(0) scale(1)';
-        gooseView.style.boxShadow = 'none';
-        if (moreHub) {
-          moreHub.style.transition = 'opacity 0.2s ease-out';
-          moreHub.style.opacity = '0';
-          setTimeout(function() {
-            if (gooseView.style.display !== 'none') moreHub.style.display = 'none';
-          }, 200);
-        }
-      }
-      startX = 0;
-      currentDiff = 0;
-    }
-
-    gooseView.addEventListener('touchstart', handleStart, { passive: true });
-    gooseView.addEventListener('touchmove', handleMove, { passive: true });
-    gooseView.addEventListener('touchend', handleEnd, { passive: true });
-
-    var edge = document.getElementById('gooseLeftEdgeHandle');
-    if (edge) {
-      edge.addEventListener('touchstart', handleStart, { passive: true });
-      edge.addEventListener('touchmove', handleMove, { passive: true });
-      edge.addEventListener('touchend', handleEnd, { passive: true });
-    }
-  })();
 
     var moreHubView = document.getElementById('moreHubView');
     var gooseSubView = document.getElementById('gooseSubView');

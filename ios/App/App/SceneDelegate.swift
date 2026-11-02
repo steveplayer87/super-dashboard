@@ -395,7 +395,7 @@ class NotificationManager {
     static func scheduleFeedbackNotification(replyText: String) {
         let center = UNUserNotificationCenter.current()
         let content = UNMutableNotificationContent()
-        content.badge = 1
+        content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
         content.title = "阿鵝管家"
         content.subtitle = "已接收您的指令"
         content.body = "「收到您的回覆：『\(replyText)』！行程與備忘已為您同步記錄。」"
@@ -474,7 +474,7 @@ class NotificationManager {
         center.getNotificationCategories { existing in
             center.setNotificationCategories(existing.union([category]))
             let content = UNMutableNotificationContent()
-        content.badge = 1
+        content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
             content.title = title; content.body = body; content.sound = .default; content.categoryIdentifier = categoryID
             var info: [String: Any] = ["workflowId": workflowID, "categoryId": categoryID]
             if let data = try? JSONSerialization.data(withJSONObject: payload), let json = String(data: data, encoding: .utf8) { info["dashboardPayload"] = json }
@@ -545,7 +545,7 @@ class NotificationManager {
         center.getNotificationSettings { settings in
             let fireNotification = {
                 let content = UNMutableNotificationContent()
-        content.badge = 1
+        content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
                 content.title = "場景自動感知 · 靠近高鐵桃園站"
                 content.subtitle = "長按此通知可展開快速操作"
                 content.body = "偵測到您在 桃園高鐵捷運閘門，請選擇快速操作："
@@ -604,7 +604,7 @@ class NotificationManager {
         center.getNotificationSettings { settings in
             let fireNotification = {
                 let content = UNMutableNotificationContent()
-        content.badge = 1
+        content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
                 content.title = "阿鵝管家"
                 content.subtitle = "傳送了一張貼圖給您"
                 content.body = "「早安！今天的行程票卡與高鐵憑證已準備好，長按即可直接輸入文字回覆我喔！」"
