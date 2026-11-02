@@ -15,6 +15,8 @@ final class KeyboardViewController: UIInputViewController {
     private var selectedCategory = "全部"
     private var hasSharedData = false
     private var decodeFailed = false
+    private var appGroupContainerAvailable = false
+    private var appGroupDefaultsAvailable = false
     private let root = UIStackView()
     private let tabs = UIStackView()
     private let grid = UIStackView()
@@ -22,7 +24,16 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.secondarySystemBackground
+        view.backgroundColor = .clear
+        view.isOpaque = false
+        view.layer.cornerRadius = 18
+        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        view.layer.masksToBounds = true
+        let glass = UIVisualEffectView(effect: UIBlurEffect(style: .systemChromeMaterial))
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        glass.isUserInteractionEnabled = false
+        view.addSubview(glass)
+        NSLayoutConstraint.activate([glass.leadingAnchor.constraint(equalTo: view.leadingAnchor), glass.trailingAnchor.constraint(equalTo: view.trailingAnchor), glass.topAnchor.constraint(equalTo: view.topAnchor), glass.bottomAnchor.constraint(equalTo: view.bottomAnchor)])
         root.axis = .vertical; root.spacing = 8; root.translatesAutoresizingMaskIntoConstraints = false
         tabs.axis = .horizontal; tabs.spacing = 6
         grid.axis = .vertical; grid.spacing = 6
@@ -32,14 +43,18 @@ final class KeyboardViewController: UIInputViewController {
         top.addArrangedSubview(title); top.addArrangedSubview(UIView())
         root.addArrangedSubview(top); root.addArrangedSubview(tabs); root.addArrangedSubview(grid); root.addArrangedSubview(status)
         view.addSubview(root)
+        view.sendSubviewToBack(glass)
         NSLayoutConstraint.activate([root.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),root.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),root.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),root.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -8),view.heightAnchor.constraint(equalToConstant: 260)])
         reloadItems()
     }
 
     override func viewWillAppear(_ animated: Bool) { super.viewWillAppear(animated); reloadItems() }
     private func reloadItems() {
-        let defaultsData = UserDefaults(suiteName: groupID)?.data(forKey: storeKey)
+        let sharedDefaults = UserDefaults(suiteName: groupID)
+        let defaultsData = sharedDefaults?.data(forKey: storeKey)
         let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
+        appGroupDefaultsAvailable = sharedDefaults != nil
+        appGroupContainerAvailable = container != nil
         let fileData = container.flatMap { try? Data(contentsOf: $0.appendingPathComponent("keyboardQuick_copy.json")) }
         let data = defaultsData ?? fileData
         hasSharedData = data != nil
@@ -67,7 +82,9 @@ final class KeyboardViewController: UIInputViewController {
             while row.arrangedSubviews.count < 3 { row.addArrangedSubview(UIView()) }; grid.addArrangedSubview(row)
         }
         if !items.isEmpty { status.text = "已載入 \(items.count) 筆 · 顯示 \(visible.count) 筆" }
-        else if !hasSharedData { status.text = "未讀到共享資料（App Group）" }
+        else if !hasSharedData {
+            status.text = !appGroupContainerAvailable ? "App Group 容器不可用（請檢查鍵盤完整取用權限）" : (appGroupDefaultsAvailable ? "共享資料尚未寫入（容器可用）" : "App Group 權限不可用")
+        }
         else if decodeFailed { /* Keep the decoding error visible. */ }
         else { status.text = "共享資料為空（已讀取）" }
     }
