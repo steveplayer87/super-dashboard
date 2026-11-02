@@ -1532,6 +1532,12 @@
   }
   @keyframes groundScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   .dino-actor { position: relative; z-index: 2; margin-bottom: 22px; cursor: pointer; }
+
+  .dino-actor.duck-walking { animation: duckWalkAcross 3.8s ease-in-out infinite alternate; }
+  .dino-actor.duck-walking svg { overflow:visible; }
+  .dino-actor.duck-wiggle { animation: duckHello .58s ease-in-out; }
+  @keyframes duckWalkAcross { 0% { transform:translateX(-58px) scaleX(1); } 48% { transform:translateX(42px) scaleX(1); } 52% { transform:translateX(42px) scaleX(-1); } 100% { transform:translateX(-58px) scaleX(-1); } }
+  @keyframes duckHello { 0%,100% { transform:translateY(0) rotate(0); } 35% { transform:translateY(-7px) rotate(-5deg); } 70% { transform:translateY(0) rotate(4deg); } }
   .dino-actor.jumping { animation: dinoJump 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
   @keyframes dinoJump {
     0% { transform: translateY(0); }
@@ -3169,9 +3175,12 @@
 
   /* ==================== 阿鵝管家 (主題全面自動調和適配) ==================== */
   #gooseSubView {
-    background: var(--bg) !important;
+    background: var(--panel) !important;
     color: var(--text) !important;
+    opacity: 1 !important;
+    isolation: isolate;
   }
+  body.goose-view-active > #app .topbar { display: none !important; }
   #gooseSubView .goose-card {
     background: var(--panel) !important;
     border: 1px solid var(--border) !important;
@@ -4294,6 +4303,11 @@
         <div class="section" style="margin-top:24px;">
           <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
           <div class="fin-list">
+            <div class="fin-row" onclick="window.openSuperKeyboardSettings()" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;">⌨️</span>
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600; color:var(--text);">超級鍵盤設定</div><div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">測試輸入、剪貼紀錄、表情符號歷史與使用統計</div></div>
+              <span style="font-size:11px; color:var(--text-muted);">管理</span>
+            </div>
             <div class="fin-row" onclick="window.triggerLiveActivity()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:#a855f7; font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
@@ -5464,7 +5478,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v7</h2>
+
+    <h2 id="updateNotesTitle">已更新至 v13</h2>
+
     <div class="update-notes-list">
       <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
@@ -5565,6 +5581,19 @@
   </div>
   <div class="reader-badge approach-hint" id="approachHint"><span id="iconApproachWifi"></span><span id="approachText">靠近讀卡機</span></div>
   <button class="sense-cancel-btn" id="senseCancelBtn">取消</button>
+</div>
+
+
+<div class="modal-overlay" id="superKeyboardSettingsModal" style="z-index:12000;">
+ <div class="modal" style="width:min(92vw,440px);max-height:86vh;overflow:auto;padding:20px;border-radius:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h3 style="margin:0;font-size:17px;">超級鍵盤設定</h3><button onclick="window.closeSuperKeyboardSettings()" style="border:0;background:none;color:var(--text-muted);font-size:22px;">×</button></div>
+  <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">輸入測試（可貼上文字或圖片）</label>
+  <div id="keyboardTestBox" contenteditable="true" style="min-height:100px;max-height:220px;overflow:auto;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-raised);outline:none;" data-placeholder="在這裡輸入或貼上文字／圖片…"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin:4px 0 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:13px;">顯示表情分類列</div><div style="font-size:11px;color:var(--text-muted);">關閉後隱藏鍵盤底部表情分類圖示</div></div><label class="switch"><input id="keyboardEmojiBarToggle" type="checkbox" checked onchange="window.setKeyboardEmojiBar(this.checked)"><span class="slider round"></span></label></div>
+  <div style="display:flex;gap:8px;margin:10px 0 16px;"><button class="btn" onclick="document.getElementById('keyboardTestImage').click()">選擇圖片</button><input id="keyboardTestImage" type="file" accept="image/*" style="display:none" onchange="window.previewKeyboardTestImage(this)"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><button class="btn" onclick="window.clearSuperKeyboardData('clipboard')" style="color:var(--danger);">清除剪貼紀錄</button><button class="btn" onclick="window.clearSuperKeyboardData('emoji')" style="color:var(--danger);">清除表情符號歷史</button></div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">表情符號使用統計</div><div id="keyboardEmojiStats" style="font-size:12px;color:var(--text-muted);">載入中…</div></div>
+ </div>
 </div>
 
 <!-- ===== 浮動球與恐龍互動 ===== -->
@@ -5953,6 +5982,34 @@ window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], ex
 var state = window.state;
 
 // ==================== 全域安全導航與防崩潰初始化 ====================
+
+window.openSuperKeyboardSettings = function(){
+ var m=document.getElementById('superKeyboardSettingsModal'); if(m)m.classList.add('show');
+ window.refreshSuperKeyboardStats();
+ var t=document.getElementById('keyboardEmojiBarToggle');if(t&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'getSettings'});
+};
+window.setKeyboardEmojiBar = function(enabled){
+ if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'setEmojiBar',enabled:!!enabled});
+ showToast(enabled?'已開啟表情分類列':'已關閉表情分類列');
+};
+window.closeSuperKeyboardSettings = function(){var m=document.getElementById('superKeyboardSettingsModal');if(m)m.classList.remove('show');};
+window.previewKeyboardTestImage = function(input){var f=input.files&&input.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var img=document.createElement('img');img.src=r.result;img.style.cssText='max-width:100%;max-height:160px;display:block;margin-top:8px;border-radius:8px';document.getElementById('keyboardTestBox').appendChild(img);};r.readAsDataURL(f);};
+window.refreshSuperKeyboardStats = function(){
+ try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'stats'});return;} var counts=window.__keyboardEmojiCounts||{}; var entries=Object.entries(counts).sort(function(a,b){return b[1]-a[1]});
+ var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent=entries.length?entries.slice(0,20).map(function(x){return x[0]+' × '+x[1]}).join('　'): '尚無表情符號使用紀錄';
+ }catch(e){var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent='目前無法讀取統計資料';}
+};
+window.clearSuperKeyboardData = function(kind){
+ var suite='group.com.steveplayer87.superdashboard';
+ try{
+  if(window.NativeBridge&&typeof window.NativeBridge.clearKeyboardData==='function'){window.NativeBridge.clearKeyboardData(kind);}
+  else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'clear',kind:kind});}
+  else { alert('目前無法直接操作鍵盤共享資料，請更新應用程式後再試。'); return; }
+  showToast(kind==='clipboard'?'已送出清除剪貼紀錄':'已送出清除表情符號歷史');
+  setTimeout(window.refreshSuperKeyboardStats,300);
+ }catch(e){showToast('清除失敗，請稍後再試');}
+};
+
 window.showMoreSubView = function(view) {
   try {
     var moreHubView = document.getElementById('moreHubView');
@@ -5961,6 +6018,9 @@ window.showMoreSubView = function(view) {
 
     if (view === 'goose') {
       if (moreHubView) moreHubView.style.display = 'block';
+      document.body.classList.add('goose-view-active');
+      gooseSubView.style.backgroundColor = 'var(--panel)';
+      gooseSubView.style.opacity = '1';
       gooseSubView.style.display = 'block';
       gooseSubView.style.transition = 'none';
       gooseSubView.style.transform = 'translate3d(100%, 0, 0)';
@@ -5983,6 +6043,7 @@ window.showMoreSubView = function(view) {
       setTimeout(function(){
         gooseSubView.style.display = 'none';
         gooseSubView.style.transform = 'none';
+        document.body.classList.remove('goose-view-active');
       }, 320);
     }
   } catch(e) { console.error('showMoreSubView error', e); }
@@ -6104,6 +6165,25 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
+
+  // 將完整文字清單同步至 App Group，鍵盤與主 App 共用同一份資料。
+  window.syncKeyboardQuickCopy = function(){
+    var curState = window.state || (typeof state !== 'undefined' ? state : null);
+    if(!curState || !Array.isArray(curState.copyItems) || !window.callNative) return 0;
+    var items = curState.copyItems.filter(function(it){
+      return it && !!(it.text || '');
+    }).map(function(item){
+      var text = item.text || '';
+      return {id:item.id || '', label:item.name || item.label || text.slice(0,24), text:text,
+        category:item.category || '未分類', type:item.type || 'text'};
+    });
+    window.callNative('sync-keyboard-quick-copy', {items:items});
+    window.__keyboardQuickCopySync = {count:items.length, requestedAt:new Date().toISOString()};
+    console.log('[QuickCopy] sync request sent:', items.length);
+    return items.length;
+  };
+
+
   // 同步前六常用項目至動態島 (包含 label, name, text, isLink 並自動退回桌面)
   window.syncQuickCopyLiveActivity = function(showMsg){
     try {
@@ -6127,6 +6207,13 @@ window.safeSetIcon = safeSetIcon;
           { id: 'c3', label: '9879-2456', name: '9879-2456', text: '9879-2456', isLink: false }
         ];
       }
+
+      // 完整清單同步給系統鍵盤；動態島仍維持原本前六筆。
+      var allKeyboardItems = (curState.copyItems || []).filter(function(it){ return !!(it.text || ''); }).map(function(item){
+        return { id:item.id, name:item.name || item.label || item.text, label:item.name || item.label || item.text, text:item.text || '', category:item.category || '未分類', type:item.type || 'text', isLink:!!item.isLink };
+      });
+      window.callNative('sync-keyboard-quick-copy', { items: allKeyboardItems });
+
       window.callNative('sync-quick-copy', { items: top6 });
       if(showMsg !== false && typeof showToast === 'function'){
         showToast('常用速貼動態島已開啟！即刻退回桌面查看');
@@ -7323,7 +7410,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v7';
+
+  var APP_VERSION = 'v13';
+
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -10307,11 +10396,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   var DINO_BALL_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" fill="none"><path d="M12 28 C10 24 14 18 22 18 C26 18 29 20 30 23 C31 27 29 31 23 32 Z" fill="#3FA9A4"/><path d="M22 18 C22 12 25 8 32 8 C37 8 39 11 39 15 C39 17 36 18 33 18 Z" fill="#3FA9A4"/><circle cx="32" cy="12" r="2" fill="#EDE6D6"/><circle cx="33" cy="12" r="1" fill="#1A1815"/><polygon points="15,19 17,15 19,19" fill="#FF9F1C"/><polygon points="21,18 23,14 25,18" fill="#FF9F1C"/><path d="M16 32 L15 37 L18 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/><path d="M24 32 L25 37 L28 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
-  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="50" cy="86" rx="26" ry="6" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><path d="M 32 54 C 28 62 36 72 48 68 C 50 62 42 54 32 54 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.8"/><circle cx="50" cy="34" r="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><ellipse cx="36" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><ellipse cx="64" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><circle cx="41" cy="32" r="3.2" fill="#1E293B"/><circle cx="40" cy="31" r="1.1" fill="#FFFFFF"/><circle cx="59" cy="32" r="3.2" fill="#1E293B"/><circle cx="58" cy="31" r="1.1" fill="#FFFFFF"/><path d="M 44 38 Q 50 35 56 38 Q 54 46 50 47 Q 46 46 44 38 Z" fill="#FF9F1C" stroke="#E07A00" stroke-width="1.4"/><path d="M 42 80 L 40 85 M 42 80 L 43 85 M 42 80 L 46 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/><path d="M 58 80 L 56 85 M 58 80 L 59 85 M 58 80 L 62 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/></svg>';
+  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="45" cy="66" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M22 62 Q43 40 65 62 Q48 78 25 73Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M66 54 Q70 25 87 27 Q98 28 98 41 Q97 53 84 55 L74 58Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="88" cy="38" r="3.2" fill="#172033"/><circle cx="89" cy="37" r="1" fill="#fff"/><path d="M97 44 L100 48 L96 51 Q93 48 97 44Z" fill="#F59E0B"/><path d="M28 83 L25 91 M42 85 L41 92" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/></svg>';
 
   var DINO_ACTOR_SVG = '<svg viewBox="0 0 70 60" width="96" height="82" fill="none"><g class="dino-tail"><path d="M18 34 C11 34 4 39 2 45 C8 45 15 41 20 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><polygon points="12,34 9,28 7,35" fill="#FF9F1C"/><polygon points="17,32 15,26 13,33" fill="#FF9F1C"/></g><path d="M16 36 C16 26 24 22 36 22 C42 22 46 25 48 30 C50 36 47 44 38 45 C28 46 16 45 16 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><path d="M22 38 C26 43 34 43 37 40 C35 44 26 45 22 38 Z" fill="#2E7E7A"/><polygon points="22,23 25,17 27,23" fill="#FF9F1C"/><polygon points="30,22 33,16 35,22" fill="#FF9F1C"/><polygon points="38,23 41,17 43,24" fill="#FF9F1C"/><g class="dino-head"><path d="M34 22 C34 13 39 7 51 7 C59 7 63 11 63 17 C63 20 59 22 55 22 L46 22 C42 22 38 23 34 22 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><circle cx="51" cy="13" r="3.6" fill="#EDE6D6"/><circle cx="52.5" cy="13" r="1.8" fill="#14120D"/><circle cx="53" cy="12" r="0.7" fill="#FFF"/><ellipse cx="46" cy="17" rx="2" ry="1.2" fill="#FF9F1C" opacity="0.6"/><path d="M49 22 L61 22 C59 26 53 27 49 27 Z" fill="#241705" stroke="#100E0A" stroke-width="1"/><polygon points="52,22 54,24 56,22" fill="#FFF"/><polygon points="56,22 58,24 60,22" fill="#FFF"/></g><g class="dino-hand"><path d="M38 29 C42 30 45 32 44 34 C43 35 40 33 37 32 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.2"/></g><g class="dino-leg-left"><path d="M24 43 L23 52 L28 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 43 L23 52 L28 52" stroke="#3FA9A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="dino-leg-right"><path d="M34 43 L36 52 L41 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 43 L36 52 L41 52" stroke="#2E7E7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
 
-  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 100 100" width="104" height="104" fill="none"><ellipse cx="50" cy="88" rx="34" ry="7" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="60" rx="30" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><path d="M 28 54 C 22 64 34 74 48 68 C 50 62 42 54 28 54 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/><circle cx="50" cy="32" r="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><ellipse cx="34" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><ellipse cx="66" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><circle cx="40" cy="29" r="3.5" fill="#0F172A"/><circle cx="39" cy="28" r="1.2" fill="#FFFFFF"/><circle cx="60" cy="29" r="3.5" fill="#0F172A"/><circle cx="59" cy="28" r="1.2" fill="#FFFFFF"/><path d="M 43 36 Q 50 33 57 36 Q 55 45 50 46 Q 45 45 43 36 Z" fill="#FF9F1C" stroke="#D97706" stroke-width="1.8"/><path d="M 42 84 L 38 90 M 42 84 L 43 90 M 42 84 L 47 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/><path d="M 58 84 L 54 90 M 58 84 L 59 90 M 58 84 L 63 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 120 90" width="116" height="86" fill="none"><ellipse cx="54" cy="78" rx="43" ry="6" fill="rgba(0,0,0,.18)"/><ellipse cx="49" cy="52" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M27 49 Q44 27 68 49 Q52 67 30 61Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M72 43 Q76 18 95 19 Q109 20 109 34 Q108 45 96 47 L83 48Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="99" cy="30" r="3.4" fill="#172033"/><circle cx="100" cy="29" r="1" fill="#fff"/><path d="M108 36 L120 40 L108 44 Q105 40 108 36Z" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/><path d="M31 69 L28 80 M42 71 L41 81" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/><path d="M17 50 Q8 43 6 48 Q11 57 22 58" fill="#fff" stroke="#CBD5E1" stroke-width="2"/></svg>';
 
   var DINO_QUOTES = [
     '嗷嗚！超級儀錶板運作正常！',
@@ -10359,6 +10448,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var dinoActor = document.getElementById('dinoActor');
     if(dinoActor){
       dinoActor.innerHTML = isDuck ? DUCK_ACTOR_SVG : DINO_ACTOR_SVG;
+      dinoActor.classList.toggle('duck-walking', isDuck);
     }
     var jumpBtnText = document.querySelector('#dinoJumpBtn span:last-child');
     if(jumpBtnText){
@@ -10397,8 +10487,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }, 650);
     }
 
-    if (dinoActor) dinoActor.addEventListener('click', makeDinoJump);
-    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', makeDinoJump);
+    if (dinoActor) dinoActor.addEventListener('click', function(){ if(currentPetRole==='duck'){ dinoActor.classList.remove('duck-wiggle'); void dinoActor.offsetWidth; dinoActor.classList.add('duck-wiggle'); if(dinoBubble)dinoBubble.textContent='嘎！我在這裡散步呢！'; setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650); } else makeDinoJump(); });
+    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', function(){ if(currentPetRole==='duck'){ if(dinoActor){dinoActor.classList.remove('duck-wiggle');void dinoActor.offsetWidth;dinoActor.classList.add('duck-wiggle');setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650);} if(dinoBubble)dinoBubble.textContent='嘎嘎！拍拍翅膀，繼續散步！'; } else makeDinoJump(); });
     if (dinoClose) dinoClose.addEventListener('click', function() {
       if (dinoModal) dinoModal.classList.remove('show');
     });
@@ -10794,6 +10884,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.cardTx = [];
       saveData();
     }
+
+
+  // 初始化完成後再同步一次，確保資料載入後的完整清單進入 iOS App Group。
+  setTimeout(function(){
+    var count = window.syncKeyboardQuickCopy ? window.syncKeyboardQuickCopy() : 0;
+    console.log('[QuickCopy] App Group sync requested:', count, 'items');
+  }, 1200);
+
 
   // ==================== 全域設定中樞 (Global Hub) 邏輯 ====================
   var DEFAULT_LOYALTY_BRANDS = [
@@ -11344,6 +11442,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         subView.style.opacity = '0';
         setTimeout(function() {
           subView.style.display = 'none';
+          document.body.classList.remove('goose-view-active');
           subView.style.transform = '';
           subView.style.opacity = '';
           subView.style.borderRadius = '';

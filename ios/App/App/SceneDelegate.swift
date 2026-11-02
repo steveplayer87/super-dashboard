@@ -827,7 +827,8 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             "syncDynamicShortcuts",
             "saveImageToPhotos",
             "openExternalUrl",
-            "superdashboard"
+            "superdashboard",
+            "keyboardSettings"
         ]
         handlers.forEach { ucc.removeScriptMessageHandler(forName: $0) }
         handlers.forEach { ucc.add(self, name: $0) }
@@ -906,9 +907,54 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "keyboardSettings" {
+            let groupID = "group.com.steveplayer87.superdashboard"
+            let shared = UserDefaults(suiteName: groupID)
+            let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
+            let body = message.body as? [String: Any] ?? [:]
+            let action = body["action"] as? String ?? "stats"
+            if action == "setEmojiBar" {
+                shared?.set(body["enabled"] as? Bool ?? true, forKey: "keyboardEmojiBarEnabled")
+                shared?.synchronize()
+            } else if action == "clear", let kind = body["kind"] as? String {
+                if kind == "clipboard" {
+                    let historyData = shared?.data(forKey: "keyboardClipboardHistory")
+                    if let container, let data = historyData,
+                       let items = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                        for item in items { if let file = item["imageFile"] as? String { try? FileManager.default.removeItem(at: container.appendingPathComponent(file)) } }
+                    }
+                    shared?.removeObject(forKey: "keyboardClipboardHistory")
+                } else if kind == "emoji" {
+                    shared?.removeObject(forKey: "keyboardRecentEmojis")
+                    if let container { try? FileManager.default.removeItem(at: container.appendingPathComponent("keyboardRecentEmojis.json")) }
+                }
+                shared?.synchronize()
+                self.webView?.evaluateJavaScript("if(typeof showToast==='function')showToast('鍵盤資料已清除');", completionHandler: nil)
+            } else {
+                let counts = shared?.dictionary(forKey: "keyboardRecentEmojis") as? [String: Int] ?? [:]
+                let enabled = shared?.object(forKey: "keyboardEmojiBarEnabled") as? Bool ?? true
+                if let data = try? JSONSerialization.data(withJSONObject: counts), let json = String(data: data, encoding: .utf8) {
+                    self.webView?.evaluateJavaScript("window.__keyboardEmojiCounts = \(json); var t=document.getElementById('keyboardEmojiBarToggle'); if(t)t.checked=\(enabled ? "true" : "false"); if(typeof window.refreshSuperKeyboardStats==='function')window.refreshSuperKeyboardStats();", completionHandler: nil)
+                }
+            }
+            return
+        }
+
         if message.name == "superdashboard" {
             if let body = message.body as? [String: Any], let action = body["action"] as? String {
+                if action.lowercased() == "sync-keyboard-quick-copy" {
+                    let groupID = "group.com.steveplayer87.superdashboard"
+                    let shared = UserDefaults(suiteName: groupID)
+                    shared?.set("收到同步訊息，正在解析資料", forKey: "keyboardQuickCopyDiagnostic")
+                    shared?.set(Date().timeIntervalSince1970, forKey: "keyboardQuickCopyDiagnosticAt")
+                    shared?.synchronize()
+                    NSLog("[QuickCopy] message received; params type: %@", String(describing: type(of: body["params"] ?? NSNull())))
+                }
                 handleUnifiedAction(action: action, params: body["params"])
+            } else {
+                let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard")
+                shared?.set("收到訊息但格式不符", forKey: "keyboardQuickCopyDiagnostic")
+                shared?.synchronize()
             }
             return
         }
@@ -991,16 +1037,18 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
         if act == "sync-keyboard-quick-copy", let dict = params as? [String: Any], let raw = dict["items"] as? [[String: Any]] {
             let keyboardItems: [[String: String]] = raw.compactMap { item in
-                guard let text = item["text"] as? String, !text.isEmpty,
-                      (item["type"] as? String != "image"), !text.hasPrefix("data:image") else { return nil }
+                guard let text = item["text"] as? String, !text.isEmpty else { return nil }
                 return ["id": item["id"] as? String ?? UUID().uuidString,
                         "label": item["label"] as? String ?? item["name"] as? String ?? String(text.prefix(24)),
                         "text": text,
-                        "category": item["category"] as? String ?? "未分類"]
+                        "category": item["category"] as? String ?? "未分類",
+                        "type": item["type"] as? String ?? (text.hasPrefix("data:image") ? "image" : "text")]
             }
             let groupID = "group.com.steveplayer87.superdashboard"
             let shared = UserDefaults(suiteName: groupID)
             let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
+            shared?.set("原生端已收到並完成解析：\(keyboardItems.count) 筆", forKey: "keyboardQuickCopyDiagnostic")
+            shared?.set(Date().timeIntervalSince1970, forKey: "keyboardQuickCopyDiagnosticAt")
             if let data = try? JSONSerialization.data(withJSONObject: keyboardItems) {
                 shared?.set(data, forKey: "keyboardQuickCopyItems")
                 shared?.set(keyboardItems.count, forKey: "keyboardQuickCopyCount")
