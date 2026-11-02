@@ -73,6 +73,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         NotificationManager.checkAndReportStatus()
     }
     func applicationDidBecomeActive(_ application: UIApplication) {
+        application.applicationIconBadgeNumber = 0
         NotificationManager.checkAndReportStatus()
     }
     func applicationWillTerminate(_ application: UIApplication) {}
