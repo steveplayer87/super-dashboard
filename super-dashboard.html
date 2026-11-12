@@ -1532,6 +1532,12 @@
   }
   @keyframes groundScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   .dino-actor { position: relative; z-index: 2; margin-bottom: 22px; cursor: pointer; }
+
+  .dino-actor.duck-walking { animation: duckWalkAcross 3.8s ease-in-out infinite alternate; }
+  .dino-actor.duck-walking svg { overflow:visible; }
+  .dino-actor.duck-wiggle { animation: duckHello .58s ease-in-out; }
+  @keyframes duckWalkAcross { 0% { transform:translateX(-58px) scaleX(1); } 48% { transform:translateX(42px) scaleX(1); } 52% { transform:translateX(42px) scaleX(-1); } 100% { transform:translateX(-58px) scaleX(-1); } }
+  @keyframes duckHello { 0%,100% { transform:translateY(0) rotate(0); } 35% { transform:translateY(-7px) rotate(-5deg); } 70% { transform:translateY(0) rotate(4deg); } }
   .dino-actor.jumping { animation: dinoJump 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
   @keyframes dinoJump {
     0% { transform: translateY(0); }
@@ -3086,6 +3092,18 @@
     transform: scale(1) translateZ(0) !important;
   }
 
+  /* 全頁子頁面必須使用不透明底色，避免底下的「更多」穿透 */
+  #settingsSubView, #gooseSubView {
+    background-color: #0E0C09 !important;
+    background-image: none !important;
+    isolation: isolate;
+    z-index: 10000;
+  }
+  body.theme-halloween #settingsSubView,
+  body.theme-halloween #gooseSubView {
+    background-color: #0C0A17 !important;
+  }
+
   /* Mini App 右側流暢滑動離開動畫 */
   #gooseSubView {
     transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.28s ease !important;
@@ -3169,9 +3187,12 @@
 
   /* ==================== 阿鵝管家 (主題全面自動調和適配) ==================== */
   #gooseSubView {
-    background: var(--bg) !important;
+    background: var(--panel) !important;
     color: var(--text) !important;
+    opacity: 1 !important;
+    isolation: isolate;
   }
+  /* Mini App 是覆蓋層，底層 More 標題保持固定可見 */
   #gooseSubView .goose-card {
     background: var(--panel) !important;
     border: 1px solid var(--border) !important;
@@ -3700,6 +3721,751 @@
   .loyalty-add-btn{display:block!important;width:100%!important;margin:8px 0 0!important;padding:10px!important;border:1px dashed var(--border)!important;border-radius:12px!important;background:transparent!important;color:var(--text-muted)!important;}
   .ticket-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   @media(max-width:360px){.loyalty-main-row{gap:5px!important}.loyalty-name{font-size:12px!important}.loyalty-row-actions{gap:4px!important}.loyalty-pts-badge{font-size:10px!important;padding:3px 5px!important}.loyalty-item{grid-template-columns:32px minmax(0,1fr)!important;column-gap:7px!important}.loyalty-app-open{width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important}.ticket-extra-grid{grid-template-columns:1fr;}}
+
+  /* ==================== 第二相片庫 (iOS 原生相片風格) ==================== */
+  #page-photos {
+    color: var(--text);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+    -webkit-font-smoothing: antialiased;
+  }
+  .photos-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .photos-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .photos-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin: 0;
+  }
+  .photos-actions-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .photos-btn {
+    min-height: 36px;
+    height: 36px;
+    padding: 0 14px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+  }
+  .photos-btn:active {
+    transform: scale(0.97);
+    background: var(--panel-raised-2);
+  }
+  .photos-btn.primary {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #241705;
+    font-weight: 700;
+  }
+  .photos-btn.danger {
+    background: rgba(193, 68, 60, 0.15);
+    border-color: var(--danger);
+    color: #FF6B6B;
+  }
+  .photos-path-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 159, 28, 0.08);
+    border: 1px solid rgba(255, 159, 28, 0.25);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 11px;
+    color: var(--amber);
+    font-weight: 500;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .photos-path-badge svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+
+  /* 頂部四分頁導航 (總覽 / 相簿 / 媒體類型 / 最近刪除) */
+  .photos-subtabs {
+    display: flex;
+    background: #171512;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 3px;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .photos-subtab {
+    flex: 1;
+    min-height: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .photos-subtab.active {
+    background: #27221A;
+    color: var(--amber);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255, 159, 28, 0.28);
+  }
+  .photos-subtab-badge {
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 1px 6px;
+    line-height: 1.2;
+  }
+
+  /* 相片網格 (iOS Photos 3 欄方形) */
+  .photos-meta-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    padding: 0 2px;
+  }
+  .photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 2px;
+  }
+  .photo-cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #1A1815;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .photo-cell img, .photo-cell video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+  }
+  .photo-badge-live {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 2px 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .photo-badge-live svg {
+    width: 10px;
+    height: 10px;
+    color: var(--amber);
+  }
+  .photo-badge-video {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.68);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .photo-badge-video svg {
+    width: 9px;
+    height: 9px;
+    fill: currentColor;
+  }
+  .photo-select-circle {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+    transition: all 0.15s ease;
+  }
+  .photo-cell.select-mode .photo-select-circle {
+    display: flex;
+  }
+  .photo-cell.selected .photo-select-circle {
+    background: var(--amber);
+    border-color: var(--amber);
+  }
+  .photo-cell.selected .photo-select-circle svg {
+    display: block;
+    width: 13px;
+    height: 13px;
+    stroke: #241705;
+    stroke-width: 3;
+  }
+  .photo-cell.selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 3px solid var(--amber);
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* 相簿視圖 (iOS Albums 2 欄卡片) */
+  .photos-album-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .album-card {
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  .album-card:active {
+    transform: scale(0.98);
+  }
+  .album-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #17140F;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .album-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .album-cover-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+  }
+  .album-cover-placeholder svg {
+    width: 32px;
+    height: 32px;
+    color: var(--amber);
+  }
+  .album-info {
+    padding: 10px 12px;
+  }
+  .album-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .album-count {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* 媒體類型視圖 (iOS Media Types List) */
+  .photos-mediatype-list {
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .mediatype-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .mediatype-row:last-child {
+    border-bottom: none;
+  }
+  .mediatype-row:active {
+    background: var(--panel-raised-2);
+  }
+  .mediatype-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .mediatype-left svg {
+    width: 20px;
+    height: 20px;
+    color: var(--amber);
+  }
+  .mediatype-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .mediatype-right svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* 最近刪除視圖 */
+  .photos-trash-banner {
+    background: rgba(193, 68, 60, 0.08);
+    border: 1px solid rgba(193, 68, 60, 0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .trash-banner-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #FF8A84;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trash-banner-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .trash-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .photo-trash-badge {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(193, 68, 60, 0.85);
+    backdrop-filter: blur(4px);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  /* 多選懸浮操作列 (浮在底部選單上方) */
+  .photos-select-toolbar {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 58px);
+    left: 12px;
+    right: 12px;
+    background: rgba(26, 24, 21, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+    z-index: 99;
+    transform: translateY(120%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .photos-select-toolbar.show {
+    transform: translateY(0);
+  }
+  .photos-select-summary {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .photos-select-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 長按預覽視窗 (Peek Modal) */
+  .photo-peek-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .photo-peek-modal.show {
+    display: flex;
+  }
+  .photo-peek-card {
+    width: 100%;
+    max-width: 320px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7);
+    animation: peekPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes peekPop {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .peek-media-box {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+  }
+  .peek-media-box img, .peek-media-box video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .peek-info-row {
+    padding: 12px 14px 8px;
+  }
+  .peek-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .peek-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .peek-actions-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border);
+  }
+  .peek-action-btn {
+    min-height: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+  .peek-action-btn:last-child {
+    border-bottom: none;
+  }
+  .peek-action-btn:active {
+    background: var(--panel-raised-2);
+  }
+  .peek-action-btn.danger {
+    color: #FF6B6B;
+  }
+
+  /* 全螢幕相片檢視器 (Lightbox) */
+  .photo-lightbox {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 1001;
+    display: none;
+    flex-direction: column;
+  }
+  .photo-lightbox.show {
+    display: flex;
+  }
+  .lightbox-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .lightbox-title-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+  }
+  .lightbox-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: #EDE6D6;
+  }
+  .lightbox-time {
+    font-size: 10.5px;
+    color: #8A8377;
+  }
+  .lightbox-media-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+  }
+  .lightbox-media-wrapper img, .lightbox-media-wrapper video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  .lightbox-live-indicator {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(0,0,0,0.65);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 5;
+  }
+  .lightbox-live-indicator.playing {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+  .lightbox-bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 12px);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .lightbox-icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #EDE6D6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lightbox-icon-btn:active {
+    transform: scale(0.92);
+    background: rgba(255,255,255,0.18);
+  }
+  .lightbox-icon-btn.danger {
+    color: #FF6B6B;
+    border-color: rgba(255, 107, 107, 0.3);
+  }
+
+  /* 後設資料抽屜 (Metadata Drawer - iOS i 按鈕) */
+  .photo-meta-drawer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #17140F;
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 16px 18px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    z-index: 20;
+    transform: translateY(105%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.7);
+  }
+  .photo-meta-drawer.show {
+    transform: translateY(0);
+  }
+  .meta-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .meta-drawer-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 8px;
+  }
+  .meta-label {
+    color: var(--text-muted);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .meta-val {
+    color: var(--text);
+    font-weight: 600;
+    text-align: right;
+    word-break: break-all;
+  }
+
+  /* 匯入選單彈窗 */
+  .photos-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 999;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+  }
+  .photos-menu-overlay.show {
+    display: flex;
+  }
+  .photos-menu-sheet {
+    width: 100%;
+    max-width: 360px;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 10px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: menuSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes menuSlideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .photos-menu-item {
+    min-height: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .photos-menu-item:active {
+    background: var(--panel-raised-2);
+  }
+  .photos-menu-item svg {
+    width: 20px;
+    height: 20px;
+    color: var(--amber);
+  }
+
 </style>
 </head>
 <body>
@@ -3743,7 +4509,7 @@
     <div class="content-header">
       <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
       <button class="btn wallet-more-btn" id="walletMoreBtn" style="display:none;" title="全域設定中樞"><span style="letter-spacing:1.5px;font-weight:900;">•••</span></button>
-      <button class="btn" id="editBtn">編輯</button>
+      <button class="btn" id="editBtn" aria-label="編輯" title="編輯">編輯</button>
       <div class="edit-actions" id="editActions">
         <button class="btn cancel" id="cancelBtn">取消</button>
         <button class="btn done" id="doneBtn">完成</button>
@@ -3777,6 +4543,226 @@
               <div class="promo-hero-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/></svg></div>
             </div>
             <div class="promo-hero-glow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- ===== 頁面二: 照片庫 (第二相片庫) ===== -->
+    <div class="page" id="page-photos" style="display:none;">
+      <!-- 頂部資訊與操作列 -->
+      <div class="photos-header">
+        <div class="photos-title-row">
+          <h1 class="photos-title">第二相片庫</h1>
+          <div class="photos-actions-top">
+            <button type="button" class="photos-btn" id="photosSelectToggleBtn" onclick="window.PhotoVault.toggleSelectMode()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>選取</span>
+            </button>
+            <button type="button" class="photos-btn primary" id="photosAddMenuBtn" onclick="window.PhotoVault.openAddMenu()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <span>匯入</span>
+            </button>
+            <button type="button" class="photos-btn" id="photosExportAllBtn" onclick="window.PhotoVault.exportBackup()" title="備份匯出至 iPhone 檔案 App">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>備份</span>
+            </button>
+          </div>
+        </div>
+        <div class="photos-path-badge" title="檔案儲存位置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          <span id="photosPathLabel">我的 iPhone / SuperDashboard / 第二相片庫</span>
+        </div>
+      </div>
+
+      <!-- 四大分頁標籤 (總覽 / 相簿 / 媒體類型 / 最近刪除) -->
+      <div class="photos-subtabs">
+        <button type="button" class="photos-subtab active" data-subtab="all" onclick="window.PhotoVault.switchSubtab('all')">總覽</button>
+        <button type="button" class="photos-subtab" data-subtab="albums" onclick="window.PhotoVault.switchSubtab('albums')">相簿</button>
+        <button type="button" class="photos-subtab" data-subtab="mediatypes" onclick="window.PhotoVault.switchSubtab('mediatypes')">媒體類型</button>
+        <button type="button" class="photos-subtab" data-subtab="deleted" onclick="window.PhotoVault.switchSubtab('deleted')">
+          <span>最近刪除</span>
+          <span class="photos-subtab-badge" id="photosTrashCountBadge" style="display:none;">0</span>
+        </button>
+      </div>
+
+      <!-- 視圖一：總覽網格 -->
+      <div id="photosSubViewAll">
+        <div class="photos-meta-summary">
+          <span id="photosItemsSummary">載入中...</span>
+          <span id="photosFilterLabel">全部相片與影片</span>
+        </div>
+        <div class="photos-grid" id="photosGrid"></div>
+      </div>
+
+      <!-- 視圖二：相簿分類 -->
+      <div id="photosSubViewAlbums" style="display:none;">
+        <div class="photos-meta-summary">
+          <span>我的相簿</span>
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.promptNewAlbum()" style="min-height:28px; height:28px; padding:0 10px; font-size:11px;">＋ 新增相簿</button>
+        </div>
+        <div class="photos-album-grid" id="photosAlbumGrid"></div>
+      </div>
+
+      <!-- 視圖三：媒體類型列表 -->
+      <div id="photosSubViewMediaTypes" style="display:none;">
+        <div class="photos-meta-summary">
+          <span>媒體類型分類</span>
+        </div>
+        <div class="photos-mediatype-list" id="photosMediaTypesList"></div>
+      </div>
+
+      <!-- 視圖四：最近刪除 -->
+      <div id="photosSubViewDeleted" style="display:none;">
+        <div class="photos-trash-banner">
+          <div class="trash-banner-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>最近刪除項目 (30 天保留期)</span>
+          </div>
+          <div class="trash-banner-desc">在此資料夾的相片與影片將於 30 天後自動永久清除。在此之前您可以隨時一鍵還原回第二相片庫。</div>
+          <div class="trash-actions-row">
+            <button type="button" class="photos-btn" onclick="window.PhotoVault.restoreAllTrash()" style="min-height:32px; height:32px; font-size:12px;">全部還原</button>
+            <button type="button" class="photos-btn danger" onclick="window.PhotoVault.emptyTrash()" style="min-height:32px; height:32px; font-size:12px;">清空垃圾桶</button>
+          </div>
+        </div>
+        <div class="photos-grid" id="photosTrashGrid"></div>
+      </div>
+
+      <!-- 多選懸浮操作工具列 (底部浮動) -->
+      <div class="photos-select-toolbar" id="photosSelectToolbar">
+        <div class="photos-select-summary" id="photosSelectedSummary">已選取 0 項</div>
+        <div class="photos-select-btns">
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectAll()" id="photosSelectAllBtn" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">全選</button>
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.batchShareSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>分享</span>
+          </button>
+          <button type="button" class="photos-btn danger" onclick="window.PhotoVault.batchTrashSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">刪除</button>
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectMode(false)" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">完成</button>
+        </div>
+      </div>
+
+      <!-- 隱藏原生檔案讀取 input -->
+      <input type="file" id="photosFileInput" multiple accept="image/*,video/*" style="display:none;" onchange="window.PhotoVault.handleFileInput(this.files)">
+      <input type="file" id="photosFolderInput" webkitdirectory directory multiple style="display:none;" onchange="window.PhotoVault.handleFolderInput(this.files)">
+      <input type="file" id="photosCameraInput" accept="image/*,video/*" capture="environment" style="display:none;" onchange="window.PhotoVault.handleFileInput(this.files)">
+    </div>
+
+    <!-- 匯入動作選單彈窗 -->
+    <div class="photos-menu-overlay" id="photosMenuOverlay" onclick="if(event.target===this)window.PhotoVault.closeAddMenu()">
+      <div class="photos-menu-sheet">
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); padding:6px 14px 2px;">新增項目至第二相片庫</div>
+        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFileInput').click(); window.PhotoVault.closeAddMenu();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          <span>匯入相片與影片</span>
+        </button>
+        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFolderInput').click(); window.PhotoVault.closeAddMenu();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          <span>匯入整個檔案夾</span>
+        </button>
+        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosCameraInput').click(); window.PhotoVault.closeAddMenu();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          <span>使用相機拍攝</span>
+        </button>
+        <button type="button" class="photos-btn" onclick="window.PhotoVault.closeAddMenu()" style="width:100%; margin-top:4px; min-height:40px;">取消</button>
+      </div>
+    </div>
+
+    <!-- 長按預覽視窗 (Peek Preview) -->
+    <div class="photo-peek-modal" id="photoPeekModal" onclick="if(event.target===this)window.PhotoVault.closePeek()">
+      <div class="photo-peek-card" id="photoPeekCard">
+        <div class="peek-media-box" id="peekMediaBox"></div>
+        <div class="peek-info-row">
+          <div class="peek-title" id="peekTitle">IMG_XXXX.HEIC</div>
+          <div class="peek-subtitle" id="peekSubtitle">2026/11/13 • 第二相片庫</div>
+        </div>
+        <div class="peek-actions-list">
+          <button type="button" class="peek-action-btn" onclick="window.PhotoVault.peekShare()">
+            <span>分享項目</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <button type="button" class="peek-action-btn" onclick="window.PhotoVault.peekToggleFavorite()">
+            <span id="peekFavoriteLabel">加入收藏</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </button>
+          <button type="button" class="peek-action-btn" onclick="window.PhotoVault.peekMoveAlbum()">
+            <span>移至相簿</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          </button>
+          <button type="button" class="peek-action-btn danger" onclick="window.PhotoVault.peekTrash()">
+            <span>移至垃圾桶</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 全螢幕相片檢視器 (Lightbox) -->
+    <div class="photo-lightbox" id="photoLightbox">
+      <div class="lightbox-topbar">
+        <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.closeLightbox()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="lightbox-title-box">
+          <div class="lightbox-date" id="lightboxDate">2026年11月13日</div>
+          <div class="lightbox-time" id="lightboxTime">09:32</div>
+        </div>
+        <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleMetaDrawer()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </button>
+      </div>
+
+      <div class="lightbox-media-wrapper" id="lightboxMediaWrapper">
+        <!-- 圖片或影片會載入於此 -->
+      </div>
+
+      <div class="lightbox-bottombar">
+        <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.shareCurrentLightbox()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleLightboxFavorite()" id="lightboxFavBtn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </button>
+        <button type="button" class="lightbox-icon-btn danger" onclick="window.PhotoVault.trashCurrentLightbox()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+
+      <!-- 詳細資訊面板 (後設資料 Metadata) -->
+      <div class="photo-meta-drawer" id="photoMetaDrawer">
+        <div class="meta-drawer-head">
+          <span class="meta-drawer-title">詳細資訊 (EXIF / 後設資料)</span>
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleMetaDrawer(false)" style="min-height:28px; height:28px; padding:0 10px; font-size:11px;">完成</button>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-row">
+            <span class="meta-label">檔案名稱</span>
+            <span class="meta-val" id="metaFilename">--</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">儲存目錄</span>
+            <span class="meta-val">我的 iPhone / SuperDashboard / 第二相片庫</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">媒體格式</span>
+            <span class="meta-val" id="metaFormat">--</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">尺寸與解析度</span>
+            <span class="meta-val" id="metaDimensions">--</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">檔案大小</span>
+            <span class="meta-val" id="metaFileSize">--</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">拍攝/新增時間</span>
+            <span class="meta-val" id="metaTimestamp">--</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">所屬相簿</span>
+            <span class="meta-val" id="metaAlbum">--</span>
           </div>
         </div>
       </div>
@@ -4276,7 +5262,6 @@
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
               </div>
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">穿搭沙盒</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">衣櫥靈感拼貼</div>
             </div>
             <!-- 3. 即將推出: 金鑰掌控中心 -->
             <div class="mini-app-item disabled" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:16px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0.6; position:relative;">
@@ -4285,15 +5270,20 @@
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
               </div>
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">金鑰掌控</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雙重認證中心</div>
             </div>
           </div>
+</div>
         </div>
 
         <!-- iOS 原生延伸功能中樞與清單 -->
         <div class="section" style="margin-top:24px;">
           <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
           <div class="fin-list">
+            <div class="fin-row" id="settingsKeyboardRow" onclick="window.openSuperKeyboardSettings()" style="cursor:pointer; display:flex; align-items:center;">
+              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;">⌨️</span>
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600; color:var(--text);">超級鍵盤設定</div><div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">測試輸入、剪貼紀錄、表情符號歷史與使用統計</div></div>
+              <span style="font-size:11px; color:var(--text-muted);">管理</span>
+            </div>
             <div class="fin-row" onclick="window.triggerLiveActivity()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:#a855f7; font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
@@ -4426,52 +5416,69 @@
           </div>
         </div>
 
-        <!-- App Icon 替換專區 (6款旗艦質感) -->
+        <div class="section" style="margin-top:20px;">
+          <div class="section-title"><span class="section-icon teal">♫</span>農場日常音樂</div>
+          <div class="fin-list">
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">AI 原創配樂匯入後在此播放</div></div>
+              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" disabled title="AI 配樂尚未匯入"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">全部介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">總開關</div></div>
+              <button type="button" class="toggle on active" id="farmSfxToggle" aria-pressed="true" onclick="window.toggleFarmSfx()"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">按鈕音效</span>
+              <button class="toggle on active sfx-toggle" data-sfx="button" aria-pressed="true" onclick="window.toggleFarmSfxType('button',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">頁籤切換</span>
+              <button class="toggle on active sfx-toggle" data-sfx="switch" aria-pressed="true" onclick="window.toggleFarmSfxType('switch',this)"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">成功提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="success" aria-pressed="true" onclick="window.toggleFarmSfxType('success',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">刪除提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="delete" aria-pressed="true" onclick="window.toggleFarmSfxType('delete',this)"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">AI 原創配樂尚未完成製作；目前先提供可分別控制的介面音效。</div>
+        </div>
+        <!-- App Icon -->
         <div class="section" style="margin-top:20px;">
           <div class="section-title">
             <span class="section-icon gold" style="display:inline-flex; align-items:center; justify-content:center;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="4"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            </span>可替換 App Icon · 旗艦風格庫
+            </span>App icon
           </div>
-          <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 12px 2px;">
-            點擊任一款式可開啟 1024×1024 高解析原圖，長按即可儲存至 iPhone 相簿；支援 iOS「捷徑」自訂圖標或 Safari「加入主畫面」。
-          </p>
           <div class="app-icon-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('dinosaur-classic')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
+              <img src="assets/icons/icon-original-dinosaur.png" style="width:58px;height:58px;border-radius:13px;margin-bottom:8px;" alt="原版恐龍" />
+              <div style="font-size:12px;font-weight:700;color:var(--teal);">原版恐龍</div>
+            </div>
+
             <!-- 1. 黑曜金 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-obsidian-gold.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="黑曜金" />
               <div style="font-size:12px; font-weight:700; color:#F5D888;">黑曜金</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">流金刻度儀表</div>
             </div>
             <!-- 2. 航太鈦銀 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-aerospace-titanium.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="航太鈦銀" />
               <div style="font-size:12px; font-weight:700; color:#E3EFFB;">航太鈦銀</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雷雕 HUD 準心</div>
-            </div>
-            <!-- 3. 極夜幽靈 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('stealth-black')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
-              <img src="assets/icons/icon-stealth-black.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="極夜幽靈" />
-              <div style="font-size:12px; font-weight:700; color:#EDE6D6;">極夜幽靈</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">啞光深黑凹雕</div>
             </div>
             <!-- 4. 星宇青綠 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-cosmic-teal.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="星宇青綠" />
               <div style="font-size:12px; font-weight:700; color:var(--teal);">星宇青綠</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">薄荷星芒光環</div>
             </div>
             <!-- 5. 復古工業 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.applyAppIcon('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-heritage-amber.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="復古工業" />
               <div style="font-size:12px; font-weight:700; color:var(--amber);">復古工業</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">經典機械錶盤</div>
             </div>
-            <!-- 6. 守護徽章 -->
-            <div class="app-icon-item" onclick="window.openAppIconPreview('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <!-- 7. 守護徽章 -->
+            <div class="app-icon-item" onclick="window.applyAppIcon('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-guardian-crest.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="守護徽章" />
               <div style="font-size:12px; font-weight:700; color:#8CE8E3;">守護徽章</div>
-              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">阿鵝夥伴盾徽</div>
             </div>
           </div>
         </div>
@@ -4513,8 +5520,28 @@
         </div>
       </div>
 
+      <!-- 設定：獨立下層頁面，不與更多首頁或其他功能混排 -->
+      <div id="settingsSubView" style="display:none; position:fixed; inset:0; z-index:10000; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <button class="btn" onclick="window.showMoreSubView('hub')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; font-size:12.5px; cursor:pointer; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted); border-radius:20px;">
+            <span>‹</span>返回更多
+          </button>
+          <span style="font-size:15px; color:var(--text); font-weight:700;">設定</span>
+          <span style="width:72px;"></span>
+        </div>
+
+        <div class="section" style="margin-top:0;">
+          <div class="section-title"><span class="section-icon gold">⌘</span>超級快捷鍵</div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin:0 2px 10px;">指定「超級快捷鍵」要執行的唯一動作；右側勾選代表目前選取。</div>
+          <div class="fin-list" id="settingsShortcutList"></div>
+        </div>
+
+        <div id="settingsKeyboardContainer"></div>
+        <div id="settingsAppearanceContainer"></div>
+      </div>
+
       <!-- 阿鵝管家 專屬子頁面 -->
-      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:#000000; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
                 <!-- 系統級手勢返回左側感應條 -->
         <div id="gooseLeftEdgeHandle" style="position:fixed; top:0; left:0; width:35px; height:100%; z-index:100; pointer-events:auto;"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
@@ -4830,6 +5857,7 @@
 
     <nav class="tabbar">
     <button type="button" class="tab active" data-tab="dashboard" id="tabBtnDashboard" onclick="window.switchPage('dashboard')"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
+    <button type="button" class="tab" data-tab="photos" id="tabBtnPhotos" onclick="window.switchPage('photos')"><span class="icon" id="tabIconPhotos"></span><span class="txt">照片庫</span></button>
     <button type="button" class="tab" data-tab="finance" id="tabBtnFinance" onclick="window.switchPage('finance')"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
     <button type="button" class="tab" data-tab="wallet" id="tabBtnWallet" onclick="window.switchPage('wallet')"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
     <button type="button" class="tab" data-tab="more" id="tabBtnMore" onclick="window.switchPage('more')"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
@@ -5464,10 +6492,12 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v7</h2>
+
+    <h2 id="updateNotesTitle">已更新至 v15</h2>
+
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>App icon 改為直接點選切換，原版恐龍圖標從舊版 Git 歷史還原並置於首位</li><li>音效新增按鈕、頁籤切換、成功、刪除四種獨立開關</li><li>通知徽章改為依序累加，顯示目前通知數量</li><li>新增原創輕農場循環配樂與介面音效，可在「更多」獨立開關</li><li>原版恐龍 App Icon 回歸圖標庫，可一鍵還原預設圖標</li><li>通知加入 App 圖示紅色數字徽章，開啟 App 後清除</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>Mini App 覆蓋整個畫面與原標題列，加入自己的返回列；移除重複手勢監聽，底層 More 不再縮放</li><li>音樂設定移至視覺主題風格下方</li><li>Mini App 改為固定底層的右側覆蓋頁，滑動返回時不再縮放或推移「更多」首頁</li><li>鍵盤表情分類列開關改用錢包快速交通卡同款樣式</li><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
     </div>
   </div>
@@ -5567,6 +6597,19 @@
   <button class="sense-cancel-btn" id="senseCancelBtn">取消</button>
 </div>
 
+
+<div class="modal-overlay" id="superKeyboardSettingsModal" style="z-index:12000;">
+ <div class="modal" style="width:min(92vw,440px);max-height:86vh;overflow:auto;padding:20px;border-radius:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h3 style="margin:0;font-size:17px;">超級鍵盤設定</h3><button onclick="window.closeSuperKeyboardSettings()" style="border:0;background:none;color:var(--text-muted);font-size:22px;">×</button></div>
+  <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">輸入測試（可貼上文字或圖片）</label>
+  <div id="keyboardTestBox" contenteditable="true" style="min-height:140px;max-height:308px;overflow:auto;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-raised);outline:none;" data-placeholder="在這裡輸入或貼上文字／圖片…"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin:4px 0 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:13px;">顯示表情分類列</div><div style="font-size:11px;color:var(--text-muted);">關閉後隱藏鍵盤底部表情分類圖示</div></div><button type="button" class="toggle on active" id="keyboardEmojiBarToggle" aria-pressed="true" onclick="window.setKeyboardEmojiBar(!(this.classList.contains('on')))"><span class="toggle-knob"></span></button></div>
+  <div style="display:flex;gap:8px;margin:10px 0 16px;"><button class="btn" onclick="document.getElementById('keyboardTestImage').click()">貼上圖片</button><input id="keyboardTestImage" type="file" accept="image/*" style="display:none" onchange="window.previewKeyboardTestImage(this)"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><button class="btn" onclick="window.clearSuperKeyboardData('clipboard')" style="color:var(--danger);">清除剪貼紀錄</button><button class="btn" onclick="window.clearSuperKeyboardData('emoji')" style="color:var(--danger);">清除表情符號歷史</button></div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">表情符號使用統計</div><div id="keyboardEmojiStats" style="font-size:12px;color:var(--text-muted);">載入中…</div></div>
+ </div>
+</div>
+
 <!-- ===== 浮動球與恐龍互動 ===== -->
 <div id="floatingDinoBall" title="拖曳或點開恐龍">
   <div class="dino-ball-led"></div>
@@ -5638,7 +6681,7 @@
       </div>
     </div>
     
-    <button class="dino-action-btn" id="dinoJumpBtn">讓恐龍跳一下！</button>
+    <button class="dino-action-btn" id="dinoJumpBtn">暴龍大跳躍</button>
   </div>
 </div>
 
@@ -5953,47 +6996,149 @@ window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], ex
 var state = window.state;
 
 // ==================== 全域安全導航與防崩潰初始化 ====================
+
+window.openSuperKeyboardSettings = function(){
+ var m=document.getElementById('superKeyboardSettingsModal'); if(m)m.classList.add('show');
+ window.refreshSuperKeyboardStats();
+ var t=document.getElementById('keyboardEmojiBarToggle');if(t&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'getSettings'});
+};
+window.setKeyboardEmojiBar = function(enabled){
+ var t=document.getElementById('keyboardEmojiBarToggle');
+ if(t){t.classList.toggle('on',!!enabled);t.classList.toggle('active',!!enabled);t.setAttribute('aria-pressed',!!enabled?'true':'false');}
+ if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'setEmojiBar',enabled:!!enabled});
+ showToast(enabled?'已開啟表情分類列':'已關閉表情分類列');
+};
+window.closeSuperKeyboardSettings = function(){var m=document.getElementById('superKeyboardSettingsModal');if(m)m.classList.remove('show');};
+window.previewKeyboardTestImage = function(input){var f=input.files&&input.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var img=document.createElement('img');img.src=r.result;img.style.cssText='max-width:100%;max-height:160px;display:block;margin-top:8px;border-radius:8px';document.getElementById('keyboardTestBox').appendChild(img);};r.readAsDataURL(f);};
+window.refreshSuperKeyboardStats = function(){
+ try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'stats'});return;} var counts=window.__keyboardEmojiCounts||{}; var entries=Object.entries(counts).sort(function(a,b){return b[1]-a[1]});
+ var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent=entries.length?entries.slice(0,20).map(function(x){return x[0]+' × '+x[1]}).join('　'): '尚無表情符號使用紀錄';
+ }catch(e){var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent='目前無法讀取統計資料';}
+};
+window.clearSuperKeyboardData = function(kind){
+ var suite='group.com.steveplayer87.superdashboard';
+ try{
+  if(window.NativeBridge&&typeof window.NativeBridge.clearKeyboardData==='function'){window.NativeBridge.clearKeyboardData(kind);}
+  else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'clear',kind:kind});}
+  else { alert('目前無法直接操作鍵盤共享資料，請更新應用程式後再試。'); return; }
+  showToast(kind==='clipboard'?'已送出清除剪貼紀錄':'已送出清除表情符號歷史');
+  setTimeout(window.refreshSuperKeyboardStats,300);
+ }catch(e){showToast('清除失敗，請稍後再試');}
+};
+
 window.showMoreSubView = function(view) {
   try {
-    var moreHubView = document.getElementById('moreHubView');
-    var gooseSubView = document.getElementById('gooseSubView');
-    if (!gooseSubView) return;
-
-    if (view === 'goose') {
-      if (moreHubView) moreHubView.style.display = 'block';
-      gooseSubView.style.display = 'block';
-      gooseSubView.style.transition = 'none';
-      gooseSubView.style.transform = 'translate3d(100%, 0, 0)';
-      void gooseSubView.offsetWidth; // 強制重繪
-      gooseSubView.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1)';
-      gooseSubView.style.transform = 'translate3d(0, 0, 0)';
-      setTimeout(function(){
-        if(moreHubView && gooseSubView.style.display === 'block'){
-          moreHubView.style.display = 'none';
-        }
-      }, 340);
-    } else {
-      // 頁面從右側平滑離開 (Slide-out to the right)
-      if (moreHubView) {
-        moreHubView.style.display = 'block';
-        moreHubView.style.opacity = '1';
-      }
-      gooseSubView.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.28s ease';
-      gooseSubView.style.transform = 'translate3d(100%, 0, 0)';
-      setTimeout(function(){
-        gooseSubView.style.display = 'none';
-        gooseSubView.style.transform = 'none';
-      }, 320);
+    var hub = document.getElementById('moreHubView');
+    var goose = document.getElementById('gooseSubView');
+    var settings = document.getElementById('settingsSubView');
+    var target = view === 'goose' ? goose : (view === 'settings' ? settings : null);
+    [goose, settings].forEach(function(el){
+      if (!el || el === target) return;
+      el.style.transition = 'transform 0.26s ease, opacity 0.22s ease';
+      el.style.transform = 'translate3d(100%,0,0)';
+      el.style.opacity = '0';
+      setTimeout(function(){ el.style.display='none'; el.style.transform='none'; el.style.opacity='1'; }, 270);
+    });
+    if (view === 'hub') {
+      if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
+      document.body.classList.remove('goose-view-active');
+      return;
     }
+    if (!target) return;
+    if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
+    document.body.classList.add('goose-view-active');
+    target.style.backgroundColor = getComputedStyle(document.body).backgroundColor || '#0E0C09';
+    target.style.display='block';
+    target.style.transition='none';
+    target.style.opacity='1';
+    target.style.transform='translate3d(100%,0,0)';
+    void target.offsetWidth;
+    target.style.transition='transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1)';
+    target.style.transform='translate3d(0,0,0)';
   } catch(e) { console.error('showMoreSubView error', e); }
 };
+
+// 將既有設定元件集中到獨立「設定」下層；保留原始 DOM ID 與事件。
+window.initMoreSettings = function() {
+  var settings = document.getElementById('settingsSubView');
+  if (!settings || settings.dataset.initialized === '1') return;
+  settings.dataset.initialized = '1';
+  var shortcutRows = [
+    ['openDashboard', '開啟超級儀表板'],
+    ['openWallet', '開啟超級錢包'],
+    ['showTransitCard', '出示悠遊卡乘車'],
+    ['copyTopItem', '複製第一筆常用速貼'],
+    ['addQuickText', '加入常用文字'],
+    ['startMetroLiveActivity', '啟動桃園捷運即時動態島'],
+    ['openWardrobe', '開啟衣櫥']
+  ];
+  var list = document.getElementById('settingsShortcutList');
+  var selected = localStorage.getItem('sd-super-shortcut-selected-option') || 'openDashboard';
+  if (!shortcutRows.some(function(item){ return item[0] === selected; })) selected = 'openDashboard';
+  shortcutRows.forEach(function(item) {
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'fin-row';
+    row.dataset.option = item[0];
+    row.style.cssText = 'width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:14px 14px;background:transparent;border:0;border-bottom:1px solid var(--border);color:var(--text);cursor:pointer;font:inherit;';
+    var name = document.createElement('span');
+    name.textContent = item[1];
+    name.style.cssText = 'flex:1;text-align:left;font-size:13px;font-weight:600;';
+    var check = document.createElement('span');
+    check.className = 'super-shortcut-check';
+    check.textContent = selected === item[0] ? '✓' : '';
+    check.style.cssText = 'width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:17px;font-weight:800;color:var(--gold);';
+    row.appendChild(name); row.appendChild(check);
+    row.addEventListener('click', function() {
+      selected = item[0];
+      localStorage.setItem('sd-super-shortcut-selected-option', selected);
+      list.querySelectorAll('[data-option]').forEach(function(other){
+        var mark = other.querySelector('.super-shortcut-check');
+        if (mark) mark.textContent = other.dataset.option === selected ? '✓' : '';
+      });
+      window.syncSuperShortcutOptions(selected);
+    });
+    list.appendChild(row);
+  });
+  window.syncSuperShortcutOptions(selected);
+  setTimeout(function(){ window.syncSuperShortcutOptions(selected); }, 1000);
+  function moveSection(fromSelector, destination) {
+    var node = document.querySelector(fromSelector);
+    var section = node && node.closest('.section');
+    var host = document.getElementById(destination);
+    if (section && host) host.appendChild(section);
+  }
+  // 桌面寵物、主題、音效、App 圖示全部收進設定。
+  moveSection('#petRoleDino', 'settingsAppearanceContainer');
+  moveSection('#themeOptDefault', 'settingsAppearanceContainer');
+  moveSection('#farmMusicToggle', 'settingsAppearanceContainer');
+  moveSection('.app-icon-grid', 'settingsAppearanceContainer');
+  // 鍵盤設定是設定項目，其餘系統測試工具仍留在「更多」首頁。
+  var keyboardRow = document.getElementById('settingsKeyboardRow');
+  if (keyboardRow) {
+    var section = document.createElement('div');
+    section.className = 'section';
+    section.style.marginTop = '18px';
+    section.innerHTML = '<div class="section-title"><span class="section-icon teal">⌨</span>鍵盤設定</div><div class="fin-list" id="settingsKeyboardList"></div>';
+    document.getElementById('settingsKeyboardContainer').appendChild(section);
+    document.getElementById('settingsKeyboardList').appendChild(keyboardRow);
+  }
+};
+window.syncSuperShortcutOptions = function(enabled) {
+  try {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.syncSuperShortcutOptions) {
+      window.webkit.messageHandlers.syncSuperShortcutOptions.postMessage(enabled);
+    }
+  } catch(e) { console.error('syncSuperShortcutOptions error', e); }
+};
+document.addEventListener('DOMContentLoaded', function(){ window.initMoreSettings(); });
 
 window.switchPage = function(page) {
   try {
     if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
     window.currentPage = page;
     if (typeof currentPage !== 'undefined') currentPage = page;
-    var pages = ['dashboard', 'finance', 'wallet', 'more'];
+    var pages = ['dashboard', 'photos', 'finance', 'wallet', 'more'];
     pages.forEach(function(p) {
       var el = document.getElementById('page-' + p);
       if (el) el.style.display = (p === page) ? '' : 'none';
@@ -6003,6 +7148,9 @@ window.switchPage = function(page) {
     }
     if (page === 'finance' && typeof renderFinance === 'function') {
       renderFinance();
+    }
+    if (page === 'photos' && window.PhotoVault && typeof window.PhotoVault.render === 'function') {
+      window.PhotoVault.render();
     }
     document.querySelectorAll('.tab[data-tab]').forEach(function(t) {
       t.classList.toggle('active', t.dataset.tab === page);
@@ -6036,6 +7184,8 @@ window.safeSetIcon = safeSetIcon;
 
       if(host === 'dashboard'){
         switchPage('dashboard');
+      } else if(host === 'photos'){
+        switchPage('photos');
       } else if(host === 'finance'){
         switchPage('finance');
       } else if(host === 'wallet'){
@@ -6104,6 +7254,25 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
+
+  // 將完整文字清單同步至 App Group，鍵盤與主 App 共用同一份資料。
+  window.syncKeyboardQuickCopy = function(){
+    var curState = window.state || (typeof state !== 'undefined' ? state : null);
+    if(!curState || !Array.isArray(curState.copyItems) || !window.callNative) return 0;
+    var items = curState.copyItems.filter(function(it){
+      return it && !!(it.text || '');
+    }).map(function(item){
+      var text = item.text || '';
+      return {id:item.id || '', label:item.name || item.label || text.slice(0,24), text:text,
+        category:item.category || '未分類', type:item.type || 'text'};
+    });
+    window.callNative('sync-keyboard-quick-copy', {items:items});
+    window.__keyboardQuickCopySync = {count:items.length, requestedAt:new Date().toISOString()};
+    console.log('[QuickCopy] sync request sent:', items.length);
+    return items.length;
+  };
+
+
   // 同步前六常用項目至動態島 (包含 label, name, text, isLink 並自動退回桌面)
   window.syncQuickCopyLiveActivity = function(showMsg){
     try {
@@ -6127,6 +7296,13 @@ window.safeSetIcon = safeSetIcon;
           { id: 'c3', label: '9879-2456', name: '9879-2456', text: '9879-2456', isLink: false }
         ];
       }
+
+      // 完整清單同步給系統鍵盤；動態島仍維持原本前六筆。
+      var allKeyboardItems = (curState.copyItems || []).filter(function(it){ return !!(it.text || ''); }).map(function(item){
+        return { id:item.id, name:item.name || item.label || item.text, label:item.name || item.label || item.text, text:item.text || '', category:item.category || '未分類', type:item.type || 'text', isLink:!!item.isLink };
+      });
+      window.callNative('sync-keyboard-quick-copy', { items: allKeyboardItems });
+
       window.callNative('sync-quick-copy', { items: top6 });
       if(showMsg !== false && typeof showToast === 'function'){
         showToast('常用速貼動態島已開啟！即刻退回桌面查看');
@@ -6145,6 +7321,8 @@ window.safeSetIcon = safeSetIcon;
 
   // ==================== App Icon 預覽與下載彈窗 ====================
   var APP_ICON_METAS = {
+    'dinosaur-classic': { title: '原版恐龍', desc: '', file: 'assets/icons/icon-original-dinosaur.png' },
+    'original-dinosaur': { title: '原版恐龍 · 經典預設', desc: '超級儀表板最初的恐龍圖標；套用後還原預設 App Icon', file: 'assets/icons/icon-original-dinosaur.png' },
     'obsidian-gold': {
       title: '黑曜金 · 尊榮黑卡',
       desc: '深邃拉絲暗金底色，搭配流金刻度儀表與微距同心環',
@@ -6177,26 +7355,9 @@ window.safeSetIcon = safeSetIcon;
     }
   };
 
-  var currentSelectedIconKey = 'obsidian-gold';
+  var currentSelectedIconKey = 'dinosaur-classic';
 
-  window.openAppIconPreview = function(key){
-    var meta = APP_ICON_METAS[key];
-    if(!meta) return;
-    currentSelectedIconKey = key;
-    var modal = document.getElementById('appIconModal');
-    var img = document.getElementById('appIconModalImg');
-    var title = document.getElementById('appIconModalTitle');
-    var desc = document.getElementById('appIconModalDesc');
-    var btn = document.getElementById('appIconModalDownloadBtn');
-    if(img) img.src = meta.file;
-    if(title) title.textContent = meta.title;
-    if(desc) desc.textContent = meta.desc;
-    if(btn){
-      btn.href = meta.file;
-      btn.download = meta.file.split('/').pop();
-    }
-    if(modal) modal.style.display = 'flex';
-  };
+  window.applyAppIcon = function(key){ currentSelectedIconKey=key; window.applyCurrentAppIconNative(); };
 
   window.applyCurrentAppIconNative = function(){
     var iconMap = {
@@ -6205,12 +7366,14 @@ window.safeSetIcon = safeSetIcon;
       'stealth-black': 'AppIcon-StealthBlack',
       'cosmic-teal': 'AppIcon-CosmicTeal',
       'heritage-amber': 'AppIcon-HeritageAmber',
-      'guardian-crest': 'AppIcon-GuardianCrest'
+      'guardian-crest': 'AppIcon-GuardianCrest',
+      'original-dinosaur': 'default',
+      'dinosaur-classic': 'AppIcon-DinosaurClassic'
     };
     var nativeName = iconMap[currentSelectedIconKey] || 'default';
     if(typeof window.callNative === 'function'){
-      window.callNative('set-app-icon', { name: nativeName });
-      if(typeof showToast === 'function') showToast('已發送原生圖標切換請求');
+      window.location.href = 'superdashboard://set-app-icon?name=' + encodeURIComponent(nativeName);
+      if(typeof showToast === 'function') showToast('正在切換 App icon');
     } else {
       window.location.href = 'superdashboard://set-app-icon?name=' + encodeURIComponent(nativeName);
     }
@@ -7051,6 +8214,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   safeSetIcon('iconAccountSection', 'landmark');
   safeSetIcon('iconExpenseSection', 'receipt');
   safeSetIcon('tabIconDashboard', 'house');
+  safeSetIcon('tabIconPhotos', 'image');
   safeSetIcon('tabIconFinance', 'wallet');
   safeSetIcon('tabIconWallet', 'credit-card');
   safeSetIcon('tabIconP1', 'ellipsis');
@@ -7284,6 +8448,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       try{ showToast('儲存空間已滿，請刪除一些圖片項目'); }catch(e3){}
     }
     try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
+    // 每次主程式快捷資料新增、編輯或刪除後，立即更新鍵盤共用 App Group。
+    try{ if(window.syncKeyboardQuickCopy) window.syncKeyboardQuickCopy(); }catch(e){}
   }
 
   function showToast(msg){
@@ -7323,7 +8489,28 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return window.handleSharedPasteboard(data.payload) === true;
   };
 
-  var APP_VERSION = 'v7';
+
+  // 原創輕農場配樂：Web Audio 合成，無第三方遊戲音樂素材
+  (function(){
+    var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true, sfxTypes={button:true,switch:true,success:true,delete:true};
+    
+    function audio(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.16;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume();return true;}
+    function tone(freq,dur,vol,type,when){if(!audio())return;var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,when);g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),when+.025);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);o.start(when);o.stop(when+dur+.03);}
+    function tick(){clearTimeout(timer);}
+    function paint(id,on){var b=document.getElementById(id);if(b){b.classList.toggle('on',!!on);b.classList.toggle('active',!!on);b.setAttribute('aria-pressed',on?'true':'false');}}
+    window.toggleFarmMusic=function(){musicOn=!musicOn;paint('farmMusicToggle',musicOn);try{localStorage.setItem('sd-farm-music',musicOn?'1':'0');}catch(e){}if(musicOn){musicOn=false;paint('farmMusicToggle',false);showToast('AI 配樂尚未匯入，暫不播放合成音樂');}else{clearTimeout(timer);}};
+    window.toggleFarmSfx=function(){sfxOn=!sfxOn;paint('farmSfxToggle',sfxOn);try{localStorage.setItem('sd-farm-sfx',sfxOn?'1':'0');}catch(e){}};
+    window.toggleFarmSfxType=function(k,b){sfxTypes[k]=!sfxTypes[k];b.classList.toggle('on',sfxTypes[k]);b.classList.toggle('active',sfxTypes[k]);b.setAttribute('aria-pressed',sfxTypes[k]?'true':'false');try{localStorage.setItem('sd-sfx-'+k,sfxTypes[k]?'1':'0');}catch(e){}};
+    window.playFarmSfx=function(kind){kind=kind||'button';if(!sfxOn||!sfxTypes[kind]||!audio())return;var t=ctx.currentTime;if(kind==='success'){tone(784,.14,.08,'sine',t);tone(1046,.22,.07,'sine',t+.09);}else if(kind==='switch'){tone(660,.07,.045,'triangle',t);}else if(kind==='delete'){tone(330,.11,.06,'triangle',t);tone(220,.14,.045,'sine',t+.06);}else{tone(587,.055,.035,'sine',t);}};
+    document.addEventListener('click',function(e){var el=e.target.closest('button,.mini-app-item,.app-icon-item,.fin-row,.tab-btn,.nav-item');if(!el||el.id==='farmMusicToggle'||el.id==='farmSfxToggle')return;window.playFarmSfx(el.dataset.sound||'tap');},true);
+    document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(timer);if(ctx&&master)master.gain.setTargetAtTime(.0001,ctx.currentTime,.08);}else if(musicOn&&audio()){master.gain.setTargetAtTime(.16,ctx.currentTime,.15);tick();}});
+    try{musicOn=localStorage.getItem('sd-farm-music')==='1';sfxOn=localStorage.getItem('sd-farm-sfx')!=='0';['button','switch','success','delete'].forEach(function(k){sfxTypes[k]=localStorage.getItem('sd-sfx-'+k)!=='0';});}catch(e){}
+    document.addEventListener('DOMContentLoaded',function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);});
+    setTimeout(function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);},1000);
+  })();
+
+  var APP_VERSION = 'v15';
+
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -9214,12 +10401,26 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(isWallet){
         // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
         editBtn.style.display = (!state.editMode && hasCards) ? 'inline-block' : 'none';
-      } else if(currentPage === 'more'){
-        // 在更多頁面：隱藏編輯按鈕
+      } else if(cur === 'photos'){
+        // 照片庫頁面：隱藏通用編輯按鈕，由照片庫原生工具列掌控
         editBtn.style.display = 'none';
+      } else if(cur === 'more'){
+        // 更多頁面右上角以齒輪作為設定入口。
+        editBtn.style.display = 'inline-flex';
+        editBtn.setAttribute('aria-label', '設定');
+        editBtn.title = '設定';
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1.4 -1.1)"/></svg>';
+        editBtn.style.padding = '7px 9px';
+        editBtn.style.minWidth = '36px';
+        editBtn.style.justifyContent = 'center';
       } else {
         // 在儀表板或財務頁面：正常顯示編輯按鈕
         editBtn.style.display = state.editMode ? 'none' : 'inline-block';
+        editBtn.textContent = '編輯';
+        editBtn.setAttribute('aria-label', '編輯');
+        editBtn.title = '編輯';
+        editBtn.style.padding = '';
+        editBtn.style.minWidth = '';
       }
     }
     if(walletMoreBtn){
@@ -9353,7 +10554,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     renderEverything();
     showToast('已完成編輯並離開');
   }
-  editBtn.addEventListener('click', enterEdit);
+  editBtn.addEventListener('click', function(){
+    if ((window.currentPage || currentPage) === 'more') { window.showMoreSubView('settings'); return; }
+    enterEdit();
+  });
   cancelBtn.addEventListener('click', cancelEdit);
   doneBtn.addEventListener('click', commitEdit);
 
@@ -10307,11 +11511,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   var DINO_BALL_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" fill="none"><path d="M12 28 C10 24 14 18 22 18 C26 18 29 20 30 23 C31 27 29 31 23 32 Z" fill="#3FA9A4"/><path d="M22 18 C22 12 25 8 32 8 C37 8 39 11 39 15 C39 17 36 18 33 18 Z" fill="#3FA9A4"/><circle cx="32" cy="12" r="2" fill="#EDE6D6"/><circle cx="33" cy="12" r="1" fill="#1A1815"/><polygon points="15,19 17,15 19,19" fill="#FF9F1C"/><polygon points="21,18 23,14 25,18" fill="#FF9F1C"/><path d="M16 32 L15 37 L18 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/><path d="M24 32 L25 37 L28 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
-  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="50" cy="86" rx="26" ry="6" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><path d="M 32 54 C 28 62 36 72 48 68 C 50 62 42 54 32 54 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.8"/><circle cx="50" cy="34" r="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><ellipse cx="36" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><ellipse cx="64" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><circle cx="41" cy="32" r="3.2" fill="#1E293B"/><circle cx="40" cy="31" r="1.1" fill="#FFFFFF"/><circle cx="59" cy="32" r="3.2" fill="#1E293B"/><circle cx="58" cy="31" r="1.1" fill="#FFFFFF"/><path d="M 44 38 Q 50 35 56 38 Q 54 46 50 47 Q 46 46 44 38 Z" fill="#FF9F1C" stroke="#E07A00" stroke-width="1.4"/><path d="M 42 80 L 40 85 M 42 80 L 43 85 M 42 80 L 46 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/><path d="M 58 80 L 56 85 M 58 80 L 59 85 M 58 80 L 62 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/></svg>';
+  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="45" cy="66" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M22 62 Q43 40 65 62 Q48 78 25 73Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M66 54 Q70 25 87 27 Q98 28 98 41 Q97 53 84 55 L74 58Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="88" cy="38" r="3.2" fill="#172033"/><circle cx="89" cy="37" r="1" fill="#fff"/><path d="M97 44 L100 48 L96 51 Q93 48 97 44Z" fill="#F59E0B"/><path d="M28 83 L25 91 M42 85 L41 92" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/></svg>';
 
   var DINO_ACTOR_SVG = '<svg viewBox="0 0 70 60" width="96" height="82" fill="none"><g class="dino-tail"><path d="M18 34 C11 34 4 39 2 45 C8 45 15 41 20 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><polygon points="12,34 9,28 7,35" fill="#FF9F1C"/><polygon points="17,32 15,26 13,33" fill="#FF9F1C"/></g><path d="M16 36 C16 26 24 22 36 22 C42 22 46 25 48 30 C50 36 47 44 38 45 C28 46 16 45 16 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><path d="M22 38 C26 43 34 43 37 40 C35 44 26 45 22 38 Z" fill="#2E7E7A"/><polygon points="22,23 25,17 27,23" fill="#FF9F1C"/><polygon points="30,22 33,16 35,22" fill="#FF9F1C"/><polygon points="38,23 41,17 43,24" fill="#FF9F1C"/><g class="dino-head"><path d="M34 22 C34 13 39 7 51 7 C59 7 63 11 63 17 C63 20 59 22 55 22 L46 22 C42 22 38 23 34 22 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><circle cx="51" cy="13" r="3.6" fill="#EDE6D6"/><circle cx="52.5" cy="13" r="1.8" fill="#14120D"/><circle cx="53" cy="12" r="0.7" fill="#FFF"/><ellipse cx="46" cy="17" rx="2" ry="1.2" fill="#FF9F1C" opacity="0.6"/><path d="M49 22 L61 22 C59 26 53 27 49 27 Z" fill="#241705" stroke="#100E0A" stroke-width="1"/><polygon points="52,22 54,24 56,22" fill="#FFF"/><polygon points="56,22 58,24 60,22" fill="#FFF"/></g><g class="dino-hand"><path d="M38 29 C42 30 45 32 44 34 C43 35 40 33 37 32 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.2"/></g><g class="dino-leg-left"><path d="M24 43 L23 52 L28 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 43 L23 52 L28 52" stroke="#3FA9A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="dino-leg-right"><path d="M34 43 L36 52 L41 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 43 L36 52 L41 52" stroke="#2E7E7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
 
-  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 100 100" width="104" height="104" fill="none"><ellipse cx="50" cy="88" rx="34" ry="7" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="60" rx="30" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><path d="M 28 54 C 22 64 34 74 48 68 C 50 62 42 54 28 54 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/><circle cx="50" cy="32" r="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><ellipse cx="34" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><ellipse cx="66" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><circle cx="40" cy="29" r="3.5" fill="#0F172A"/><circle cx="39" cy="28" r="1.2" fill="#FFFFFF"/><circle cx="60" cy="29" r="3.5" fill="#0F172A"/><circle cx="59" cy="28" r="1.2" fill="#FFFFFF"/><path d="M 43 36 Q 50 33 57 36 Q 55 45 50 46 Q 45 45 43 36 Z" fill="#FF9F1C" stroke="#D97706" stroke-width="1.8"/><path d="M 42 84 L 38 90 M 42 84 L 43 90 M 42 84 L 47 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/><path d="M 58 84 L 54 90 M 58 84 L 59 90 M 58 84 L 63 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 120 90" width="116" height="86" fill="none"><ellipse cx="54" cy="78" rx="43" ry="6" fill="rgba(0,0,0,.18)"/><ellipse cx="49" cy="52" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M27 49 Q44 27 68 49 Q52 67 30 61Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M72 43 Q76 18 95 19 Q109 20 109 34 Q108 45 96 47 L83 48Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="99" cy="30" r="3.4" fill="#172033"/><circle cx="100" cy="29" r="1" fill="#fff"/><path d="M108 36 L120 40 L108 44 Q105 40 108 36Z" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/><path d="M31 69 L28 80 M42 71 L41 81" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/><path d="M17 50 Q8 43 6 48 Q11 57 22 58" fill="#fff" stroke="#CBD5E1" stroke-width="2"/></svg>';
 
   var DINO_QUOTES = [
     '嗷嗚！超級儀錶板運作正常！',
@@ -10359,8 +11563,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var dinoActor = document.getElementById('dinoActor');
     if(dinoActor){
       dinoActor.innerHTML = isDuck ? DUCK_ACTOR_SVG : DINO_ACTOR_SVG;
+      dinoActor.classList.toggle('duck-walking', isDuck);
     }
-    var jumpBtnText = document.querySelector('#dinoJumpBtn span:last-child');
+    var jumpBtnText = document.getElementById('dinoJumpBtn');
     if(jumpBtnText){
       jumpBtnText.textContent = isDuck ? '拍拍翅膀嘎嘎叫' : '暴龍大跳躍';
     }
@@ -10397,8 +11602,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }, 650);
     }
 
-    if (dinoActor) dinoActor.addEventListener('click', makeDinoJump);
-    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', makeDinoJump);
+    if (dinoActor) dinoActor.addEventListener('click', function(){ if(currentPetRole==='duck'){ dinoActor.classList.remove('duck-wiggle'); void dinoActor.offsetWidth; dinoActor.classList.add('duck-wiggle'); if(dinoBubble)dinoBubble.textContent='嘎！我在這裡散步呢！'; setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650); } else makeDinoJump(); });
+    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', function(){ if(currentPetRole==='duck'){ if(dinoActor){dinoActor.classList.remove('duck-wiggle');void dinoActor.offsetWidth;dinoActor.classList.add('duck-wiggle');setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650);} if(dinoBubble)dinoBubble.textContent='嘎嘎！拍拍翅膀，繼續散步！'; } else makeDinoJump(); });
     if (dinoClose) dinoClose.addEventListener('click', function() {
       if (dinoModal) dinoModal.classList.remove('show');
     });
@@ -10794,6 +11999,14 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.cardTx = [];
       saveData();
     }
+
+
+  // 初始化完成後再同步一次，確保資料載入後的完整清單進入 iOS App Group。
+  setTimeout(function(){
+    var count = window.syncKeyboardQuickCopy ? window.syncKeyboardQuickCopy() : 0;
+    console.log('[QuickCopy] App Group sync requested:', count, 'items');
+  }, 1200);
+
 
   // ==================== 全域設定中樞 (Global Hub) 邏輯 ====================
   var DEFAULT_LOYALTY_BRANDS = [
@@ -11286,83 +12499,39 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== Mini App 系統級指尖騰空滑動返回手勢 ====================
   function initMiniAppSwipeBack() {
-    var subView = document.getElementById('gooseSubView');
-    var hubView = document.getElementById('moreHubView');
-    if (!subView || !hubView) return;
-
-    var startX = 0, startY = 0, currentX = 0, isDragging = false;
-
-    subView.addEventListener('touchstart', function(e) {
-      if (e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      // 支援自左側邊緣滑動，或在頁面上方捏住往右拖曳
-      if (touch.clientX < 80 || touch.clientY < 180) {
-        startX = touch.clientX;
-        startY = touch.clientY;
-        currentX = startX;
-        isDragging = true;
-        subView.style.transition = 'none';
-        subView.style.transformOrigin = 'left center';
+    ['gooseSubView', 'settingsSubView'].forEach(function(id){
+      var sub = document.getElementById(id);
+      if (!sub || sub.dataset.swipeReady) return;
+      sub.dataset.swipeReady = '1';
+      var sx=0, sy=0, dx=0, active=false, horizontal=false;
+      sub.addEventListener('touchstart', function(e){
+        if(e.touches.length!==1 || sub.style.display==='none') return;
+        var t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; active=(sx<36); horizontal=false;
+      }, {passive:true});
+      sub.addEventListener('touchmove', function(e){
+        if(!active || e.touches.length!==1) return;
+        var t=e.touches[0], x=t.clientX-sx, y=t.clientY-sy;
+        if(!horizontal && x>8 && Math.abs(x)>Math.abs(y)*1.25) horizontal=true;
+        if(horizontal && x>0){ dx=x; sub.style.transition='none'; sub.style.transform='translate3d('+x+'px,0,0)'; }
+      }, {passive:true});
+      function finish(){
+        if(!active)return; active=false;
+        if(horizontal && dx>Math.min(120,window.innerWidth*.28)){
+          sub.style.transition='transform .24s cubic-bezier(.2,.9,.4,1)';
+          sub.style.transform='translate3d(100%,0,0)';
+          var done=function(){
+            sub.style.display='none'; sub.style.transform='translate3d(100%,0,0)';
+            sub.style.transition=''; sub.style.opacity=''; document.body.classList.remove('goose-view-active');
+          };
+          sub.addEventListener('transitionend',done,{once:true}); setTimeout(done,300);
+        } else if(horizontal){
+          sub.style.transition='transform .22s ease-out'; sub.style.transform='translate3d(0,0,0)';
+          setTimeout(function(){sub.style.transition='';},240);
+        }
+        dx=0; horizontal=false;
       }
-    }, { passive: true });
-
-    subView.addEventListener('touchmove', function(e) {
-      if (!isDragging || e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      var dx = touch.clientX - startX;
-      var dy = touch.clientY - startY;
-
-      // 如果主要是水平向右滑動
-      if (dx > 0 && Math.abs(dx) > Math.abs(dy) * 0.8) {
-        currentX = touch.clientX;
-        var progress = Math.min(1, dx / 280);
-        // 系統級別指尖掌握騰空縮小動畫：隨著手指拖曳縮小為 0.88、圓角放大、陰影騰空
-        var scale = 1 - (progress * 0.12);
-        var radius = 16 + (progress * 24);
-        var translateY = dy * 0.25;
-
-        subView.style.transform = 'translate3d(' + (dx * 0.85) + 'px, ' + translateY + 'px, 0) scale(' + scale + ')';
-        subView.style.borderRadius = radius + 'px';
-        subView.style.boxShadow = '0 ' + (12 + progress * 24) + 'px ' + (24 + progress * 36) + 'px rgba(0,0,0,' + (0.4 + progress * 0.35) + ')';
-
-        // 底層 moreHubView 呈現反向縮放進場
-        hubView.style.display = 'block';
-        hubView.style.opacity = '' + (0.5 + progress * 0.5);
-        hubView.style.transform = 'scale(' + (0.94 + progress * 0.06) + ')';
-      }
-    }, { passive: true });
-
-    subView.addEventListener('touchend', function(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      var dx = currentX - startX;
-
-      if (dx > 90) {
-        // 超過門檻：流暢滑出並回到更多首頁
-        subView.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.24s ease';
-        subView.style.transform = 'translate3d(100vw, 0, 0) scale(0.85)';
-        subView.style.opacity = '0';
-        setTimeout(function() {
-          subView.style.display = 'none';
-          subView.style.transform = '';
-          subView.style.opacity = '';
-          subView.style.borderRadius = '';
-          subView.style.boxShadow = '';
-          hubView.style.display = 'block';
-          hubView.style.opacity = '1';
-          hubView.style.transform = 'scale(1)';
-        }, 260);
-      } else {
-        // 未過門檻：彈性回彈復原
-        subView.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-radius 0.28s ease, box-shadow 0.28s ease';
-        subView.style.transform = 'translate3d(0, 0, 0) scale(1)';
-        subView.style.borderRadius = '';
-        subView.style.boxShadow = '';
-        setTimeout(function() {
-          subView.style.transition = '';
-          hubView.style.display = 'none';
-        }, 300);
-      }
+      sub.addEventListener('touchend',finish,{passive:true});
+      sub.addEventListener('touchcancel',finish,{passive:true});
     });
   }
 
@@ -11767,113 +12936,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function initMorePageAndGooseButler() {
     updateGooseDisplay();
 
-  // 支援 iOS 系統級手勢右滑返回 (Interactive Swipe-Back Gesture)
-  (function initGooseSwipeBack() {
-    var gooseView = document.getElementById('gooseSubView');
-    var moreHub = document.getElementById('moreHubView');
-    if (!gooseView) return;
-
-    var startX = 0, startY = 0, currentDiff = 0, isDragging = false;
-
-    function handleStart(e) {
-      if (e.touches.length !== 1) return;
-      var t = e.touches[0];
-      // 支援左邊緣 80px 內觸發手勢返回
-      if (t.clientX <= 80) {
-        startX = t.clientX;
-        startY = t.clientY;
-        isDragging = false;
-        currentDiff = 0;
-      }
-    }
-
-    function handleMove(e) {
-      if (!startX) return;
-      var t = e.touches[0];
-      var diffX = t.clientX - startX;
-      var diffY = t.clientY - startY;
-
-      if (!isDragging) {
-        if (diffX > 10 && Math.abs(diffX) > Math.abs(diffY)) {
-          isDragging = true;
-          if (moreHub) {
-            moreHub.style.display = 'block';
-            moreHub.style.opacity = '0.7';
-            moreHub.style.transform = 'scale(0.96)';
-          }
-        } else if (Math.abs(diffY) > 10) {
-          startX = 0;
-          return;
-        }
-      }
-
-      if (isDragging && diffX > 0) {
-        currentDiff = diffX;
-        var screenW = window.innerWidth || 375;
-        var progress = Math.min(diffX / screenW, 1);
-        
-        // 阿鵝頁面右移並帶有輕微縮小騰空感 (Pinch / Floating Effect)
-        var scale = 1 - progress * 0.06;
-        gooseView.style.transition = 'none';
-        gooseView.style.transform = 'translateX(' + diffX + 'px) scale(' + scale + ')';
-        gooseView.style.boxShadow = '-12px 0 32px rgba(0,0,0,0.6)';
-
-        // 底層「更多中樞」同步放大回彈 (iOS 系統級平行位移視差)
-        if (moreHub) {
-          moreHub.style.transition = 'none';
-          moreHub.style.transform = 'scale(' + (0.96 + progress * 0.04) + ')';
-          moreHub.style.opacity = (0.7 + progress * 0.3);
-        }
-      }
-    }
-
-    function handleEnd(e) {
-      if (!isDragging) { startX = 0; return; }
-      isDragging = false;
-      var screenW = window.innerWidth || 375;
-      var shouldPop = currentDiff > (screenW * 0.28);
-
-      if (shouldPop) {
-        // 完成滑出動畫
-        gooseView.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-        gooseView.style.transform = 'translateX(100%) scale(0.94)';
-        if (moreHub) {
-          moreHub.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-          moreHub.style.transform = 'scale(1)';
-          moreHub.style.opacity = '1';
-        }
-        setTimeout(function() {
-          window.showMoreSubView('hub');
-        }, 220);
-      } else {
-        // 取消並回彈原位
-        gooseView.style.transition = 'transform 0.2s ease-out';
-        gooseView.style.transform = 'translateX(0) scale(1)';
-        gooseView.style.boxShadow = 'none';
-        if (moreHub) {
-          moreHub.style.transition = 'opacity 0.2s ease-out';
-          moreHub.style.opacity = '0';
-          setTimeout(function() {
-            if (gooseView.style.display !== 'none') moreHub.style.display = 'none';
-          }, 200);
-        }
-      }
-      startX = 0;
-      currentDiff = 0;
-    }
-
-    gooseView.addEventListener('touchstart', handleStart, { passive: true });
-    gooseView.addEventListener('touchmove', handleMove, { passive: true });
-    gooseView.addEventListener('touchend', handleEnd, { passive: true });
-
-    var edge = document.getElementById('gooseLeftEdgeHandle');
-    if (edge) {
-      edge.addEventListener('touchstart', handleStart, { passive: true });
-      edge.addEventListener('touchmove', handleMove, { passive: true });
-      edge.addEventListener('touchend', handleEnd, { passive: true });
-    }
-  })();
-
     var moreHubView = document.getElementById('moreHubView');
     var gooseSubView = document.getElementById('gooseSubView');
     var entryGoose = document.getElementById('entryGooseHub');
@@ -12037,6 +13099,1139 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 })();
 
 </script>
+
+<script>
+// ==================== 第二相片庫 (PhotoVault Engine) ====================
+(function() {
+  var DB_NAME = 'SuperPhotoVaultDB';
+  var DB_VERSION = 1;
+  var db = null;
+
+  var state = {
+    subtab: 'all',          // 'all', 'albums', 'mediatypes', 'deleted'
+    albumFilter: null,      // null or album name string
+    mediaTypeFilter: null,  // null or 'live', 'video', 'screenshot', 'favorite'
+    selectMode: false,
+    selectedIds: new Set(),
+    items: [],
+    albums: ['全部相片', '工作紀錄', '專案相片', '單據憑證', '個人收藏'],
+    activePeekItem: null,
+    activeLightboxItem: null,
+    metaDrawerOpen: false,
+    longPressTimer: null,
+    touchMoved: false,
+    liveHoldInterval: null
+  };
+
+  // 向量繪製高解析度樣例海報（免除外部網路圖片遺失風險）
+  function makeSampleCanvas(title, sub, type, color1, color2) {
+    try {
+      var canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 800;
+      var ctx = canvas.getContext('2d');
+      var grad = ctx.createLinearGradient(0, 0, 800, 800);
+      grad.addColorStop(0, color1);
+      grad.addColorStop(1, color2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 800, 800);
+
+      // 裝飾網格與線條
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      for (var i = 40; i < 800; i += 40) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 800); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(800, i); ctx.stroke();
+      }
+
+      // 徽章外框
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.roundRect(80, 160, 640, 480, 24);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 文字
+      ctx.fillStyle = '#FF9F1C';
+      ctx.font = 'bold 34px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(type, 400, 260);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 42px -apple-system, sans-serif';
+      ctx.fillText(title, 400, 360);
+
+      ctx.fillStyle = '#B0A89C';
+      ctx.font = '24px -apple-system, sans-serif';
+      ctx.fillText(sub, 400, 440);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '20px monospace';
+      ctx.fillText('第二相片庫 • 專屬私密隔離空間', 400, 540);
+
+      return canvas.toDataURL('image/jpeg', 0.9);
+    } catch(e) {
+      return '';
+    }
+  }
+
+  // 產生原況相片動畫連續影格（免外掛即可流暢播放 Live Photo）
+  function makeLiveFrames(title, color1, color2) {
+    var frames = [];
+    for (var f = 0; f < 8; f++) {
+      var canvas = document.createElement('canvas');
+      canvas.width = 400; canvas.height = 400;
+      var ctx = canvas.getContext('2d');
+      var grad = ctx.createLinearGradient(0, 0, 400, 400);
+      grad.addColorStop(0, color1);
+      grad.addColorStop(1, color2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 400, 400);
+
+      // 動態脈衝同心圓
+      var r = 60 + f * 12;
+      ctx.strokeStyle = 'rgba(255, 159, 28, ' + (1 - f * 0.1) + ')';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(200, 180, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 24px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, 200, 280);
+      ctx.fillStyle = '#FF9F1C';
+      ctx.font = 'bold 16px -apple-system, sans-serif';
+      ctx.fillText('LIVE MOTION • ' + (f + 1) + '/8', 200, 320);
+
+      frames.push(canvas.toDataURL('image/jpeg', 0.8));
+    }
+    return frames;
+  }
+
+  // 初始化 IndexedDB
+  function openDB() {
+    return new Promise(function(resolve, reject) {
+      if (db) return resolve(db);
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function(e) {
+        var d = e.target.result;
+        if (!d.objectStoreNames.contains('photos')) {
+          var store = d.createObjectStore('photos', { keyPath: 'id' });
+          store.createIndex('album', 'album', { unique: false });
+          store.createIndex('isDeleted', 'isDeleted', { unique: false });
+          store.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+        if (!d.objectStoreNames.contains('albums')) {
+          d.createObjectStore('albums', { keyPath: 'name' });
+        }
+      };
+      req.onsuccess = function(e) {
+        db = e.target.result;
+        resolve(db);
+      };
+      req.onerror = function(e) {
+        console.error('IndexedDB error', e);
+        resolve(null);
+      };
+    });
+  }
+
+  // 確保 iPhone 原生 Capacitor 檔案夾「第二相片庫」存在
+  function ensureNativeFolder() {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem) {
+        var fs = window.Capacitor.Plugins.Filesystem;
+        fs.mkdir({
+          path: '第二相片庫',
+          directory: 'DOCUMENTS',
+          recursive: true
+        }).then(function() {
+          console.log('Native folder Documents/第二相片庫 verified.');
+        }).catch(function(e) {
+          console.log('Native folder info', e);
+        });
+      }
+    } catch(err) {}
+  }
+
+  // 種子預設工作示範相片
+  function seedDefaultPhotos() {
+    var sample1Data = makeSampleCanvas('工地巡檢紀錄_A棟', '工程進度現場確認', '原況相片 LIVE', '#1F1B16', '#3D2F1B');
+    var sample1Frames = makeLiveFrames('工地巡檢紀錄_A棟', '#1F1B16', '#3D2F1B');
+    var sample2Data = makeSampleCanvas('伺服器機房測試錄影', '主幹路由器散熱測試', '高畫質影片 00:15', '#131B24', '#1E3547');
+    var sample3Data = makeSampleCanvas('電氣施工配線藍圖', '第三期主配電盤線路', '專案藍圖', '#0C2027', '#17404D');
+    var sample4Data = makeSampleCanvas('統一發票採購報銷', '硬體設備原廠發票', '單據收據', '#211D16', '#4A3D24');
+    var sample5Data = makeSampleCanvas('架構討論白板截圖', '微服務與資料庫拓撲', '會議白板截圖', '#1B1424', '#39224A');
+    var sample6Data = makeSampleCanvas('精密光學傳感器序號', '零件進料入庫條碼', '進料檢驗', '#1E2417', '#344721');
+
+    var now = Date.now();
+    var samples = [
+      {
+        id: 'sample-1',
+        filename: 'IMG_20261113_0932_LIVE.HEIC',
+        mediaType: 'image',
+        isLive: true,
+        liveFrames: sample1Frames,
+        dataUrl: sample1Data,
+        width: 4032,
+        height: 3024,
+        size: 3565158,
+        createdAt: now - 3600000 * 2,
+        album: '工作紀錄',
+        isFavorite: true,
+        isDeleted: false,
+        deletedAt: null
+      },
+      {
+        id: 'sample-2',
+        filename: 'REC_20261113_SERVER.MP4',
+        mediaType: 'video',
+        isLive: false,
+        duration: '00:15',
+        dataUrl: sample2Data,
+        width: 1920,
+        height: 1080,
+        size: 7864320,
+        createdAt: now - 3600000 * 6,
+        album: '工作紀錄',
+        isFavorite: false,
+        isDeleted: false,
+        deletedAt: null
+      },
+      {
+        id: 'sample-3',
+        filename: 'BLUEPRINT_PHASE3.PNG',
+        mediaType: 'image',
+        isLive: false,
+        dataUrl: sample3Data,
+        width: 3840,
+        height: 2160,
+        size: 4325376,
+        createdAt: now - 86400000 * 1,
+        album: '專案相片',
+        isFavorite: true,
+        isDeleted: false,
+        deletedAt: null
+      },
+      {
+        id: 'sample-4',
+        filename: 'INVOICE_HARDWARE_1102.JPG',
+        mediaType: 'image',
+        isLive: false,
+        dataUrl: sample4Data,
+        width: 2400,
+        height: 3200,
+        size: 1945600,
+        createdAt: now - 86400000 * 2,
+        album: '單據憑證',
+        isFavorite: false,
+        isDeleted: false,
+        deletedAt: null
+      },
+      {
+        id: 'sample-5',
+        filename: 'WHITEBOARD_ARCH_SNAP.PNG',
+        mediaType: 'screenshot',
+        isLive: false,
+        dataUrl: sample5Data,
+        width: 2800,
+        height: 1750,
+        size: 2411724,
+        createdAt: now - 86400000 * 3,
+        album: '專案相片',
+        isFavorite: false,
+        isDeleted: false,
+        deletedAt: null
+      },
+      {
+        id: 'sample-6',
+        filename: 'SENSOR_BARCODE_CHECK.JPG',
+        mediaType: 'image',
+        isLive: false,
+        dataUrl: sample6Data,
+        width: 3000,
+        height: 2000,
+        size: 1572864,
+        createdAt: now - 86400000 * 4,
+        album: '全部相片',
+        isFavorite: false,
+        isDeleted: false,
+        deletedAt: null
+      }
+    ];
+
+    saveBatch(samples);
+  }
+
+  function getAllFromDB() {
+    return new Promise(function(resolve) {
+      if (!db) {
+        try {
+          var raw = localStorage.getItem('photo_vault_cache');
+          return resolve(raw ? JSON.parse(raw) : []);
+        } catch(e) { return resolve([]); }
+      }
+      var tx = db.transaction('photos', 'readonly');
+      var req = tx.objectStore('photos').getAll();
+      req.onsuccess = function() { resolve(req.result || []); };
+      req.onerror = function() { resolve([]); };
+    });
+  }
+
+  function saveBatch(list) {
+    state.items = list;
+    try {
+      localStorage.setItem('photo_vault_cache', JSON.stringify(list));
+    } catch(e) {}
+
+    if (db) {
+      var tx = db.transaction('photos', 'readwrite');
+      var st = tx.objectStore('photos');
+      list.forEach(function(item) { st.put(item); });
+    }
+  }
+
+  function saveItem(item) {
+    var idx = state.items.findIndex(function(x) { return x.id === item.id; });
+    if (idx !== -1) state.items[idx] = item;
+    else state.items.unshift(item);
+
+    saveBatch(state.items);
+  }
+
+  function deletePermanent(id) {
+    state.items = state.items.filter(function(x) { return x.id !== id; });
+    saveBatch(state.items);
+    if (db) {
+      var tx = db.transaction('photos', 'readwrite');
+      tx.objectStore('photos').delete(id);
+    }
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function formatDate(ts) {
+    var d = new Date(ts);
+    var y = d.getFullYear();
+    var m = (d.getMonth() + 1).toString().padStart(2, '0');
+    var day = d.getDate().toString().padStart(2, '0');
+    var h = d.getHours().toString().padStart(2, '0');
+    var min = d.getMinutes().toString().padStart(2, '0');
+    return y + '年' + m + '月' + day + '日 ' + h + ':' + min;
+  }
+
+  // ==================== 視圖渲染 ====================
+  function render() {
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    var trashList = state.items.filter(function(x) { return x.isDeleted; });
+
+    // 更新最近刪除角標
+    var badge = document.getElementById('photosTrashCountBadge');
+    if (badge) {
+      badge.textContent = trashList.length;
+      badge.style.display = trashList.length > 0 ? 'inline-block' : 'none';
+    }
+
+    // 依據篩選條件過濾
+    if (state.albumFilter) {
+      activeList = activeList.filter(function(x) { return x.album === state.albumFilter; });
+    }
+    if (state.mediaTypeFilter === 'live') {
+      activeList = activeList.filter(function(x) { return x.isLive; });
+    } else if (state.mediaTypeFilter === 'video') {
+      activeList = activeList.filter(function(x) { return x.mediaType === 'video'; });
+    } else if (state.mediaTypeFilter === 'screenshot') {
+      activeList = activeList.filter(function(x) { return x.mediaType === 'screenshot'; });
+    } else if (state.mediaTypeFilter === 'favorite') {
+      activeList = activeList.filter(function(x) { return x.isFavorite; });
+    }
+
+    // 更新總覽統計文字
+    var summaryEl = document.getElementById('photosItemsSummary');
+    if (summaryEl) {
+      var photoCount = activeList.filter(function(x){ return x.mediaType !== 'video'; }).length;
+      var videoCount = activeList.filter(function(x){ return x.mediaType === 'video'; }).length;
+      summaryEl.textContent = '共 ' + activeList.length + ' 個項目 (' + photoCount + ' 張相片、' + videoCount + ' 部影片)';
+    }
+
+    var filterLabel = document.getElementById('photosFilterLabel');
+    if (filterLabel) {
+      if (state.albumFilter) filterLabel.textContent = '相簿：' + state.albumFilter;
+      else if (state.mediaTypeFilter) filterLabel.textContent = '篩選：' + state.mediaTypeFilter;
+      else filterLabel.textContent = '全部相片與影片';
+    }
+
+    // 渲染總覽網格
+    var grid = document.getElementById('photosGrid');
+    if (grid) {
+      if (activeList.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; padding:48px 16px; text-align:center; color:var(--text-muted); font-size:13px;">' +
+          '<div style="margin-bottom:8px;"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>' +
+          '此資料夾尚無相片或影片<br><span style="font-size:11px; opacity:0.7;">點擊右上角「匯入」或「相機」即可存入第二相片庫</span>' +
+          '</div>';
+      } else {
+        grid.innerHTML = activeList.map(function(item) {
+          var isSel = state.selectedIds.has(item.id);
+          var cls = 'photo-cell' + (state.selectMode ? ' select-mode' : '') + (isSel ? ' selected' : '');
+          var liveBadge = item.isLive ? '<div class="photo-badge-live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>LIVE</span></div>' : '';
+          var videoBadge = item.mediaType === 'video' ? '<div class="photo-badge-video"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>' + (item.duration || '00:15') + '</span></div>' : '';
+          var selectCheck = '<div class="photo-select-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>';
+
+          return '<div class="' + cls + '" data-id="' + item.id + '">' +
+            '<img src="' + item.dataUrl + '" alt="' + item.filename + '" loading="lazy">' +
+            liveBadge + videoBadge + selectCheck +
+            '</div>';
+        }).join('');
+
+        // 綁定點擊與長按預覽事件
+        grid.querySelectorAll('.photo-cell').forEach(function(cell) {
+          var id = cell.dataset.id;
+          var item = activeList.find(function(x) { return x.id === id; });
+          if (!item) return;
+
+          bindCellGestures(cell, item);
+        });
+      }
+    }
+
+    // 渲染相簿視圖
+    renderAlbums();
+
+    // 渲染媒體類型視圖
+    renderMediaTypes();
+
+    // 渲染最近刪除視圖
+    renderDeletedGrid(trashList);
+
+    // 更新多選工具列
+    updateSelectToolbar();
+  }
+
+  function bindCellGestures(cell, item) {
+    var timer = null;
+    var moved = false;
+
+    cell.addEventListener('touchstart', function(e) {
+      moved = false;
+      timer = setTimeout(function() {
+        if (!moved && !state.selectMode) {
+          if (navigator.vibrate) navigator.vibrate(25);
+          openPeek(item);
+        }
+      }, 450);
+    }, { passive: true });
+
+    cell.addEventListener('touchmove', function() {
+      moved = true;
+      if (timer) clearTimeout(timer);
+    }, { passive: true });
+
+    cell.addEventListener('touchend', function(e) {
+      if (timer) clearTimeout(timer);
+    });
+
+    cell.addEventListener('click', function(e) {
+      if (state.selectMode) {
+        toggleSelectItem(item.id);
+      } else {
+        openLightbox(item);
+      }
+    });
+
+    // 桌面滑鼠長按支援
+    cell.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      moved = false;
+      timer = setTimeout(function() {
+        if (!moved && !state.selectMode) {
+          openPeek(item);
+        }
+      }, 450);
+    });
+    cell.addEventListener('mouseup', function() { if (timer) clearTimeout(timer); });
+    cell.addEventListener('mousemove', function() { moved = true; if (timer) clearTimeout(timer); });
+  }
+
+  // 渲染相簿
+  function renderAlbums() {
+    var albumGrid = document.getElementById('photosAlbumGrid');
+    if (!albumGrid) return;
+
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    var albumNames = ['全部相片', '工作紀錄', '專案相片', '單據憑證', '個人收藏'];
+
+    albumGrid.innerHTML = albumNames.map(function(name) {
+      var items = (name === '全部相片') ? activeList : activeList.filter(function(x) { return x.album === name; });
+      var coverUrl = items.length > 0 ? items[0].dataUrl : '';
+      var coverHtml = coverUrl ?
+        '<img src="' + coverUrl + '" alt="' + name + '">' :
+        '<div class="album-cover-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span style="font-size:11px;">無相片</span></div>';
+
+      return '<div class="album-card" data-album="' + name + '" onclick="window.PhotoVault.filterByAlbum(this.dataset.album)">' +
+        '<div class="album-cover">' + coverHtml + '</div>' +
+        '<div class="album-info">' +
+          '<div class="album-name">' + name + '</div>' +
+          '<div class="album-count">' + items.length + ' 個項目</div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // 渲染媒體類型
+  function renderMediaTypes() {
+    var list = document.getElementById('photosMediaTypesList');
+    if (!list) return;
+
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    var liveCount = activeList.filter(function(x) { return x.isLive; }).length;
+    var videoCount = activeList.filter(function(x) { return x.mediaType === 'video'; }).length;
+    var screenshotCount = activeList.filter(function(x) { return x.mediaType === 'screenshot'; }).length;
+    var favoriteCount = activeList.filter(function(x) { return x.isFavorite; }).length;
+
+    var rows = [
+      { id: 'live', name: '原況相片 (LIVE)', count: liveCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>' },
+      { id: 'video', name: '影片 (Videos)', count: videoCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>' },
+      { id: 'screenshot', name: '螢幕截圖 (Screenshots)', count: screenshotCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>' },
+      { id: 'favorite', name: '已收藏項目 (Favorites)', count: favoriteCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>' }
+    ];
+
+    list.innerHTML = rows.map(function(r) {
+      return '<div class="mediatype-row" data-type="' + r.id + '" onclick="window.PhotoVault.filterByMediaType(this.dataset.type)">' +
+        '<div class="mediatype-left">' + r.icon + '<span>' + r.name + '</span></div>' +
+        '<div class="mediatype-right"><span>' + r.count + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // 渲染最近刪除網格
+  function renderDeletedGrid(trashList) {
+    var trashGrid = document.getElementById('photosTrashGrid');
+    if (!trashGrid) return;
+
+    if (trashList.length === 0) {
+      trashGrid.innerHTML = '<div style="grid-column:1/-1; padding:40px 16px; text-align:center; color:var(--text-muted); font-size:13px;">垃圾桶目前是空的</div>';
+      return;
+    }
+
+    trashGrid.innerHTML = trashList.map(function(item) {
+      var daysLeft = 30;
+      if (item.deletedAt) {
+        var elapsedDays = Math.floor((Date.now() - item.deletedAt) / (86400000));
+        daysLeft = Math.max(0, 30 - elapsedDays);
+      }
+
+      return '<div class="photo-cell" data-id="' + item.id + '" onclick="window.PhotoVault.promptRestoreTrash(this.dataset.id)">' +
+        '<img src="' + item.dataUrl + '" alt="' + item.filename + '">' +
+        '<div class="photo-trash-badge">剩餘 ' + daysLeft + ' 天</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ==================== 分頁切換 ====================
+  function switchSubtab(tab) {
+    state.subtab = tab;
+    state.albumFilter = null;
+    state.mediaTypeFilter = null;
+
+    document.querySelectorAll('.photos-subtab').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.subtab === tab);
+    });
+
+    var viewAll = document.getElementById('photosSubViewAll');
+    var viewAlbums = document.getElementById('photosSubViewAlbums');
+    var viewMedia = document.getElementById('photosSubViewMediaTypes');
+    var viewDel = document.getElementById('photosSubViewDeleted');
+
+    if (viewAll) viewAll.style.display = (tab === 'all') ? '' : 'none';
+    if (viewAlbums) viewAlbums.style.display = (tab === 'albums') ? '' : 'none';
+    if (viewMedia) viewMedia.style.display = (tab === 'mediatypes') ? '' : 'none';
+    if (viewDel) viewDel.style.display = (tab === 'deleted') ? '' : 'none';
+
+    render();
+  }
+
+  function filterByAlbum(album) {
+    if (album === '全部相片') {
+      state.albumFilter = null;
+    } else {
+      state.albumFilter = album;
+    }
+    state.subtab = 'all';
+    switchSubtab('all');
+  }
+
+  function filterByMediaType(type) {
+    state.mediaTypeFilter = type;
+    state.subtab = 'all';
+    switchSubtab('all');
+  }
+
+  // ==================== 多選模式 ====================
+  function toggleSelectMode(enable) {
+    if (typeof enable === 'boolean') state.selectMode = enable;
+    else state.selectMode = !state.selectMode;
+
+    if (!state.selectMode) {
+      state.selectedIds.clear();
+    }
+
+    var btn = document.getElementById('photosSelectToggleBtn');
+    if (btn) {
+      btn.querySelector('span').textContent = state.selectMode ? '取消' : '選取';
+      btn.classList.toggle('primary', state.selectMode);
+    }
+
+    render();
+  }
+
+  function toggleSelectItem(id) {
+    if (state.selectedIds.has(id)) {
+      state.selectedIds.delete(id);
+    } else {
+      state.selectedIds.add(id);
+    }
+    updateSelectToolbar();
+
+    // 更新單個 DOM 節點樣式避免全量重繪
+    var cell = document.querySelector('.photo-cell[data-id="' + id + '"]');
+    if (cell) {
+      cell.classList.toggle('selected', state.selectedIds.has(id));
+    }
+  }
+
+  function toggleSelectAll() {
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    if (state.selectedIds.size === activeList.length) {
+      state.selectedIds.clear();
+    } else {
+      activeList.forEach(function(x) { state.selectedIds.add(x.id); });
+    }
+    render();
+  }
+
+  function updateSelectToolbar() {
+    var bar = document.getElementById('photosSelectToolbar');
+    var summary = document.getElementById('photosSelectedSummary');
+    if (bar && summary) {
+      bar.classList.toggle('show', state.selectMode);
+      summary.textContent = '已選取 ' + state.selectedIds.size + ' 項';
+    }
+  }
+
+  function batchTrashSelected() {
+    if (state.selectedIds.size === 0) return;
+    var now = Date.now();
+    state.selectedIds.forEach(function(id) {
+      var item = state.items.find(function(x) { return x.id === id; });
+      if (item) {
+        item.isDeleted = true;
+        item.deletedAt = now;
+      }
+    });
+
+    saveBatch(state.items);
+    toggleSelectMode(false);
+    if (typeof showToast === 'function') showToast('已將項目移至最近刪除');
+    render();
+  }
+
+  function batchShareSelected() {
+    if (state.selectedIds.size === 0) return;
+    var selected = state.items.filter(function(x) { return state.selectedIds.has(x.id); });
+
+    if (navigator.share) {
+      navigator.share({
+        title: '第二相片庫項目',
+        text: '來自 SuperDashboard 第二相片庫的 ' + selected.length + ' 個項目'
+      }).catch(function(e) {});
+    } else {
+      // 依序觸發下載
+      selected.forEach(function(item) {
+        var a = document.createElement('a');
+        a.href = item.dataUrl;
+        a.download = item.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+      if (typeof showToast === 'function') showToast('已開始匯出選取項目');
+    }
+  }
+
+  // ==================== 長按 Peek 預覽 ====================
+  function openPeek(item) {
+    state.activePeekItem = item;
+    var modal = document.getElementById('photoPeekModal');
+    var mediaBox = document.getElementById('peekMediaBox');
+    var title = document.getElementById('peekTitle');
+    var subtitle = document.getElementById('peekSubtitle');
+    var favLabel = document.getElementById('peekFavoriteLabel');
+
+    if (!modal || !mediaBox) return;
+
+    title.textContent = item.filename;
+    subtitle.textContent = formatDate(item.createdAt) + ' • ' + (item.album || '第二相片庫');
+    if (favLabel) favLabel.textContent = item.isFavorite ? '取消收藏' : '加入收藏';
+
+    // 如果是原況相片，自動播放微動影格
+    if (item.isLive && item.liveFrames && item.liveFrames.length) {
+      var img = document.createElement('img');
+      img.src = item.liveFrames[0];
+      mediaBox.innerHTML = '';
+      mediaBox.appendChild(img);
+
+      var idx = 0;
+      if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
+      state.liveHoldInterval = setInterval(function() {
+        idx = (idx + 1) % item.liveFrames.length;
+        img.src = item.liveFrames[idx];
+      }, 120);
+    } else {
+      mediaBox.innerHTML = '<img src="' + item.dataUrl + '" alt="' + item.filename + '">';
+    }
+
+    modal.classList.add('show');
+  }
+
+  function closePeek() {
+    var modal = document.getElementById('photoPeekModal');
+    if (modal) modal.classList.remove('show');
+    if (state.liveHoldInterval) {
+      clearInterval(state.liveHoldInterval);
+      state.liveHoldInterval = null;
+    }
+    state.activePeekItem = null;
+  }
+
+  function peekShare() {
+    if (!state.activePeekItem) return;
+    var it = state.activePeekItem;
+    closePeek();
+    shareMediaItem(it);
+  }
+
+  function peekToggleFavorite() {
+    if (!state.activePeekItem) return;
+    state.activePeekItem.isFavorite = !state.activePeekItem.isFavorite;
+    saveItem(state.activePeekItem);
+    closePeek();
+    render();
+    if (typeof showToast === 'function') showToast(state.activePeekItem.isFavorite ? '已加入收藏' : '已從收藏移除');
+  }
+
+  function peekMoveAlbum() {
+    if (!state.activePeekItem) return;
+    var it = state.activePeekItem;
+    closePeek();
+    var newAlbum = prompt('請輸入欲移動至的相簿名稱：', it.album || '工作紀錄');
+    if (newAlbum) {
+      it.album = newAlbum.trim();
+      saveItem(it);
+      render();
+      if (typeof showToast === 'function') showToast('已移至相簿：' + it.album);
+    }
+  }
+
+  function peekTrash() {
+    if (!state.activePeekItem) return;
+    var it = state.activePeekItem;
+    it.isDeleted = true;
+    it.deletedAt = Date.now();
+    saveItem(it);
+    closePeek();
+    render();
+    if (typeof showToast === 'function') showToast('已移至最近刪除');
+  }
+
+  // ==================== 全螢幕檢視器 (Lightbox) ====================
+  function openLightbox(item) {
+    state.activeLightboxItem = item;
+    var box = document.getElementById('photoLightbox');
+    var wrapper = document.getElementById('lightboxMediaWrapper');
+    var dEl = document.getElementById('lightboxDate');
+    var tEl = document.getElementById('lightboxTime');
+    var favBtn = document.getElementById('lightboxFavBtn');
+
+    if (!box || !wrapper) return;
+
+    var d = new Date(item.createdAt);
+    if (dEl) dEl.textContent = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    if (tEl) tEl.textContent = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+    if (favBtn) favBtn.style.color = item.isFavorite ? 'var(--amber)' : '#EDE6D6';
+
+    wrapper.innerHTML = '';
+
+    if (item.mediaType === 'video') {
+      var video = document.createElement('video');
+      video.src = item.dataUrl;
+      video.controls = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      wrapper.appendChild(video);
+    } else {
+      var img = document.createElement('img');
+      img.src = item.dataUrl;
+      img.alt = item.filename;
+      wrapper.appendChild(img);
+
+      // 原況相片長按播放
+      if (item.isLive && item.liveFrames && item.liveFrames.length) {
+        var indicator = document.createElement('div');
+        indicator.className = 'lightbox-live-indicator';
+        indicator.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>按住播放 LIVE</span>';
+        wrapper.appendChild(indicator);
+
+        var loopIdx = 0;
+        var startLivePlay = function() {
+          indicator.classList.add('playing');
+          if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
+          state.liveHoldInterval = setInterval(function() {
+            loopIdx = (loopIdx + 1) % item.liveFrames.length;
+            img.src = item.liveFrames[loopIdx];
+          }, 110);
+        };
+        var stopLivePlay = function() {
+          indicator.classList.remove('playing');
+          if (state.liveHoldInterval) {
+            clearInterval(state.liveHoldInterval);
+            state.liveHoldInterval = null;
+          }
+          img.src = item.dataUrl;
+        };
+
+        wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
+        wrapper.addEventListener('touchend', stopLivePlay);
+        wrapper.addEventListener('mousedown', startLivePlay);
+        wrapper.addEventListener('mouseup', stopLivePlay);
+      }
+    }
+
+    // 填寫後設資料面板
+    fillMetadata(item);
+
+    box.classList.add('show');
+  }
+
+  function closeLightbox() {
+    var box = document.getElementById('photoLightbox');
+    if (box) box.classList.remove('show');
+    toggleMetaDrawer(false);
+    if (state.liveHoldInterval) {
+      clearInterval(state.liveHoldInterval);
+      state.liveHoldInterval = null;
+    }
+    state.activeLightboxItem = null;
+  }
+
+  function fillMetadata(item) {
+    var fn = document.getElementById('metaFilename');
+    var fmt = document.getElementById('metaFormat');
+    var dim = document.getElementById('metaDimensions');
+    var sz = document.getElementById('metaFileSize');
+    var ts = document.getElementById('metaTimestamp');
+    var alb = document.getElementById('metaAlbum');
+
+    if (fn) fn.textContent = item.filename;
+    if (fmt) {
+      if (item.isLive) fmt.textContent = '原況相片 (Apple Live Photo • HEIC + MOV)';
+      else if (item.mediaType === 'video') fmt.textContent = '高畫質影片 (MPEG-4 Video)';
+      else if (item.mediaType === 'screenshot') fmt.textContent = '螢幕截圖 (PNG Image)';
+      else fmt.textContent = '相片影像 (JPEG/HEIC Image)';
+    }
+    if (dim) {
+      var mp = ((item.width * item.height) / 1000000).toFixed(1);
+      dim.textContent = item.width + ' × ' + item.height + ' (' + mp + ' MP)';
+    }
+    if (sz) sz.textContent = formatBytes(item.size);
+    if (ts) ts.textContent = formatDate(item.createdAt);
+    if (alb) alb.textContent = item.album || '未分類';
+  }
+
+  function toggleMetaDrawer(open) {
+    if (typeof open === 'boolean') state.metaDrawerOpen = open;
+    else state.metaDrawerOpen = !state.metaDrawerOpen;
+
+    var drawer = document.getElementById('photoMetaDrawer');
+    if (drawer) drawer.classList.toggle('show', state.metaDrawerOpen);
+  }
+
+  function toggleLightboxFavorite() {
+    if (!state.activeLightboxItem) return;
+    state.activeLightboxItem.isFavorite = !state.activeLightboxItem.isFavorite;
+    saveItem(state.activeLightboxItem);
+    var favBtn = document.getElementById('lightboxFavBtn');
+    if (favBtn) favBtn.style.color = state.activeLightboxItem.isFavorite ? 'var(--amber)' : '#EDE6D6';
+    render();
+    if (typeof showToast === 'function') showToast(state.activeLightboxItem.isFavorite ? '已加入收藏' : '已從收藏移除');
+  }
+
+  function trashCurrentLightbox() {
+    if (!state.activeLightboxItem) return;
+    state.activeLightboxItem.isDeleted = true;
+    state.activeLightboxItem.deletedAt = Date.now();
+    saveItem(state.activeLightboxItem);
+    closeLightbox();
+    render();
+    if (typeof showToast === 'function') showToast('已移至最近刪除');
+  }
+
+  function shareCurrentLightbox() {
+    if (!state.activeLightboxItem) return;
+    shareMediaItem(state.activeLightboxItem);
+  }
+
+  function shareMediaItem(item) {
+    if (navigator.share) {
+      navigator.share({
+        title: item.filename,
+        text: '來自 SuperDashboard 第二相片庫：' + item.filename
+      }).catch(function(e) {});
+    } else {
+      var a = document.createElement('a');
+      a.href = item.dataUrl;
+      a.download = item.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if (typeof showToast === 'function') showToast('已觸發項目下載');
+    }
+  }
+
+  // ==================== 最近刪除還原與清空 ====================
+  function promptRestoreTrash(id) {
+    var item = state.items.find(function(x) { return x.id === id; });
+    if (!item) return;
+
+    if (confirm('是否還原此項目回第二相片庫？\n（按「確定」還原，按「取消」維持在最近刪除）')) {
+      item.isDeleted = false;
+      item.deletedAt = null;
+      saveItem(item);
+      render();
+      if (typeof showToast === 'function') showToast('已還原項目至相片庫');
+    }
+  }
+
+  function restoreAllTrash() {
+    var trash = state.items.filter(function(x) { return x.isDeleted; });
+    if (trash.length === 0) return;
+
+    trash.forEach(function(item) {
+      item.isDeleted = false;
+      item.deletedAt = null;
+    });
+
+    saveBatch(state.items);
+    render();
+    if (typeof showToast === 'function') showToast('已還原全部項目');
+  }
+
+  function emptyTrash() {
+    var trash = state.items.filter(function(x) { return x.isDeleted; });
+    if (trash.length === 0) return;
+
+    if (confirm('確定要清空最近刪除中的所有項目嗎？\n此操作將永久清除且無法復原。')) {
+      state.items = state.items.filter(function(x) { return !x.isDeleted; });
+      saveBatch(state.items);
+      render();
+      if (typeof showToast === 'function') showToast('已清空垃圾桶');
+    }
+  }
+
+  // ==================== 檔案與相機匯入 ====================
+  function openAddMenu() {
+    var overlay = document.getElementById('photosMenuOverlay');
+    if (overlay) overlay.classList.add('show');
+  }
+
+  function closeAddMenu() {
+    var overlay = document.getElementById('photosMenuOverlay');
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  function handleFileInput(files) {
+    if (!files || !files.length) return;
+    processFileList(Array.from(files), '全部相片');
+  }
+
+  function handleFolderInput(files) {
+    if (!files || !files.length) return;
+    var list = Array.from(files);
+    var albumName = '資料夾匯入';
+    if (list[0] && list[0].webkitRelativePath) {
+      var parts = list[0].webkitRelativePath.split('/');
+      if (parts.length > 1) albumName = parts[0];
+    }
+    processFileList(list, albumName);
+  }
+
+  function processFileList(files, defaultAlbum) {
+    var loaded = 0;
+    var total = files.length;
+    var newItems = [];
+
+    files.forEach(function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var isVideo = file.type.startsWith('video');
+
+        var item = {
+          id: 'media-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+          filename: file.name,
+          mediaType: isVideo ? 'video' : 'image',
+          isLive: false,
+          dataUrl: dataUrl,
+          size: file.size,
+          width: 1920,
+          height: 1080,
+          duration: isVideo ? '00:10' : undefined,
+          createdAt: file.lastModified || Date.now(),
+          album: defaultAlbum || '工作紀錄',
+          isFavorite: false,
+          isDeleted: false,
+          deletedAt: null
+        };
+
+        // 讀取真實圖片尺寸
+        if (!isVideo) {
+          var img = new Image();
+          img.onload = function() {
+            item.width = img.width;
+            item.height = img.height;
+            newItems.push(item);
+            loaded++;
+            if (loaded === total) finishImport(newItems);
+          };
+          img.onerror = function() {
+            newItems.push(item);
+            loaded++;
+            if (loaded === total) finishImport(newItems);
+          };
+          img.src = dataUrl;
+        } else {
+          newItems.push(item);
+          loaded++;
+          if (loaded === total) finishImport(newItems);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function finishImport(newItems) {
+    state.items = newItems.concat(state.items);
+    saveBatch(state.items);
+    render();
+    if (typeof showToast === 'function') showToast('已成功匯入 ' + newItems.length + ' 個項目至第二相片庫');
+  }
+
+  // ==================== 備份匯出至檔案 App ====================
+  function exportBackup() {
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    var metaExport = {
+      vaultName: '第二相片庫 (SuperDashboard)',
+      exportedAt: new Date().toISOString(),
+      itemCount: activeList.length,
+      storagePath: '我的 iPhone / SuperDashboard / 第二相片庫',
+      items: activeList.map(function(item) {
+        return {
+          id: item.id,
+          filename: item.filename,
+          mediaType: item.mediaType,
+          isLive: item.isLive,
+          size: item.size,
+          width: item.width,
+          height: item.height,
+          createdAt: item.createdAt,
+          album: item.album,
+          isFavorite: item.isFavorite
+        };
+      })
+    };
+
+    var blob = new Blob([JSON.stringify(metaExport, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '第二相片庫_完整後設資料備份_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (typeof showToast === 'function') showToast('已產生後設資料備份，可直接儲存至檔案 App');
+  }
+
+  function promptNewAlbum() {
+    var name = prompt('請輸入新相簿名稱：');
+    if (name && name.trim()) {
+      var clean = name.trim();
+      if (!state.albums.includes(clean)) {
+        state.albums.push(clean);
+        renderAlbums();
+        if (typeof showToast === 'function') showToast('已建立相簿：' + clean);
+      }
+    }
+  }
+
+  // ==================== 初始化 ====================
+  openDB().then(function() {
+    ensureNativeFolder();
+    return getAllFromDB();
+  }).then(function(items) {
+    if (!items || items.length === 0) {
+      seedDefaultPhotos();
+    } else {
+      state.items = items;
+    }
+    render();
+  });
+
+  // 全域介面公開
+  window.PhotoVault = {
+    render: render,
+    switchSubtab: switchSubtab,
+    filterByAlbum: filterByAlbum,
+    filterByMediaType: filterByMediaType,
+    toggleSelectMode: toggleSelectMode,
+    toggleSelectItem: toggleSelectItem,
+    toggleSelectAll: toggleSelectAll,
+    batchTrashSelected: batchTrashSelected,
+    batchShareSelected: batchShareSelected,
+    openAddMenu: openAddMenu,
+    closeAddMenu: closeAddMenu,
+    handleFileInput: handleFileInput,
+    handleFolderInput: handleFolderInput,
+    openPeek: openPeek,
+    closePeek: closePeek,
+    peekShare: peekShare,
+    peekToggleFavorite: peekToggleFavorite,
+    peekMoveAlbum: peekMoveAlbum,
+    peekTrash: peekTrash,
+    openLightbox: openLightbox,
+    closeLightbox: closeLightbox,
+    toggleMetaDrawer: toggleMetaDrawer,
+    toggleLightboxFavorite: toggleLightboxFavorite,
+    trashCurrentLightbox: trashCurrentLightbox,
+    shareCurrentLightbox: shareCurrentLightbox,
+    promptRestoreTrash: promptRestoreTrash,
+    restoreAllTrash: restoreAllTrash,
+    emptyTrash: emptyTrash,
+    exportBackup: exportBackup,
+    promptNewAlbum: promptNewAlbum
+  };
+})();
+</script>
+
 </body>
 </html>
 

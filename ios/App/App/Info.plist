@@ -28,6 +28,14 @@
 	<true/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要存取相簿以匯入相片與影片至第二相片庫。</string>
+	<key>NSCameraUsageDescription</key>
+	<string>需要相機權限以拍攝相片與影片並存入第二相片庫。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>需要存取相簿以將常用項目的圖片安全儲存至您的照片 App 中。</string>
 	<key>CFBundleURLTypes</key>
