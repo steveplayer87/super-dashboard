@@ -810,7 +810,7 @@
     border-top:1px solid var(--border);
     padding-bottom:env(safe-area-inset-bottom, 0px);
     box-sizing:border-box;
-    z-index:100;
+    z-index:1000000 !important;
     -webkit-transform:translateZ(0);
     transform:translateZ(0);
   }
@@ -4286,11 +4286,13 @@
   .lightbox-bottombar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px calc(env(safe-area-inset-bottom, 0px) + 18px);
-    background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+    justify-content: space-around;
+    padding: 12px 28px;
+    margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 54px);
+    background: linear-gradient(0deg, rgba(14,12,9,0.92) 0%, rgba(14,12,9,0.6) 80%, transparent 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255,255,255,0.06);
     z-index: 100;
   }
   .lightbox-media-wrapper {
@@ -4411,14 +4413,14 @@
   /* 後設資料抽屜 (Metadata Drawer - iOS i 按鈕) */
   .photo-meta-drawer {
     position: absolute;
-    bottom: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 54px);
     left: 0;
     right: 0;
     background: #17140F;
     border-top: 1px solid var(--border);
     border-radius: 20px 20px 0 0;
-    padding: 16px 18px calc(env(safe-area-inset-bottom, 0px) + 16px);
-    z-index: 20;
+    padding: 16px 18px 16px;
+    z-index: 120;
     transform: translateY(105%);
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 -10px 40px rgba(0,0,0,0.7);
@@ -7133,6 +7135,9 @@ window.switchPage = function(page) {
     }
     if (page === 'finance' && typeof renderFinance === 'function') {
       renderFinance();
+    }
+    if (window.PhotoVault && typeof window.PhotoVault.closeLightbox === 'function') {
+      window.PhotoVault.closeLightbox();
     }
     if (page === 'photos' && window.PhotoVault && typeof window.PhotoVault.render === 'function') {
       window.PhotoVault.render();
@@ -13840,11 +13845,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     if (!box || !wrapper) return;
 
-    // 展開時隱藏外層儀錶板頂欄與底欄，全螢幕無阻隔
+    // 展開照片時僅隱藏頂部 SuperDashboard 標題列，底部 Tab Bar 維持常駐可見
     var appTopbar = document.querySelector('.topbar');
-    var appTabbar = document.querySelector('.tabbar');
     if (appTopbar) appTopbar.style.display = 'none';
-    if (appTabbar) appTabbar.style.display = 'none';
 
     var d = new Date(item.createdAt);
     if (dEl) dEl.textContent = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
@@ -13998,16 +14001,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   function updateLightboxFavIcons(isFav) {
-    var topFav = document.getElementById('lightboxTopFavBtn');
     var botFav = document.getElementById('lightboxFavBtn');
-    var favColor = isFav ? 'var(--amber)' : '#EDE6D6';
-
-    [topFav, botFav].forEach(function(btn) {
-      if (!btn) return;
-      btn.style.color = favColor;
-      var svg = btn.querySelector('svg');
-      if (svg) svg.style.fill = isFav ? 'currentColor' : 'none';
-    });
+    if (!botFav) return;
+    botFav.style.color = isFav ? 'var(--amber)' : '#EDE6D6';
+    var svg = botFav.querySelector('svg');
+    if (svg) svg.style.fill = isFav ? 'currentColor' : 'none';
   }
 
   function closeLightbox() {
@@ -14015,11 +14013,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (box) box.classList.remove('show');
     toggleMetaDrawer(false);
 
-    // 恢復外層儀錶板頂欄與底欄
+    // 恢復外層儀錶板頂欄
     var appTopbar = document.querySelector('.topbar');
-    var appTabbar = document.querySelector('.tabbar');
     if (appTopbar) appTopbar.style.display = '';
-    if (appTabbar) appTabbar.style.display = '';
 
     if (state.liveHoldInterval) {
       clearInterval(state.liveHoldInterval);
@@ -14397,9 +14393,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       <div class="lightbox-time" id="lightboxTime">09:32</div>
     </div>
     <div class="lightbox-top-actions">
-      <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleLightboxFavorite()" id="lightboxTopFavBtn" title="喜好項目" aria-label="喜好項目">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-      </button>
       <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleMetaDrawer()" title="詳細資訊" aria-label="詳細資訊">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
       </button>
