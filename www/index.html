@@ -13181,25 +13181,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     });
   }
 
-  // 從靜態照片自動運算 Live 微動態連續影格
-  function makeFramesFromImage(img, width, height) {
-    var frames = [];
-    var w = Math.min(width || 600, 600);
-    var h = Math.min(height || 600, 600);
-    for (var i = 0; i < 6; i++) {
-      var cvs = document.createElement('canvas');
-      cvs.width = w; cvs.height = h;
-      var ctx = cvs.getContext('2d');
-      var scale = 1.0 + (i * 0.018);
-      ctx.save();
-      ctx.translate(w / 2, h / 2);
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, -w / 2, -h / 2, w, h);
-      ctx.restore();
-      frames.push(cvs.toDataURL('image/jpeg', 0.85));
-    }
-    return frames;
-  }
 
   // 向量繪製高解析度樣例海報
   function makeSampleCanvas(title, sub, type, color1, color2) {
@@ -13978,27 +13959,19 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         wrapper.appendChild(liveVideo);
       }
 
-      var loopIdx = 0;
       var startLivePlay = function(e) {
         if (!item.isLive) return;
+        if (!liveVideo) {
+          if (typeof showToast === 'function') showToast('此相片尚無配對的動態影片檔 (.MOV)，請於詳細資訊配對');
+          return;
+        }
         indicator.classList.add('playing');
         if (navigator.vibrate) navigator.vibrate(20);
 
-        if (liveVideo) {
-          liveVideo.currentTime = 0;
-          liveVideo.style.opacity = '1';
-          var p = liveVideo.play();
-          if (p && p.catch) p.catch(function(){});
-        } else if (item.liveFrames && item.liveFrames.length) {
-          if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
-          state.liveHoldInterval = setInterval(function() {
-            loopIdx = (loopIdx + 1) % item.liveFrames.length;
-            img.src = item.liveFrames[loopIdx];
-          }, 100);
-        } else {
-          img.style.transition = 'transform 0.35s ease';
-          img.style.transform = 'scale(1.08)';
-        }
+        liveVideo.currentTime = 0;
+        liveVideo.style.opacity = '1';
+        var p = liveVideo.play();
+        if (p && p.catch) p.catch(function(){});
       };
 
       var stopLivePlay = function() {
@@ -14007,12 +13980,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           liveVideo.pause();
           liveVideo.style.opacity = '0';
         }
-        if (state.liveHoldInterval) {
-          clearInterval(state.liveHoldInterval);
-          state.liveHoldInterval = null;
-        }
-        img.src = item.dataUrl;
-        img.style.transform = '';
       };
 
       wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
@@ -14140,19 +14107,17 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (!state.activeLightboxItem) return;
     var it = state.activeLightboxItem;
     it.isLive = !it.isLive;
-    if (it.isLive && (!it.liveFrames || !it.liveFrames.length) && !it.liveVideoUrl) {
-      var tmpImg = new Image();
-      tmpImg.onload = function() {
-        it.liveFrames = makeFramesFromImage(tmpImg, it.width, it.height);
-        saveItem(it);
-      };
-      tmpImg.src = it.dataUrl;
-    }
     saveItem(it);
     fillMetadata(it);
     render();
     openLightbox(it);
-    if (typeof showToast === 'function') showToast(it.isLive ? '已啟用原況相片 (LIVE) 模式' : '已切換為靜態相片模式');
+    if (typeof showToast === 'function') {
+      if (it.isLive) {
+        showToast(it.liveVideoUrl ? '已切換為原況相片模式' : '已標記為原況相片，請於下方「配對影片」選取動態短片');
+      } else {
+        showToast('已切換為靜態相片模式');
+      }
+    }
   }
 
   function handleLiveMotionInput(files) {
@@ -14348,9 +14313,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               probeImg.onload = function() {
                 item.width = probeImg.width;
                 item.height = probeImg.height;
-                if (item.isLive && !item.liveVideoUrl) {
-                  item.liveFrames = makeFramesFromImage(probeImg, probeImg.width, probeImg.height);
-                }
+
                 newItems.push(item);
                 loaded++;
                 if (loaded === total) finishImport(newItems);
