@@ -3092,6 +3092,18 @@
     transform: scale(1) translateZ(0) !important;
   }
 
+  /* 全頁子頁面必須使用不透明底色，避免底下的「更多」穿透 */
+  #settingsSubView, #gooseSubView {
+    background-color: #0E0C09 !important;
+    background-image: none !important;
+    isolation: isolate;
+    z-index: 10000;
+  }
+  body.theme-halloween #settingsSubView,
+  body.theme-halloween #gooseSubView {
+    background-color: #0C0A17 !important;
+  }
+
   /* Mini App 右側流暢滑動離開動畫 */
   #gooseSubView {
     transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.28s ease !important;
@@ -6069,6 +6081,7 @@ window.showMoreSubView = function(view) {
     if (!target) return;
     if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
     document.body.classList.add('goose-view-active');
+    target.style.backgroundColor = getComputedStyle(document.body).backgroundColor || '#0E0C09';
     target.style.display='block';
     target.style.transition='none';
     target.style.opacity='1';
@@ -9421,7 +9434,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         editBtn.style.display = 'inline-flex';
         editBtn.setAttribute('aria-label', '設定');
         editBtn.title = '設定';
-        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.9-1.8 1.8-1.9-1.1-.2.1-2.1.9-.1 2.2h-2.6l-.1-2.2-2.1-.9-.2-.1-1.9 1.1-1.8-1.8 1.1-1.9-.1-.2-.9-2.1-2.2-.1v-2.6l2.2-.1.9-2.1.1-.2-1.1-1.9 1.8-1.8 1.9 1.1.2-.1 2.1-.9.1-2.2h2.6l.1 2.2 2.1.9.2.1 1.9-1.1 1.8 1.8-1.1 1.9.1.2.9 2.1 2.2.1v2.6l-2.2.1-.9 2.1z"/></svg>';
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1.4 -1.1)"/></svg>';
         editBtn.style.padding = '7px 9px';
         editBtn.style.minWidth = '36px';
         editBtn.style.justifyContent = 'center';
