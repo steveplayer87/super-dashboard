@@ -4361,21 +4361,34 @@
     position: absolute;
     top: 14px;
     left: 14px;
-    background: rgba(0,0,0,0.65);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 8px;
-    padding: 4px 8px;
-    font-size: 11px;
+    background: rgba(0,0,0,0.72);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 11.5px;
     font-weight: 800;
-    color: #fff;
+    color: #FFFFFF;
     display: flex;
     align-items: center;
-    gap: 4px;
-    z-index: 5;
+    gap: 6px;
+    z-index: 30;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: all 0.15s ease;
   }
-  .lightbox-live-indicator.playing {
+  .lightbox-live-indicator:active {
+    transform: scale(0.96);
+  }
+  .lightbox-live-indicator.active {
     border-color: var(--amber);
     color: var(--amber);
+    background: rgba(255, 159, 28, 0.18);
+  }
+  .lightbox-live-indicator.playing {
+    border-color: #5CD68A;
+    color: #5CD68A;
+    background: rgba(92, 214, 138, 0.2);
+    box-shadow: 0 0 16px rgba(92, 214, 138, 0.4);
   }
   .lightbox-bottombar {
     display: flex;
@@ -4711,6 +4724,10 @@
         <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFileInput').click(); window.PhotoVault.closeAddMenu();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           <span>匯入相片與影片</span>
+        </button>
+        <button type="button" class="photos-menu-item" onclick="window.PhotoVault.triggerLivePhotoImport(); window.PhotoVault.closeAddMenu();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+          <span>匯入原況相片 (LIVE)</span>
         </button>
         <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFolderInput').click(); window.PhotoVault.closeAddMenu();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
@@ -13108,6 +13125,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     activePeekItem: null,
     activeLightboxItem: null,
     metaDrawerOpen: false,
+    forceLiveNextImport: false,
     liveHoldInterval: null
   };
 
@@ -13129,6 +13147,58 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       console.error('dataUrlToFile error', e);
       return null;
     }
+  }
+
+
+  // 智慧掃描 Apple 原況相片 EXIF/二進位 ContentIdentifier UUID
+  function detectAppleLivePhoto(file) {
+    return new Promise(function(resolve) {
+      if (!file) return resolve(false);
+      if (state.forceLiveNextImport) return resolve(true);
+      var isTarget = /\.(heic|heif|jpe?g|png)$/i.test(file.name) || /image\/(heic|heif|jpeg|png)/i.test(file.type);
+      if (!isTarget) return resolve(false);
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var buf = e.target.result;
+          var view = new Uint8Array(buf);
+          var len = Math.min(view.length, 524288);
+          var chars = [];
+          for (var i = 0; i < len; i += 2) {
+            var b = view[i];
+            if (b >= 32 && b <= 126) chars.push(String.fromCharCode(b));
+          }
+          var str = chars.join('');
+          var hasLive = /ContentIdentifier|apple.*live|Apple:LivePhoto|com\.apple\.quicktime|[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i.test(str);
+          resolve(hasLive);
+        } catch(err) {
+          resolve(false);
+        }
+      };
+      reader.onerror = function() { resolve(false); };
+      reader.readAsArrayBuffer(file.slice(0, 524288));
+    });
+  }
+
+  // 從靜態照片自動運算 Live 微動態連續影格
+  function makeFramesFromImage(img, width, height) {
+    var frames = [];
+    var w = Math.min(width || 600, 600);
+    var h = Math.min(height || 600, 600);
+    for (var i = 0; i < 6; i++) {
+      var cvs = document.createElement('canvas');
+      cvs.width = w; cvs.height = h;
+      var ctx = cvs.getContext('2d');
+      var scale = 1.0 + (i * 0.018);
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      frames.push(cvs.toDataURL('image/jpeg', 0.85));
+    }
+    return frames;
   }
 
   // 向量繪製高解析度樣例海報
@@ -13877,65 +13947,78 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       img.style.objectFit = 'contain';
       wrapper.appendChild(img);
 
-      // 原況相片長按播放動態短片
-      if (item.isLive) {
-        var indicator = document.createElement('div');
-        indicator.className = 'lightbox-live-indicator';
-        indicator.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>按住播放 LIVE</span>';
-        wrapper.appendChild(indicator);
+      // 原況相片長按播放引擎 (支援原生 iOS 影片無阻斷播放與微動態影格)
+      var indicator = document.createElement('div');
+      indicator.className = 'lightbox-live-indicator' + (item.isLive ? ' active' : '');
+      indicator.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>' + (item.isLive ? 'LIVE' : '靜態相片') + '</span>';
+      indicator.title = '點擊切換原況/靜態模式';
+      indicator.onclick = function(e) {
+        e.stopPropagation();
+        window.PhotoVault.toggleCurrentLiveMode();
+      };
+      wrapper.appendChild(indicator);
 
-        var liveVideo = null;
-        if (item.liveVideoUrl) {
-          liveVideo = document.createElement('video');
-          liveVideo.src = item.liveVideoUrl;
-          liveVideo.loop = true;
-          liveVideo.muted = true;
-          liveVideo.playsInline = true;
-          liveVideo.style.display = 'none';
-          liveVideo.style.maxWidth = '100%';
-          liveVideo.style.maxHeight = '100%';
-          liveVideo.style.objectFit = 'contain';
-          wrapper.appendChild(liveVideo);
-        }
-
-        var loopIdx = 0;
-        var startLivePlay = function() {
-          indicator.classList.add('playing');
-          if (navigator.vibrate) navigator.vibrate(15);
-
-          if (liveVideo) {
-            img.style.display = 'none';
-            liveVideo.style.display = 'block';
-            liveVideo.currentTime = 0;
-            liveVideo.play().catch(function(){});
-          } else if (item.liveFrames && item.liveFrames.length) {
-            if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
-            state.liveHoldInterval = setInterval(function() {
-              loopIdx = (loopIdx + 1) % item.liveFrames.length;
-              img.src = item.liveFrames[loopIdx];
-            }, 110);
-          }
-        };
-
-        var stopLivePlay = function() {
-          indicator.classList.remove('playing');
-          if (liveVideo) {
-            liveVideo.pause();
-            liveVideo.style.display = 'none';
-            img.style.display = 'block';
-          }
-          if (state.liveHoldInterval) {
-            clearInterval(state.liveHoldInterval);
-            state.liveHoldInterval = null;
-          }
-          img.src = item.dataUrl;
-        };
-
-        wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
-        wrapper.addEventListener('touchend', stopLivePlay);
-        wrapper.addEventListener('mousedown', startLivePlay);
-        wrapper.addEventListener('mouseup', stopLivePlay);
+      var liveVideo = null;
+      if (item.liveVideoUrl) {
+        liveVideo = document.createElement('video');
+        liveVideo.src = item.liveVideoUrl;
+        liveVideo.loop = true;
+        liveVideo.muted = true;
+        liveVideo.playsInline = true;
+        liveVideo.setAttribute('playsinline', '');
+        liveVideo.setAttribute('webkit-playsinline', '');
+        liveVideo.style.position = 'absolute';
+        liveVideo.style.inset = '0';
+        liveVideo.style.width = '100%';
+        liveVideo.style.height = '100%';
+        liveVideo.style.objectFit = 'contain';
+        liveVideo.style.opacity = '0';
+        liveVideo.style.pointerEvents = 'none';
+        liveVideo.style.transition = 'opacity 0.12s ease';
+        wrapper.appendChild(liveVideo);
       }
+
+      var loopIdx = 0;
+      var startLivePlay = function(e) {
+        if (!item.isLive) return;
+        indicator.classList.add('playing');
+        if (navigator.vibrate) navigator.vibrate(20);
+
+        if (liveVideo) {
+          liveVideo.currentTime = 0;
+          liveVideo.style.opacity = '1';
+          var p = liveVideo.play();
+          if (p && p.catch) p.catch(function(){});
+        } else if (item.liveFrames && item.liveFrames.length) {
+          if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
+          state.liveHoldInterval = setInterval(function() {
+            loopIdx = (loopIdx + 1) % item.liveFrames.length;
+            img.src = item.liveFrames[loopIdx];
+          }, 100);
+        } else {
+          img.style.transition = 'transform 0.35s ease';
+          img.style.transform = 'scale(1.08)';
+        }
+      };
+
+      var stopLivePlay = function() {
+        indicator.classList.remove('playing');
+        if (liveVideo) {
+          liveVideo.pause();
+          liveVideo.style.opacity = '0';
+        }
+        if (state.liveHoldInterval) {
+          clearInterval(state.liveHoldInterval);
+          state.liveHoldInterval = null;
+        }
+        img.src = item.dataUrl;
+        img.style.transform = '';
+      };
+
+      wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
+      wrapper.addEventListener('touchend', stopLivePlay);
+      wrapper.addEventListener('mousedown', startLivePlay);
+      wrapper.addEventListener('mouseup', stopLivePlay);
     }
 
     // 綁定向下滑動關閉手勢 (Swipe down to dismiss)
@@ -14058,12 +14141,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var it = state.activeLightboxItem;
     it.isLive = !it.isLive;
     if (it.isLive && (!it.liveFrames || !it.liveFrames.length) && !it.liveVideoUrl) {
-      it.liveFrames = makeLiveFrames(it.filename.split('.')[0], '#1F1B16', '#3D2F1B');
+      var tmpImg = new Image();
+      tmpImg.onload = function() {
+        it.liveFrames = makeFramesFromImage(tmpImg, it.width, it.height);
+        saveItem(it);
+      };
+      tmpImg.src = it.dataUrl;
     }
     saveItem(it);
     fillMetadata(it);
     render();
-    if (typeof showToast === 'function') showToast(it.isLive ? '已啟用原況相片 (LIVE) 模式' : '已關閉原況模式');
+    openLightbox(it);
+    if (typeof showToast === 'function') showToast(it.isLive ? '已啟用原況相片 (LIVE) 模式' : '已切換為靜態相片模式');
   }
 
   function handleLiveMotionInput(files) {
@@ -14196,7 +14285,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     processFileList(list, albumName);
   }
 
-  // 處理匯入檔案：支援自動配對同名相片與影片為原況相片 (Live Photo)
+  // 處理匯入檔案：支援自動偵測 Apple 原況相片 EXIF 與同名相片短片配對
   function processFileList(files, defaultAlbum) {
     var fileMap = {};
     files.forEach(function(f) {
@@ -14210,6 +14299,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var loaded = 0;
     var total = groups.length;
     var newItems = [];
+    var isForce = state.forceLiveNextImport;
+    state.forceLiveNextImport = false;
 
     groups.forEach(function(grp) {
       var imgFile = grp.find(function(f){ return f.type.startsWith('image'); });
@@ -14217,62 +14308,68 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       var isLivePair = (imgFile && vidFile);
       var primaryFile = imgFile || vidFile || grp[0];
 
-      var r = new FileReader();
-      r.onload = function(e) {
-        var dataUrl = e.target.result;
-        var isVideo = primaryFile.type.startsWith('video');
+      detectAppleLivePhoto(primaryFile).then(function(hasAppleLive) {
+        var isLive = isLivePair || hasAppleLive || isForce;
+        var r = new FileReader();
+        r.onload = function(e) {
+          var dataUrl = e.target.result;
+          var isVideo = primaryFile.type.startsWith('video');
 
-        var item = {
-          id: 'media-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
-          filename: primaryFile.name,
-          mediaType: isVideo ? 'video' : 'image',
-          isLive: isLivePair,
-          dataUrl: dataUrl,
-          size: primaryFile.size,
-          width: 1920,
-          height: 1080,
-          createdAt: primaryFile.lastModified || Date.now(),
-          album: defaultAlbum || '工作紀錄',
-          isFavorite: false,
-          isDeleted: false,
-          deletedAt: null
-        };
-
-        if (isLivePair) {
-          var vr = new FileReader();
-          vr.onload = function(ve) {
-            item.liveVideoUrl = ve.target.result;
-            finishSingle();
+          var item = {
+            id: 'media-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+            filename: primaryFile.name,
+            mediaType: isVideo ? 'video' : 'image',
+            isLive: isLive,
+            dataUrl: dataUrl,
+            size: primaryFile.size,
+            width: 1920,
+            height: 1080,
+            createdAt: primaryFile.lastModified || Date.now(),
+            album: defaultAlbum || '工作紀錄',
+            isFavorite: false,
+            isDeleted: false,
+            deletedAt: null
           };
-          vr.readAsDataURL(vidFile);
-        } else {
-          finishSingle();
-        }
 
-        function finishSingle() {
-          if (!isVideo) {
-            var probeImg = new Image();
-            probeImg.onload = function() {
-              item.width = probeImg.width;
-              item.height = probeImg.height;
-              newItems.push(item);
-              loaded++;
-              if (loaded === total) finishImport(newItems);
+          if (isLivePair) {
+            var vr = new FileReader();
+            vr.onload = function(ve) {
+              item.liveVideoUrl = ve.target.result;
+              finishSingle();
             };
-            probeImg.onerror = function() {
-              newItems.push(item);
-              loaded++;
-              if (loaded === total) finishImport(newItems);
-            };
-            probeImg.src = dataUrl;
+            vr.readAsDataURL(vidFile);
           } else {
-            newItems.push(item);
-            loaded++;
-            if (loaded === total) finishImport(newItems);
+            finishSingle();
           }
-        }
-      };
-      r.readAsDataURL(primaryFile);
+
+          function finishSingle() {
+            if (!isVideo) {
+              var probeImg = new Image();
+              probeImg.onload = function() {
+                item.width = probeImg.width;
+                item.height = probeImg.height;
+                if (item.isLive && !item.liveVideoUrl) {
+                  item.liveFrames = makeFramesFromImage(probeImg, probeImg.width, probeImg.height);
+                }
+                newItems.push(item);
+                loaded++;
+                if (loaded === total) finishImport(newItems);
+              };
+              probeImg.onerror = function() {
+                newItems.push(item);
+                loaded++;
+                if (loaded === total) finishImport(newItems);
+              };
+              probeImg.src = dataUrl;
+            } else {
+              newItems.push(item);
+              loaded++;
+              if (loaded === total) finishImport(newItems);
+            }
+          }
+        };
+        r.readAsDataURL(primaryFile);
+      });
     });
   }
 
@@ -14317,6 +14414,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     URL.revokeObjectURL(url);
 
     if (typeof showToast === 'function') showToast('已產生後設資料備份，可直接儲存至檔案 App');
+  }
+
+  function triggerLivePhotoImport() {
+    state.forceLiveNextImport = true;
+    var inp = document.getElementById('photosFileInput');
+    if (inp) inp.click();
+    if (typeof showToast === 'function') showToast('請選取欲匯入之原況相片');
   }
 
   function promptNewAlbum() {
@@ -14376,6 +14480,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     exportBackup: exportBackup,
     promptNewAlbum: promptNewAlbum,
     toggleCurrentLiveMode: toggleCurrentLiveMode,
+    triggerLivePhotoImport: triggerLivePhotoImport,
     handleLiveMotionInput: handleLiveMotionInput
   };
 })();
