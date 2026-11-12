@@ -20,6 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             center.requestAuthorization(options: [.alert, .sound, .badge, .provisional]) { granted, error in
                 print("[Notification] Notification permission granted: \(granted), error: \(String(describing: error))")
                 NotificationManager.checkAndReportStatus()
+                InstallationExpiryReminder.scheduleIfNeeded()
             }
         }
         return true
@@ -71,10 +72,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func applicationDidEnterBackground(_ application: UIApplication) {}
     func applicationWillEnterForeground(_ application: UIApplication) {
         NotificationManager.checkAndReportStatus()
+        InstallationExpiryReminder.scheduleIfNeeded()
     }
     func applicationDidBecomeActive(_ application: UIApplication) {
         application.applicationIconBadgeNumber = 0
         NotificationManager.checkAndReportStatus()
+        InstallationExpiryReminder.scheduleIfNeeded()
     }
     func applicationWillTerminate(_ application: UIApplication) {}
 
@@ -85,5 +88,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                                           sessionRole: connectingSceneSession.role)
         config.delegateClass = SceneDelegate.self
         return config
+    }
+}
+
+
+/// 全新安裝後 6.5 天提醒重新安裝，避開 7 天開發簽章到期前最後半天。
+/// UserDefaults 隨 App 刪除而清除，因此完整刪除再安裝會重新計時；一般更新不會重設。
+enum InstallationExpiryReminder {
+    private static let requestID = "superdashboard.install-expiry-6-5-days"
+    private static let scheduledKey = "superdashboard.install-expiry-reminder-scheduled"
+
+    static func scheduleIfNeeded() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: scheduledKey) else { return }
+
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized ||
+                  settings.authorizationStatus == .provisional ||
+                  settings.authorizationStatus == .ephemeral else { return }
+
+            let content = UNMutableNotificationContent()
+            content.title = "超級儀表板重裝提醒"
+            content.body = "再不重裝就要過期了"
+            content.sound = .default
+
+            // 6 天 12 小時 = 561,600 秒
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 561600, repeats: false)
+            let request = UNNotificationRequest(identifier: requestID, content: content, trigger: trigger)
+            center.add(request) { error in
+                if let error = error {
+                    print("[InstallExpiry] Failed to schedule: \(error.localizedDescription)")
+                } else {
+                    defaults.set(true, forKey: scheduledKey)
+                    print("[InstallExpiry] Reminder scheduled for 6.5 days after install.")
+                }
+            }
+        }
     }
 }

@@ -3752,7 +3752,7 @@
     <div class="content-header">
       <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
       <button class="btn wallet-more-btn" id="walletMoreBtn" style="display:none;" title="全域設定中樞"><span style="letter-spacing:1.5px;font-weight:900;">•••</span></button>
-      <button class="btn" id="editBtn">編輯</button>
+      <button class="btn" id="editBtn" aria-label="編輯" title="編輯">編輯</button>
       <div class="edit-actions" id="editActions">
         <button class="btn cancel" id="cancelBtn">取消</button>
         <button class="btn done" id="doneBtn">完成</button>
@@ -4295,13 +4295,14 @@
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">金鑰掌控</div>
             </div>
           </div>
+</div>
         </div>
 
         <!-- iOS 原生延伸功能中樞與清單 -->
         <div class="section" style="margin-top:24px;">
           <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
           <div class="fin-list">
-            <div class="fin-row" onclick="window.openSuperKeyboardSettings()" style="cursor:pointer; display:flex; align-items:center;">
+            <div class="fin-row" id="settingsKeyboardRow" onclick="window.openSuperKeyboardSettings()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;">⌨️</span>
               <div class="fin-row-name" style="flex:1;"><div style="font-weight:600; color:var(--text);">超級鍵盤設定</div><div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">測試輸入、剪貼紀錄、表情符號歷史與使用統計</div></div>
               <span style="font-size:11px; color:var(--text-muted);">管理</span>
@@ -4540,6 +4541,26 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- 設定：獨立下層頁面，不與更多首頁或其他功能混排 -->
+      <div id="settingsSubView" style="display:none; position:fixed; inset:0; z-index:10000; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+          <button class="btn" onclick="window.showMoreSubView('hub')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; font-size:12.5px; cursor:pointer; background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text-muted); border-radius:20px;">
+            <span>‹</span>返回更多
+          </button>
+          <span style="font-size:15px; color:var(--text); font-weight:700;">設定</span>
+          <span style="width:72px;"></span>
+        </div>
+
+        <div class="section" style="margin-top:0;">
+          <div class="section-title"><span class="section-icon gold">⌘</span>超級快捷鍵</div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin:0 2px 10px;">指定「超級快捷鍵」要執行的唯一動作；右側勾選代表目前選取。</div>
+          <div class="fin-list" id="settingsShortcutList"></div>
+        </div>
+
+        <div id="settingsKeyboardContainer"></div>
+        <div id="settingsAppearanceContainer"></div>
       </div>
 
       <!-- 阿鵝管家 專屬子頁面 -->
@@ -5603,9 +5624,9 @@
  <div class="modal" style="width:min(92vw,440px);max-height:86vh;overflow:auto;padding:20px;border-radius:20px;">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h3 style="margin:0;font-size:17px;">超級鍵盤設定</h3><button onclick="window.closeSuperKeyboardSettings()" style="border:0;background:none;color:var(--text-muted);font-size:22px;">×</button></div>
   <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">輸入測試（可貼上文字或圖片）</label>
-  <div id="keyboardTestBox" contenteditable="true" style="min-height:100px;max-height:220px;overflow:auto;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-raised);outline:none;" data-placeholder="在這裡輸入或貼上文字／圖片…"></div>
+  <div id="keyboardTestBox" contenteditable="true" style="min-height:140px;max-height:308px;overflow:auto;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-raised);outline:none;" data-placeholder="在這裡輸入或貼上文字／圖片…"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin:4px 0 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:13px;">顯示表情分類列</div><div style="font-size:11px;color:var(--text-muted);">關閉後隱藏鍵盤底部表情分類圖示</div></div><button type="button" class="toggle on active" id="keyboardEmojiBarToggle" aria-pressed="true" onclick="window.setKeyboardEmojiBar(!(this.classList.contains('on')))"><span class="toggle-knob"></span></button></div>
-  <div style="display:flex;gap:8px;margin:10px 0 16px;"><button class="btn" onclick="document.getElementById('keyboardTestImage').click()">選擇圖片</button><input id="keyboardTestImage" type="file" accept="image/*" style="display:none" onchange="window.previewKeyboardTestImage(this)"></div>
+  <div style="display:flex;gap:8px;margin:10px 0 16px;"><button class="btn" onclick="document.getElementById('keyboardTestImage').click()">貼上圖片</button><input id="keyboardTestImage" type="file" accept="image/*" style="display:none" onchange="window.previewKeyboardTestImage(this)"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><button class="btn" onclick="window.clearSuperKeyboardData('clipboard')" style="color:var(--danger);">清除剪貼紀錄</button><button class="btn" onclick="window.clearSuperKeyboardData('emoji')" style="color:var(--danger);">清除表情符號歷史</button></div>
   <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">表情符號使用統計</div><div id="keyboardEmojiStats" style="font-size:12px;color:var(--text-muted);">載入中…</div></div>
  </div>
@@ -6029,35 +6050,109 @@ window.clearSuperKeyboardData = function(kind){
 
 window.showMoreSubView = function(view) {
   try {
-    var moreHubView = document.getElementById('moreHubView');
-    var gooseSubView = document.getElementById('gooseSubView');
-    if (!gooseSubView) return;
-
-    if (view === 'goose') {
-      if (moreHubView) { moreHubView.style.display = 'block'; moreHubView.style.transform='none'; moreHubView.style.opacity='1'; }
-      document.body.classList.add('goose-view-active');
-      gooseSubView.style.backgroundColor = 'var(--panel)';
-      gooseSubView.style.opacity = '1';
-      gooseSubView.style.display = 'block';
-      gooseSubView.style.transition = 'none';
-      gooseSubView.style.transform = 'translate3d(100%, 0, 0)';
-      void gooseSubView.offsetWidth; // 強制重繪
-      gooseSubView.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1)';
-      gooseSubView.style.transform = 'translate3d(0, 0, 0)';
-
-    } else {
-      // 頁面從右側平滑離開 (Slide-out to the right)
-
-      gooseSubView.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.28s ease';
-      gooseSubView.style.transform = 'translate3d(100%, 0, 0)';
-      setTimeout(function(){
-        gooseSubView.style.display = 'none';
-        gooseSubView.style.transform = 'none';
-        document.body.classList.remove('goose-view-active');
-      }, 320);
+    var hub = document.getElementById('moreHubView');
+    var goose = document.getElementById('gooseSubView');
+    var settings = document.getElementById('settingsSubView');
+    var target = view === 'goose' ? goose : (view === 'settings' ? settings : null);
+    [goose, settings].forEach(function(el){
+      if (!el || el === target) return;
+      el.style.transition = 'transform 0.26s ease, opacity 0.22s ease';
+      el.style.transform = 'translate3d(100%,0,0)';
+      el.style.opacity = '0';
+      setTimeout(function(){ el.style.display='none'; el.style.transform='none'; el.style.opacity='1'; }, 270);
+    });
+    if (view === 'hub') {
+      if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
+      document.body.classList.remove('goose-view-active');
+      return;
     }
+    if (!target) return;
+    if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
+    document.body.classList.add('goose-view-active');
+    target.style.display='block';
+    target.style.transition='none';
+    target.style.opacity='1';
+    target.style.transform='translate3d(100%,0,0)';
+    void target.offsetWidth;
+    target.style.transition='transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1)';
+    target.style.transform='translate3d(0,0,0)';
   } catch(e) { console.error('showMoreSubView error', e); }
 };
+
+// 將既有設定元件集中到獨立「設定」下層；保留原始 DOM ID 與事件。
+window.initMoreSettings = function() {
+  var settings = document.getElementById('settingsSubView');
+  if (!settings || settings.dataset.initialized === '1') return;
+  settings.dataset.initialized = '1';
+  var shortcutRows = [
+    ['openDashboard', '開啟超級儀表板'],
+    ['openWallet', '開啟超級錢包'],
+    ['showTransitCard', '出示悠遊卡乘車'],
+    ['copyTopItem', '複製第一筆常用速貼'],
+    ['addQuickText', '加入常用文字'],
+    ['startMetroLiveActivity', '啟動桃園捷運即時動態島'],
+    ['openWardrobe', '開啟衣櫥']
+  ];
+  var list = document.getElementById('settingsShortcutList');
+  var selected = localStorage.getItem('sd-super-shortcut-selected-option') || 'openDashboard';
+  if (!shortcutRows.some(function(item){ return item[0] === selected; })) selected = 'openDashboard';
+  shortcutRows.forEach(function(item) {
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'fin-row';
+    row.dataset.option = item[0];
+    row.style.cssText = 'width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:14px 14px;background:transparent;border:0;border-bottom:1px solid var(--border);color:var(--text);cursor:pointer;font:inherit;';
+    var name = document.createElement('span');
+    name.textContent = item[1];
+    name.style.cssText = 'flex:1;text-align:left;font-size:13px;font-weight:600;';
+    var check = document.createElement('span');
+    check.className = 'super-shortcut-check';
+    check.textContent = selected === item[0] ? '✓' : '';
+    check.style.cssText = 'width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:17px;font-weight:800;color:var(--gold);';
+    row.appendChild(name); row.appendChild(check);
+    row.addEventListener('click', function() {
+      selected = item[0];
+      localStorage.setItem('sd-super-shortcut-selected-option', selected);
+      list.querySelectorAll('[data-option]').forEach(function(other){
+        var mark = other.querySelector('.super-shortcut-check');
+        if (mark) mark.textContent = other.dataset.option === selected ? '✓' : '';
+      });
+      window.syncSuperShortcutOptions(selected);
+    });
+    list.appendChild(row);
+  });
+  window.syncSuperShortcutOptions(selected);
+  setTimeout(function(){ window.syncSuperShortcutOptions(selected); }, 1000);
+  function moveSection(fromSelector, destination) {
+    var node = document.querySelector(fromSelector);
+    var section = node && node.closest('.section');
+    var host = document.getElementById(destination);
+    if (section && host) host.appendChild(section);
+  }
+  // 桌面寵物、主題、音效、App 圖示全部收進設定。
+  moveSection('#petRoleDino', 'settingsAppearanceContainer');
+  moveSection('#themeOptDefault', 'settingsAppearanceContainer');
+  moveSection('#farmMusicToggle', 'settingsAppearanceContainer');
+  moveSection('.app-icon-grid', 'settingsAppearanceContainer');
+  // 鍵盤設定是設定項目，其餘系統測試工具仍留在「更多」首頁。
+  var keyboardRow = document.getElementById('settingsKeyboardRow');
+  if (keyboardRow) {
+    var section = document.createElement('div');
+    section.className = 'section';
+    section.style.marginTop = '18px';
+    section.innerHTML = '<div class="section-title"><span class="section-icon teal">⌨</span>鍵盤設定</div><div class="fin-list" id="settingsKeyboardList"></div>';
+    document.getElementById('settingsKeyboardContainer').appendChild(section);
+    document.getElementById('settingsKeyboardList').appendChild(keyboardRow);
+  }
+};
+window.syncSuperShortcutOptions = function(enabled) {
+  try {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.syncSuperShortcutOptions) {
+      window.webkit.messageHandlers.syncSuperShortcutOptions.postMessage(enabled);
+    }
+  } catch(e) { console.error('syncSuperShortcutOptions error', e); }
+};
+document.addEventListener('DOMContentLoaded', function(){ window.initMoreSettings(); });
 
 window.switchPage = function(page) {
   try {
@@ -7368,6 +7463,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       try{ showToast('儲存空間已滿，請刪除一些圖片項目'); }catch(e3){}
     }
     try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
+    // 每次主程式快捷資料新增、編輯或刪除後，立即更新鍵盤共用 App Group。
+    try{ if(window.syncKeyboardQuickCopy) window.syncKeyboardQuickCopy(); }catch(e){}
   }
 
   function showToast(msg){
@@ -9319,12 +9416,23 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(isWallet){
         // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
         editBtn.style.display = (!state.editMode && hasCards) ? 'inline-block' : 'none';
-      } else if(currentPage === 'more'){
-        // 在更多頁面：隱藏編輯按鈕
-        editBtn.style.display = 'none';
+      } else if(cur === 'more'){
+        // 更多頁面右上角以齒輪作為設定入口。
+        editBtn.style.display = 'inline-flex';
+        editBtn.setAttribute('aria-label', '設定');
+        editBtn.title = '設定';
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.9-1.8 1.8-1.9-1.1-.2.1-2.1.9-.1 2.2h-2.6l-.1-2.2-2.1-.9-.2-.1-1.9 1.1-1.8-1.8 1.1-1.9-.1-.2-.9-2.1-2.2-.1v-2.6l2.2-.1.9-2.1.1-.2-1.1-1.9 1.8-1.8 1.9 1.1.2-.1 2.1-.9.1-2.2h2.6l.1 2.2 2.1.9.2.1 1.9-1.1 1.8 1.8-1.1 1.9.1.2.9 2.1 2.2.1v2.6l-2.2.1-.9 2.1z"/></svg>';
+        editBtn.style.padding = '7px 9px';
+        editBtn.style.minWidth = '36px';
+        editBtn.style.justifyContent = 'center';
       } else {
         // 在儀表板或財務頁面：正常顯示編輯按鈕
         editBtn.style.display = state.editMode ? 'none' : 'inline-block';
+        editBtn.textContent = '編輯';
+        editBtn.setAttribute('aria-label', '編輯');
+        editBtn.title = '編輯';
+        editBtn.style.padding = '';
+        editBtn.style.minWidth = '';
       }
     }
     if(walletMoreBtn){
@@ -9458,7 +9566,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     renderEverything();
     showToast('已完成編輯並離開');
   }
-  editBtn.addEventListener('click', enterEdit);
+  editBtn.addEventListener('click', function(){
+    if ((window.currentPage || currentPage) === 'more') { window.showMoreSubView('settings'); return; }
+    enterEdit();
+  });
   cancelBtn.addEventListener('click', cancelEdit);
   doneBtn.addEventListener('click', commitEdit);
 
@@ -11400,43 +11511,40 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== Mini App 系統級指尖騰空滑動返回手勢 ====================
   function initMiniAppSwipeBack() {
-    var sub = document.getElementById('gooseSubView');
-    if (!sub || sub.dataset.swipeReady) return;
-    sub.dataset.swipeReady = '1';
-    var sx=0, sy=0, dx=0, active=false, horizontal=false;
-    sub.addEventListener('touchstart', function(e){
-      if(e.touches.length!==1 || sub.style.display==='none') return;
-      var t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; active=(sx<36); horizontal=false;
-    }, {passive:true});
-    sub.addEventListener('touchmove', function(e){
-      if(!active || e.touches.length!==1) return;
-      var t=e.touches[0], x=t.clientX-sx, y=t.clientY-sy;
-      if(!horizontal && x>8 && Math.abs(x)>Math.abs(y)*1.25) horizontal=true;
-      if(horizontal && x>0){
-        dx=x;
-        sub.style.transition='none';
-        sub.style.transform='translate3d('+x+'px,0,0)';
+    ['gooseSubView', 'settingsSubView'].forEach(function(id){
+      var sub = document.getElementById(id);
+      if (!sub || sub.dataset.swipeReady) return;
+      sub.dataset.swipeReady = '1';
+      var sx=0, sy=0, dx=0, active=false, horizontal=false;
+      sub.addEventListener('touchstart', function(e){
+        if(e.touches.length!==1 || sub.style.display==='none') return;
+        var t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; active=(sx<36); horizontal=false;
+      }, {passive:true});
+      sub.addEventListener('touchmove', function(e){
+        if(!active || e.touches.length!==1) return;
+        var t=e.touches[0], x=t.clientX-sx, y=t.clientY-sy;
+        if(!horizontal && x>8 && Math.abs(x)>Math.abs(y)*1.25) horizontal=true;
+        if(horizontal && x>0){ dx=x; sub.style.transition='none'; sub.style.transform='translate3d('+x+'px,0,0)'; }
+      }, {passive:true});
+      function finish(){
+        if(!active)return; active=false;
+        if(horizontal && dx>Math.min(120,window.innerWidth*.28)){
+          sub.style.transition='transform .24s cubic-bezier(.2,.9,.4,1)';
+          sub.style.transform='translate3d(100%,0,0)';
+          var done=function(){
+            sub.style.display='none'; sub.style.transform='translate3d(100%,0,0)';
+            sub.style.transition=''; sub.style.opacity=''; document.body.classList.remove('goose-view-active');
+          };
+          sub.addEventListener('transitionend',done,{once:true}); setTimeout(done,300);
+        } else if(horizontal){
+          sub.style.transition='transform .22s ease-out'; sub.style.transform='translate3d(0,0,0)';
+          setTimeout(function(){sub.style.transition='';},240);
+        }
+        dx=0; horizontal=false;
       }
-    }, {passive:true});
-    function finish(){
-      if(!active)return; active=false;
-      if(horizontal && dx>Math.min(120,window.innerWidth*.28)){
-        sub.style.transition='transform .24s cubic-bezier(.2,.9,.4,1)';
-        sub.style.transform='translate3d(100%,0,0)';
-        var done=function(){
-          sub.style.display='none'; sub.style.transform='translate3d(100%,0,0)';
-          sub.style.transition=''; sub.style.opacity=''; document.body.classList.remove('goose-view-active');
-        };
-        sub.addEventListener('transitionend',done,{once:true});
-        setTimeout(done,300);
-      } else if(horizontal){
-        sub.style.transition='transform .22s ease-out'; sub.style.transform='translate3d(0,0,0)';
-        setTimeout(function(){sub.style.transition='';},240);
-      }
-      dx=0; horizontal=false;
-    }
-    sub.addEventListener('touchend',finish,{passive:true});
-    sub.addEventListener('touchcancel',finish,{passive:true});
+      sub.addEventListener('touchend',finish,{passive:true});
+      sub.addEventListener('touchcancel',finish,{passive:true});
+    });
   }
 
   // 阿鵝寫真集照片上傳動態持久化邏輯

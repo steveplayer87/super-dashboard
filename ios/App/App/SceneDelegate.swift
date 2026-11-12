@@ -829,6 +829,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             "checkNotificationStatus",
             "authenticateFaceID",
             "syncDynamicShortcuts",
+            "syncSuperShortcutOptions",
             "saveImageToPhotos",
             "openExternalUrl",
             "superdashboard",
@@ -997,6 +998,16 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
                     sceneDelegate.updateDynamicQuickActions(items: items)
                 }
+            }
+        } else if message.name == "syncSuperShortcutOptions" {
+            let selected = message.body as? String ?? "openDashboard"
+            let allOptions = ["openDashboard", "openWallet", "showTransitCard", "copyTopItem", "addQuickText", "startMetroLiveActivity", "openWardrobe"]
+            if let defaults = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard") {
+                defaults.set(selected, forKey: "superShortcutSelectedOption")
+                allOptions.forEach { key in
+                    defaults.set(key == selected, forKey: "superShortcutEnabled_\(key)")
+                }
+                defaults.synchronize()
             }
         } else if message.name == "saveImageToPhotos" {
             if let base64Str = message.body as? String {
@@ -1409,6 +1420,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
                 QuickCopyInbox.logDrain("上次更新長按選單時當機，本次已略過（請回報）")
                 return
             }
+            // App Group 同步常用速貼，讓「超級快捷鍵」捷徑動作可複製第一筆。
+            if let shared = UserDefaults(suiteName: SceneDelegate.sharedGroupID) {
+                shared.set(items.map { ["id": $0.id, "label": $0.label, "text": $0.text, "isLink": $0.isLink ? "1" : "0"] }, forKey: "dynamicQuickCopyItems")
+            }
             var shortcuts: [UIApplicationShortcutItem] = []
             for (idx, item) in items.prefix(3).enumerated() {
                 let title = cleanedString(item.label, max: 40, fallback: "項目 \(idx + 1)")
@@ -1478,7 +1493,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         if urlStr.contains("set-app-icon") {
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             let iconName = components?.queryItems?.first(where: { $0.name == "name" })?.value
-            let target = (iconName == "default" || iconName == "AppIcon-ObsidianGold" || iconName == nil || iconName == "") ? nil : iconName
+            let target = (iconName == "default" || iconName == nil || iconName == "") ? nil : iconName
             DispatchQueue.main.async {
                 if UIApplication.shared.supportsAlternateIcons {
                     UIApplication.shared.setAlternateIconName(target) { err in

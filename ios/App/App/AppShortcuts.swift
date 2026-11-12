@@ -64,10 +64,109 @@ struct StartMetroLiveActivityIntent: AppIntent {
     }
 }
 
+// MARK: - 超級快捷鍵：執行「更多 → 設定」中唯一選取的功能
+@available(iOS 16.0, *)
+enum SuperShortcutOption: String, AppEnum {
+    case openDashboard
+    case openWallet
+    case showTransitCard
+    case copyTopItem
+    case addQuickText
+    case startMetroLiveActivity
+    case openWardrobe
+
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "超級快捷鍵功能")
+    static var caseDisplayRepresentations: [SuperShortcutOption: DisplayRepresentation] = [
+        .openDashboard: "開啟超級儀表板",
+        .openWallet: "開啟超級錢包",
+        .showTransitCard: "出示悠遊卡乘車",
+        .copyTopItem: "複製第一筆常用速貼",
+        .addQuickText: "加入常用文字",
+        .startMetroLiveActivity: "啟動桃園捷運即時動態島",
+        .openWardrobe: "開啟衣櫥"
+    ]
+}
+
+@available(iOS 16.0, *)
+struct SuperShortcutIntent: AppIntent {
+    static var title: LocalizedStringResource = "超級快捷鍵"
+    static var description = IntentDescription("執行在「超級儀表板 → 更多 → 設定」中啟用的指定功能")
+    static var openAppWhenRun: Bool = true
+
+    @Parameter(title: "要加入的文字", description: "選擇「加入常用文字」時填寫")
+    var text: String?
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("執行超級快捷鍵") {
+            \.$text
+        }
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let defaults = UserDefaults(suiteName: QuickCopyInbox.groupID)
+        let selectedRawValue = defaults?.string(forKey: "superShortcutSelectedOption") ?? "openDashboard"
+        let option = SuperShortcutOption(rawValue: selectedRawValue) ?? .openDashboard
+
+        switch option {
+        case .openDashboard:
+            await open("superdashboard://")
+            return .result(dialog: "已開啟超級儀表板。")
+        case .openWallet:
+            await open("superdashboard://wallet")
+            return .result(dialog: "已開啟超級錢包。")
+        case .showTransitCard:
+            await open("superdashboard://wallet?card=easycard")
+            return .result(dialog: "正在開啟悠遊卡。")
+        case .copyTopItem:
+            guard let items = defaults?.array(forKey: "dynamicQuickCopyItems") as? [[String: String]],
+                  let value = items.first?["text"], !value.isEmpty else {
+                return .result(dialog: "目前沒有常用速貼項目。")
+            }
+            UIPasteboard.general.string = value
+            return .result(dialog: "已複製第一筆常用速貼。")
+        case .addQuickText:
+            guard let value = text?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+                return .result(dialog: "請先在「要加入的文字」欄位輸入內容。")
+            }
+            let entry = ["kind": "text", "value": value, "id": UUID().uuidString]
+            guard QuickCopyInbox.append([entry]) else {
+                return .result(dialog: "暫時無法寫入常用文字，請確認 App Group 權限。")
+            }
+            return .result(dialog: "已將文字加入常用項目收件匣。")
+        case .startMetroLiveActivity:
+            if #available(iOS 16.2, *) {
+                LiveActivityManager.startTaoyuanMetroActivity()
+                return .result(dialog: "已啟動桃園捷運即時動態島。")
+            } else {
+                return .result(dialog: "桃園捷運即時動態島需要 iOS 16.2 或更新版本。")
+            }
+        case .openWardrobe:
+            await open("https://steveplayer87.github.io/wardrobe-master/")
+            return .result(dialog: "正在開啟衣櫥。")
+        }
+    }
+
+    @MainActor
+    private func open(_ rawURL: String) async {
+        guard let url = URL(string: rawURL) else { return }
+        await UIApplication.shared.open(url)
+    }
+}
+
 // MARK: - 捷徑 AppShortcuts 提供者 (出現在 iOS「捷徑」App 中的「此 App 的動作」)
 @available(iOS 16.2, *)
 struct SuperDashboardShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: SuperShortcutIntent(),
+            phrases: [
+                "執行 \(.applicationName) 超級快捷鍵",
+                "使用 \(.applicationName) 超級快捷鍵"
+            ],
+            shortTitle: "超級快捷鍵",
+            systemImageName: "command"
+        )
         AppShortcut(
             intent: OpenWalletIntent(),
             phrases: [
