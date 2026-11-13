@@ -7206,6 +7206,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.addEventListener('DOMContentLoaded',function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);});
     setTimeout(function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);},1000);
   })();
+});
 window.switchPage = function(page) {
   try {
     if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
@@ -8586,7 +8587,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v20';
+  var APP_VERSION = 'v21';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
