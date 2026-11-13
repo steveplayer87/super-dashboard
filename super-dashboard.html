@@ -3723,6 +3723,56 @@
   @media(max-width:360px){.loyalty-main-row{gap:5px!important}.loyalty-name{font-size:12px!important}.loyalty-row-actions{gap:4px!important}.loyalty-pts-badge{font-size:10px!important;padding:3px 5px!important}.loyalty-item{grid-template-columns:32px minmax(0,1fr)!important;column-gap:7px!important}.loyalty-app-open{width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important}.ticket-extra-grid{grid-template-columns:1fr;}}
 
   /* ==================== 第二相片庫 (iOS 原生相片風格) ==================== */
+
+
+  .lightbox-title-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    flex: 1;
+    text-align: center;
+  }
+  .lightbox-loc-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #EDE6D6;
+    letter-spacing: -0.2px;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lightbox-date-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #EDE6D6;
+    text-align: center;
+  }
+  .lightbox-date-title.sub-mode {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #8A8377 !important;
+    margin-top: 2px;
+  }
+  .meta-input-field {
+    flex: 1;
+    background: #221F19;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-size: 12.5px;
+    font-family: inherit;
+    outline: none;
+    text-align: right;
+    box-sizing: border-box;
+  }
+  .meta-input-field:focus {
+    border-color: var(--amber);
+  }
+
   #page-photos {
     color: var(--text);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
@@ -4129,7 +4179,7 @@
   /* 多選懸浮操作列 (浮在底部選單上方) */
   .photos-select-toolbar {
     position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 58px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
     left: 12px;
     right: 12px;
     background: rgba(26, 24, 21, 0.94);
@@ -4143,7 +4193,7 @@
     justify-content: space-between;
     gap: 8px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.65);
-    z-index: 99;
+    z-index: 1000005 !important;
     transform: translateY(120%);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -4478,19 +4528,22 @@
     word-break: break-all;
   }
 
-  /* 匯入選單彈窗 */
+  /* 匯入選單彈窗 (完全浮動於 tabbar 之上，絕不遮擋) */
   .photos-menu-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.65);
-    z-index: 999;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.72) !important;
+    z-index: 2000000 !important;
     display: none;
     align-items: flex-end;
     justify-content: center;
-    padding: 16px;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 84px) 16px !important;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .photos-menu-overlay.show {
-    display: flex;
+    display: flex !important;
   }
   .photos-menu-sheet {
     width: 100%;
@@ -4622,7 +4675,7 @@
       <!-- 頂部資訊與操作列 -->
       <div class="photos-header">
         <div class="photos-title-row">
-          <h1 class="photos-title">第二相片庫</h1>
+          <h1 class="photos-title">相片庫</h1>
           <div class="photos-actions-top">
             <button type="button" class="photos-btn" id="photosSelectToggleBtn" onclick="window.PhotoVault.toggleSelectMode()">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -4632,15 +4685,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               <span>匯入</span>
             </button>
-            <button type="button" class="photos-btn" id="photosExportAllBtn" onclick="window.PhotoVault.exportBackup()" title="備份匯出至 iPhone 檔案 App">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>備份</span>
-            </button>
           </div>
-        </div>
-        <div class="photos-path-badge" title="檔案儲存位置">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
-          <span id="photosPathLabel">我的 iPhone / SuperDashboard / 第二相片庫</span>
         </div>
       </div>
 
@@ -4703,11 +4748,11 @@
         <div class="photos-select-btns">
           <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectAll()" id="photosSelectAllBtn" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">全選</button>
           <button type="button" class="photos-btn" onclick="window.PhotoVault.batchShareSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             <span>分享</span>
           </button>
           <button type="button" class="photos-btn danger" onclick="window.PhotoVault.batchTrashSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">刪除</button>
-          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectMode(false)" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">完成</button>
+          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectMode(false)" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">取消</button>
         </div>
       </div>
 
@@ -4720,16 +4765,12 @@
     <!-- 匯入動作選單彈窗 -->
     <div class="photos-menu-overlay" id="photosMenuOverlay" onclick="if(event.target===this)window.PhotoVault.closeAddMenu()">
       <div class="photos-menu-sheet">
-        <div style="font-size:12px; font-weight:700; color:var(--text-muted); padding:6px 14px 2px;">新增項目至第二相片庫</div>
-        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFileInput').click(); window.PhotoVault.closeAddMenu();">
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); padding:6px 14px 2px;">新增項目至相片庫</div>
+        <button type="button" class="photos-menu-item" onclick="window.PhotoVault.requestImportMedia(); window.PhotoVault.closeAddMenu();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
           <span>匯入相片與影片</span>
         </button>
-        <button type="button" class="photos-menu-item" onclick="window.PhotoVault.triggerLivePhotoImport(); window.PhotoVault.closeAddMenu();">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
-          <span>匯入原況相片 (LIVE)</span>
-        </button>
-        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosFolderInput').click(); window.PhotoVault.closeAddMenu();">
+        <button type="button" class="photos-menu-item" onclick="window.PhotoVault.requestImportFolder(); window.PhotoVault.closeAddMenu();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
           <span>匯入整個檔案夾</span>
         </button>
@@ -4737,7 +4778,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
           <span>使用相機拍攝</span>
         </button>
-        <button type="button" class="photos-btn" onclick="window.PhotoVault.closeAddMenu()" style="width:100%; margin-top:4px; min-height:40px;">取消</button>
+        <button type="button" class="photos-btn" onclick="window.PhotoVault.closeAddMenu()" style="width:100%; margin-top:8px; min-height:42px; height:42px;">取消</button>
       </div>
     </div>
 
@@ -5861,7 +5902,7 @@
 
     <nav class="tabbar">
     <button type="button" class="tab active" data-tab="dashboard" id="tabBtnDashboard" onclick="window.switchPage('dashboard')"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
-    <button type="button" class="tab" data-tab="photos" id="tabBtnPhotos" onclick="window.switchPage('photos')"><span class="icon" id="tabIconPhotos"></span><span class="txt">照片庫</span></button>
+    <button type="button" class="tab" data-tab="photos" id="tabBtnPhotos" onclick="window.switchPage('photos')"><span class="icon" id="tabIconPhotos"></span><span class="txt">相片庫</span></button>
     <button type="button" class="tab" data-tab="finance" id="tabBtnFinance" onclick="window.switchPage('finance')"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
     <button type="button" class="tab" data-tab="wallet" id="tabBtnWallet" onclick="window.switchPage('wallet')"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
     <button type="button" class="tab" data-tab="more" id="tabBtnMore" onclick="window.switchPage('more')"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
@@ -13125,11 +13166,25 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     activePeekItem: null,
     activeLightboxItem: null,
     metaDrawerOpen: false,
-    forceLiveNextImport: false,
-    liveHoldInterval: null
+    forceLiveNextImport: false
   };
 
-  // 將 DataURL 轉換為原生二進位 File 物件 (解決分享只分享文字問題)
+  // 格式化日期時間 (包含星期幾)
+  function formatDateWithWeekday(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    var y = d.getFullYear();
+    var m = (d.getMonth() + 1).toString().padStart(2, '0');
+    var day = d.getDate().toString().padStart(2, '0');
+    var h = d.getHours().toString().padStart(2, '0');
+    var min = d.getMinutes().toString().padStart(2, '0');
+    var weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    var weekDay = weekDays[d.getDay()];
+    return y + '年' + m + '月' + day + '日 ' + weekDay + ' ' + h + ':' + min;
+  }
+
+  // 將 DataURL 轉換為原生二進位 File 物件 (原生分享真實照片/影片)
   function dataUrlToFile(dataUrl, filename) {
     if (!dataUrl) return null;
     try {
@@ -13148,7 +13203,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       return null;
     }
   }
-
 
   // 智慧掃描 Apple 原況相片 EXIF/二進位 ContentIdentifier UUID
   function detectAppleLivePhoto(file) {
@@ -13180,7 +13234,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       reader.readAsArrayBuffer(file.slice(0, 524288));
     });
   }
-
 
   // 向量繪製高解析度樣例海報
   function makeSampleCanvas(title, sub, type, color1, color2) {
@@ -13224,43 +13277,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
       ctx.font = '20px monospace';
-      ctx.fillText('第二相片庫 • 原生級隔離相片庫', 400, 540);
+      ctx.fillText('相片庫 • 原生級隔離相片庫', 400, 540);
 
       return canvas.toDataURL('image/jpeg', 0.9);
     } catch(e) { return ''; }
-  }
-
-  // 產生原況相片動畫影格
-  function makeLiveFrames(title, color1, color2) {
-    var frames = [];
-    for (var f = 0; f < 8; f++) {
-      var canvas = document.createElement('canvas');
-      canvas.width = 400; canvas.height = 400;
-      var ctx = canvas.getContext('2d');
-      var grad = ctx.createLinearGradient(0, 0, 400, 400);
-      grad.addColorStop(0, color1);
-      grad.addColorStop(1, color2);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 400, 400);
-
-      var r = 60 + f * 12;
-      ctx.strokeStyle = 'rgba(255, 159, 28, ' + (1 - f * 0.1) + ')';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(200, 180, r, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 24px -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(title, 200, 280);
-      ctx.fillStyle = '#FF9F1C';
-      ctx.font = 'bold 16px -apple-system, sans-serif';
-      ctx.fillText('LIVE MOTION • ' + (f + 1) + '/8', 200, 320);
-
-      frames.push(canvas.toDataURL('image/jpeg', 0.8));
-    }
-    return frames;
   }
 
   // 初始化 IndexedDB
@@ -13303,27 +13323,27 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function seedDefaultPhotos() {
     var sample1Data = makeSampleCanvas('工地巡檢紀錄_A棟', '工程進度現場確認', '原況相片 LIVE', '#1F1B16', '#3D2F1B');
-    var sample1Frames = makeLiveFrames('工地巡檢紀錄_A棟', '#1F1B16', '#3D2F1B');
     var sample2Data = makeSampleCanvas('伺服器機房測試錄影', '主幹路由器散熱測試', '高畫質影片 00:15', '#131B24', '#1E3547');
     var sample3Data = makeSampleCanvas('電氣施工配線藍圖', '第三期主配電盤線路', '專案藍圖', '#0C2027', '#17404D');
-    var sample4Data = makeSampleCanvas('統一發票採購報銷', '硬體設備原廠發票', '單據收據', '#211D16', '#4A3D24');
-    var sample5Data = makeSampleCanvas('架構討論白板截圖', '微服務與資料庫拓撲', '會議白板截圖', '#1B1424', '#39224A');
+    var sample4Data = makeSampleCanvas('統一發票採購報銷', '硬體設備原廠發票', '單據憑證', '#211D16', '#4A3D24');
+    var sample5Data = makeSampleCanvas('架構討論白板截圖', '微服務與資料庫拓撲', '會議截圖', '#1B1424', '#39224A');
     var sample6Data = makeSampleCanvas('精密光學傳感器序號', '零件進料入庫條碼', '進料檢驗', '#1E2417', '#344721');
 
     var now = Date.now();
     var samples = [
       {
         id: 'sample-1',
-        filename: 'IMG_20261113_0932_LIVE.HEIC',
+        filename: 'IMG_20261113_0932.HEIC',
+        location: '台北市信義區 • 總部研發中心',
         mediaType: 'image',
         isLive: true,
-        liveFrames: sample1Frames,
         dataUrl: sample1Data,
         width: 4032,
         height: 3024,
         size: 3565158,
         createdAt: now - 3600000 * 2,
         album: '工作紀錄',
+        notes: '研發機房一期現場檢查',
         isFavorite: true,
         isDeleted: false,
         deletedAt: null
@@ -13331,6 +13351,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       {
         id: 'sample-2',
         filename: 'REC_20261113_SERVER.MP4',
+        location: '新北市中和區 • 雲端資料中心',
         mediaType: 'video',
         isLive: false,
         duration: '00:15',
@@ -13340,6 +13361,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         size: 7864320,
         createdAt: now - 3600000 * 6,
         album: '工作紀錄',
+        notes: '伺服器壓力散熱錄影',
         isFavorite: false,
         isDeleted: false,
         deletedAt: null
@@ -13347,6 +13369,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       {
         id: 'sample-3',
         filename: 'BLUEPRINT_PHASE3.PNG',
+        location: '新竹科學園區 • 施工現場',
         mediaType: 'image',
         isLive: false,
         dataUrl: sample3Data,
@@ -13355,6 +13378,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         size: 4325376,
         createdAt: now - 86400000 * 1,
         album: '專案相片',
+        notes: '第三期高壓配線平面圖',
         isFavorite: true,
         isDeleted: false,
         deletedAt: null
@@ -13362,6 +13386,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       {
         id: 'sample-4',
         filename: 'INVOICE_HARDWARE_1102.JPG',
+        location: '',
         mediaType: 'image',
         isLive: false,
         dataUrl: sample4Data,
@@ -13370,6 +13395,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         size: 1945600,
         createdAt: now - 86400000 * 2,
         album: '單據憑證',
+        notes: '伺服器原廠零件採購報銷',
         isFavorite: false,
         isDeleted: false,
         deletedAt: null
@@ -13377,6 +13403,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       {
         id: 'sample-5',
         filename: 'WHITEBOARD_ARCH_SNAP.PNG',
+        location: '',
         mediaType: 'screenshot',
         isLive: false,
         dataUrl: sample5Data,
@@ -13385,6 +13412,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         size: 2411724,
         createdAt: now - 86400000 * 3,
         album: '專案相片',
+        notes: '資料庫拓撲架構討論截圖',
         isFavorite: false,
         isDeleted: false,
         deletedAt: null
@@ -13392,6 +13420,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       {
         id: 'sample-6',
         filename: 'SENSOR_BARCODE_CHECK.JPG',
+        location: '台中物流保稅倉',
         mediaType: 'image',
         isLive: false,
         dataUrl: sample6Data,
@@ -13400,6 +13429,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         size: 1572864,
         createdAt: now - 86400000 * 4,
         album: '全部相片',
+        notes: '傳感器批次條碼抽檢',
         isFavorite: false,
         isDeleted: false,
         deletedAt: null
@@ -13452,16 +13482,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
-  function formatDate(ts) {
-    var d = new Date(ts);
-    var y = d.getFullYear();
-    var m = (d.getMonth() + 1).toString().padStart(2, '0');
-    var day = d.getDate().toString().padStart(2, '0');
-    var h = d.getHours().toString().padStart(2, '0');
-    var min = d.getMinutes().toString().padStart(2, '0');
-    return y + '年' + m + '月' + day + '日 ' + h + ':' + min;
-  }
-
   // ==================== 視圖渲染 ====================
   function render() {
     var activeList = state.items.filter(function(x) { return !x.isDeleted; });
@@ -13473,21 +13493,34 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       badge.style.display = trashList.length > 0 ? 'inline-block' : 'none';
     }
 
+    // 處理篩選條件
+    var isFiltered = false;
+    var filterDesc = '全部相片與影片';
+
     if (state.albumFilter) {
+      isFiltered = true;
       if (state.albumFilter === '喜好項目') {
         activeList = activeList.filter(function(x) { return x.isFavorite; });
+        filterDesc = '相簿：喜好項目';
       } else {
         activeList = activeList.filter(function(x) { return x.album === state.albumFilter; });
+        filterDesc = '相簿：' + state.albumFilter;
       }
-    }
-    if (state.mediaTypeFilter === 'live') {
-      activeList = activeList.filter(function(x) { return x.isLive; });
-    } else if (state.mediaTypeFilter === 'video') {
-      activeList = activeList.filter(function(x) { return x.mediaType === 'video'; });
-    } else if (state.mediaTypeFilter === 'screenshot') {
-      activeList = activeList.filter(function(x) { return x.mediaType === 'screenshot'; });
-    } else if (state.mediaTypeFilter === 'favorite') {
-      activeList = activeList.filter(function(x) { return x.isFavorite; });
+    } else if (state.mediaTypeFilter) {
+      isFiltered = true;
+      if (state.mediaTypeFilter === 'live') {
+        activeList = activeList.filter(function(x) { return x.isLive; });
+        filterDesc = '媒體類型：原況相片 (LIVE)';
+      } else if (state.mediaTypeFilter === 'video') {
+        activeList = activeList.filter(function(x) { return x.mediaType === 'video'; });
+        filterDesc = '媒體類型：影片 (Videos)';
+      } else if (state.mediaTypeFilter === 'screenshot') {
+        activeList = activeList.filter(function(x) { return x.mediaType === 'screenshot'; });
+        filterDesc = '媒體類型：螢幕截圖';
+      } else if (state.mediaTypeFilter === 'favorite') {
+        activeList = activeList.filter(function(x) { return x.isFavorite; });
+        filterDesc = '媒體類型：已收藏項目';
+      }
     }
 
     var summaryEl = document.getElementById('photosItemsSummary');
@@ -13501,18 +13534,27 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     var filterLabel = document.getElementById('photosFilterLabel');
     if (filterLabel) {
-      if (state.albumFilter) filterLabel.textContent = '相簿：' + state.albumFilter;
-      else if (state.mediaTypeFilter) filterLabel.textContent = '篩選：' + state.mediaTypeFilter;
-      else filterLabel.textContent = '全部相片與影片';
+      if (state.albumFilter) {
+        filterLabel.innerHTML = '<span>' + filterDesc + '</span>' +
+          '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'albums\')" style="min-height:28px; height:28px; padding:0 10px; font-size:12px; margin-left:8px;">‹ 返回相簿</button>';
+      } else if (state.mediaTypeFilter) {
+        filterLabel.innerHTML = '<span>' + filterDesc + '</span>' +
+          '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'mediatypes\')" style="min-height:28px; height:28px; padding:0 10px; font-size:12px; margin-left:8px;">‹ 返回媒體類型</button>';
+      } else {
+        filterLabel.innerHTML = '<span>全部相片與影片</span>';
+      }
     }
 
     var grid = document.getElementById('photosGrid');
     if (grid) {
       if (activeList.length === 0) {
+        var emptyMsg = isFiltered ? '此分類下尚無項目' : '此資料夾尚無相片或影片';
+        var backTarget = state.albumFilter ? 'albums' : (state.mediaTypeFilter ? 'mediatypes' : 'all');
+        var backBtnText = state.albumFilter ? '返回相簿' : (state.mediaTypeFilter ? '返回媒體類型' : '返回全部相片');
+        var backBtn = isFiltered ? ('<br><button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'' + backTarget + '\')" style="margin-top:10px; min-height:30px; height:30px; padding:0 12px; font-size:12px;">‹ ' + backBtnText + '</button>') : '';
         grid.innerHTML = '<div style="grid-column:1/-1; padding:48px 16px; text-align:center; color:var(--text-muted); font-size:13px;">' +
           '<div style="margin-bottom:8px;"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>' +
-          '此資料夾尚無相片或影片<br><span style="font-size:11px; opacity:0.7;">點擊右上角「匯入」或「相機」即可存入第二相片庫</span>' +
-          '</div>';
+          emptyMsg + backBtn + '</div>';
       } else {
         grid.innerHTML = activeList.map(function(item) {
           var isSel = state.selectedIds.has(item.id);
@@ -13541,6 +13583,26 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     renderMediaTypes();
     renderDeletedGrid(trashList);
     updateSelectToolbar();
+  }
+
+  function updateCountsOnly() {
+    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
+    var trashList = state.items.filter(function(x) { return x.isDeleted; });
+
+    var badge = document.getElementById('photosTrashCountBadge');
+    if (badge) {
+      badge.textContent = trashList.length;
+      badge.style.display = trashList.length > 0 ? 'inline-block' : 'none';
+    }
+
+    var summaryEl = document.getElementById('photosItemsSummary');
+    if (summaryEl) {
+      var photoCount = activeList.filter(function(x){ return x.mediaType !== 'video'; }).length;
+      var videoCount = activeList.filter(function(x){ return x.mediaType === 'video'; }).length;
+      var liveCount = activeList.filter(function(x){ return x.isLive; }).length;
+      var liveTxt = liveCount > 0 ? ('、' + liveCount + ' 張原況') : '';
+      summaryEl.textContent = '共 ' + activeList.length + ' 個項目 (' + photoCount + ' 張相片' + liveTxt + '、' + videoCount + ' 部影片)';
+    }
   }
 
   function bindCellGestures(cell, item) {
@@ -13663,10 +13725,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }).join('');
   }
 
-  function switchSubtab(tab) {
+  function switchSubtab(tab, keepFilter) {
     state.subtab = tab;
-    state.albumFilter = null;
-    state.mediaTypeFilter = null;
+    if (!keepFilter) {
+      state.albumFilter = null;
+      state.mediaTypeFilter = null;
+    }
 
     document.querySelectorAll('.photos-subtab').forEach(function(b) {
       b.classList.toggle('active', b.dataset.subtab === tab);
@@ -13686,19 +13750,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   function filterByAlbum(album) {
-    if (album === '全部相片') {
-      state.albumFilter = null;
-    } else {
-      state.albumFilter = album;
-    }
-    state.subtab = 'all';
-    switchSubtab('all');
+    state.albumFilter = (album === '全部相片') ? null : album;
+    state.mediaTypeFilter = null;
+    switchSubtab('all', true);
   }
 
   function filterByMediaType(type) {
     state.mediaTypeFilter = type;
-    state.subtab = 'all';
-    switchSubtab('all');
+    state.albumFilter = null;
+    switchSubtab('all', true);
+  }
+
+  function clearFilters() {
+    state.albumFilter = null;
+    state.mediaTypeFilter = null;
+    switchSubtab('all', false);
   }
 
   function toggleSelectMode(enable) {
@@ -13753,6 +13819,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function batchTrashSelected() {
     if (state.selectedIds.size === 0) return;
+    if (!confirm('確定要將選取的 ' + state.selectedIds.size + ' 個項目移至最近刪除嗎？')) return;
     var now = Date.now();
     state.selectedIds.forEach(function(id) {
       var item = state.items.find(function(x) { return x.id === id; });
@@ -13768,7 +13835,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     render();
   }
 
-  // 真正傳送檔案二進位的批次分享
   function batchShareSelected() {
     if (state.selectedIds.size === 0) return;
     var selected = state.items.filter(function(x) { return state.selectedIds.has(x.id); });
@@ -13781,7 +13847,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (files.length > 0 && navigator.canShare && navigator.canShare({ files: files })) {
       navigator.share({
         files: files,
-        title: '第二相片庫項目'
+        title: '相片庫項目'
       }).catch(function(e) {});
     } else {
       selected.forEach(function(item) {
@@ -13808,27 +13874,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (!modal || !mediaBox) return;
 
     title.textContent = item.filename;
-    subtitle.textContent = formatDate(item.createdAt) + ' • ' + (item.album || '第二相片庫');
+    var locSub = item.location ? (item.location + ' • ') : '';
+    subtitle.textContent = locSub + formatDateWithWeekday(item.createdAt);
     if (favLabel) favLabel.textContent = item.isFavorite ? '取消收藏' : '加入收藏';
 
-    if (item.isLive) {
-      if (item.liveVideoUrl) {
-        mediaBox.innerHTML = '<video src="' + item.liveVideoUrl + '" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>';
-      } else if (item.liveFrames && item.liveFrames.length) {
-        var img = document.createElement('img');
-        img.src = item.liveFrames[0];
-        mediaBox.innerHTML = '';
-        mediaBox.appendChild(img);
-
-        var idx = 0;
-        if (state.liveHoldInterval) clearInterval(state.liveHoldInterval);
-        state.liveHoldInterval = setInterval(function() {
-          idx = (idx + 1) % item.liveFrames.length;
-          img.src = item.liveFrames[idx];
-        }, 120);
-      } else {
-        mediaBox.innerHTML = '<img src="' + item.dataUrl + '" alt="' + item.filename + '">';
-      }
+    if (item.isLive && item.liveVideoUrl) {
+      mediaBox.innerHTML = '<video src="' + item.liveVideoUrl + '" autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>';
     } else {
       mediaBox.innerHTML = '<img src="' + item.dataUrl + '" alt="' + item.filename + '">';
     }
@@ -13839,10 +13890,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function closePeek() {
     var modal = document.getElementById('photoPeekModal');
     if (modal) modal.classList.remove('show');
-    if (state.liveHoldInterval) {
-      clearInterval(state.liveHoldInterval);
-      state.liveHoldInterval = null;
-    }
     state.activePeekItem = null;
   }
 
@@ -13855,11 +13902,27 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function peekToggleFavorite() {
     if (!state.activePeekItem) return;
-    state.activePeekItem.isFavorite = !state.activePeekItem.isFavorite;
-    saveItem(state.activePeekItem);
+    var it = state.activePeekItem;
+    it.isFavorite = !it.isFavorite;
+    saveItem(it);
     closePeek();
-    render();
-    if (typeof showToast === 'function') showToast(state.activePeekItem.isFavorite ? '已加入喜好項目' : '已從喜好項目移除');
+
+    // 局部更新對應 cell，不觸發全頁面重繪
+    var cell = document.querySelector('.photo-cell[data-id="' + it.id + '"]');
+    if (cell) {
+      var existingFav = cell.querySelector('.photo-cell-fav');
+      if (it.isFavorite) {
+        if (!existingFav) {
+          var favDiv = document.createElement('div');
+          favDiv.className = 'photo-cell-fav';
+          favDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+          cell.appendChild(favDiv);
+        }
+      } else {
+        if (existingFav) existingFav.remove();
+      }
+    }
+    if (typeof showToast === 'function') showToast(it.isFavorite ? '已加入喜好項目' : '已從喜好項目移除');
   }
 
   function peekMoveAlbum() {
@@ -13870,29 +13933,49 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (newAlbum) {
       it.album = newAlbum.trim();
       saveItem(it);
-      render();
       if (typeof showToast === 'function') showToast('已移至相簿：' + it.album);
     }
   }
 
   function peekTrash() {
     if (!state.activePeekItem) return;
+    if (!confirm('確定要將此相片移至最近刪除嗎？')) return;
     var it = state.activePeekItem;
     it.isDeleted = true;
     it.deletedAt = Date.now();
     saveItem(it);
     closePeek();
-    render();
+
+    var cell = document.querySelector('.photo-cell[data-id="' + it.id + '"]');
+    if (cell) cell.remove();
+    updateCountsOnly();
     if (typeof showToast === 'function') showToast('已移至最近刪除');
   }
 
   // ==================== 全螢幕檢視器 (Lightbox 升級) ====================
+  function updateLightboxTitle(item) {
+    var locEl = document.getElementById('lightboxLocationText');
+    var dateEl = document.getElementById('lightboxDateText');
+    if (!locEl || !dateEl) return;
+
+    var formattedTime = formatDateWithWeekday(item.createdAt);
+
+    if (item.location && item.location.trim()) {
+      locEl.style.display = 'block';
+      locEl.textContent = item.location.trim();
+      dateEl.className = 'lightbox-date-title sub-mode';
+      dateEl.textContent = formattedTime;
+    } else {
+      locEl.style.display = 'none';
+      dateEl.className = 'lightbox-date-title';
+      dateEl.textContent = formattedTime;
+    }
+  }
+
   function openLightbox(item) {
     state.activeLightboxItem = item;
     var box = document.getElementById('photoLightbox');
     var wrapper = document.getElementById('lightboxMediaWrapper');
-    var dEl = document.getElementById('lightboxDate');
-    var tEl = document.getElementById('lightboxTime');
 
     if (!box || !wrapper) return;
 
@@ -13900,10 +13983,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var appTopbar = document.querySelector('.topbar');
     if (appTopbar) appTopbar.style.display = 'none';
 
-    var d = new Date(item.createdAt);
-    if (dEl) dEl.textContent = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
-    if (tEl) tEl.textContent = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-
+    updateLightboxTitle(item);
     updateLightboxFavIcons(item.isFavorite);
 
     wrapper.innerHTML = '';
@@ -13928,67 +14008,69 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       img.style.objectFit = 'contain';
       wrapper.appendChild(img);
 
-      // 原況相片長按播放引擎 (支援原生 iOS 影片無阻斷播放與微動態影格)
-      var indicator = document.createElement('div');
-      indicator.className = 'lightbox-live-indicator' + (item.isLive ? ' active' : '');
-      indicator.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>' + (item.isLive ? 'LIVE' : '靜態相片') + '</span>';
-      indicator.title = '點擊切換原況/靜態模式';
-      indicator.onclick = function(e) {
-        e.stopPropagation();
-        window.PhotoVault.toggleCurrentLiveMode();
-      };
-      wrapper.appendChild(indicator);
+      // 原況相片指示器與播放引擎
+      if (item.isLive) {
+        var indicator = document.createElement('div');
+        indicator.className = 'lightbox-live-indicator active';
+        indicator.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>' + (item.liveVideoUrl ? 'LIVE' : 'LIVE (待配對短片)') + '</span>';
+        indicator.title = '點擊切換原況/靜態模式';
+        indicator.onclick = function(e) {
+          e.stopPropagation();
+          window.PhotoVault.toggleCurrentLiveMode();
+        };
+        wrapper.appendChild(indicator);
 
-      var liveVideo = null;
-      if (item.liveVideoUrl) {
-        liveVideo = document.createElement('video');
-        liveVideo.src = item.liveVideoUrl;
-        liveVideo.loop = true;
-        liveVideo.muted = true;
-        liveVideo.playsInline = true;
-        liveVideo.setAttribute('playsinline', '');
-        liveVideo.setAttribute('webkit-playsinline', '');
-        liveVideo.style.position = 'absolute';
-        liveVideo.style.inset = '0';
-        liveVideo.style.width = '100%';
-        liveVideo.style.height = '100%';
-        liveVideo.style.objectFit = 'contain';
-        liveVideo.style.opacity = '0';
-        liveVideo.style.pointerEvents = 'none';
-        liveVideo.style.transition = 'opacity 0.12s ease';
-        wrapper.appendChild(liveVideo);
-      }
-
-      var startLivePlay = function(e) {
-        if (!item.isLive) return;
-        if (!liveVideo) {
-          if (typeof showToast === 'function') showToast('此相片尚無配對的動態影片檔 (.MOV)，請於詳細資訊配對');
-          return;
-        }
-        indicator.classList.add('playing');
-        if (navigator.vibrate) navigator.vibrate(20);
-
-        liveVideo.currentTime = 0;
-        liveVideo.style.opacity = '1';
-        var p = liveVideo.play();
-        if (p && p.catch) p.catch(function(){});
-      };
-
-      var stopLivePlay = function() {
-        indicator.classList.remove('playing');
-        if (liveVideo) {
-          liveVideo.pause();
+        var liveVideo = null;
+        if (item.liveVideoUrl) {
+          liveVideo = document.createElement('video');
+          liveVideo.src = item.liveVideoUrl;
+          liveVideo.loop = true;
+          liveVideo.muted = true;
+          liveVideo.playsInline = true;
+          liveVideo.setAttribute('playsinline', '');
+          liveVideo.setAttribute('webkit-playsinline', '');
+          liveVideo.style.position = 'absolute';
+          liveVideo.style.inset = '0';
+          liveVideo.style.width = '100%';
+          liveVideo.style.height = '100%';
+          liveVideo.style.objectFit = 'contain';
           liveVideo.style.opacity = '0';
+          liveVideo.style.pointerEvents = 'none';
+          liveVideo.style.transition = 'opacity 0.12s ease';
+          wrapper.appendChild(liveVideo);
         }
-      };
 
-      wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
-      wrapper.addEventListener('touchend', stopLivePlay);
-      wrapper.addEventListener('mousedown', startLivePlay);
-      wrapper.addEventListener('mouseup', stopLivePlay);
+        var startLivePlay = function(e) {
+          if (!item.isLive) return;
+          if (!liveVideo) {
+            if (typeof showToast === 'function') showToast('此相片尚無配對的動態影片檔 (.MOV)，請於詳細資訊配對');
+            return;
+          }
+          indicator.classList.add('playing');
+          if (navigator.vibrate) navigator.vibrate(20);
+
+          liveVideo.currentTime = 0;
+          liveVideo.style.opacity = '1';
+          var p = liveVideo.play();
+          if (p && p.catch) p.catch(function(){});
+        };
+
+        var stopLivePlay = function() {
+          indicator.classList.remove('playing');
+          if (liveVideo) {
+            liveVideo.pause();
+            liveVideo.style.opacity = '0';
+          }
+        };
+
+        wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
+        wrapper.addEventListener('touchend', stopLivePlay);
+        wrapper.addEventListener('mousedown', startLivePlay);
+        wrapper.addEventListener('mouseup', stopLivePlay);
+      }
     }
 
-    // 綁定向下滑動關閉手勢 (Swipe down to dismiss)
+    // 綁定向下滑動自然關閉手勢 (Swipe down to dismiss)
     bindSwipeToDismiss(wrapper);
 
     fillMetadata(item);
@@ -14063,27 +14145,36 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (box) box.classList.remove('show');
     toggleMetaDrawer(false);
 
-    // 恢復外層儀錶板頂欄
     var appTopbar = document.querySelector('.topbar');
     if (appTopbar) appTopbar.style.display = '';
 
-    if (state.liveHoldInterval) {
-      clearInterval(state.liveHoldInterval);
-      state.liveHoldInterval = null;
-    }
     state.activeLightboxItem = null;
   }
 
   function fillMetadata(item) {
-    var fn = document.getElementById('metaFilename');
+    var fnInput = document.getElementById('metaEditFilename');
+    var locInput = document.getElementById('metaEditLocation');
+    var timeInput = document.getElementById('metaEditTimestamp');
+    var albInput = document.getElementById('metaEditAlbum');
+    var notesInput = document.getElementById('metaEditNotes');
+
     var fmt = document.getElementById('metaFormat');
     var dim = document.getElementById('metaDimensions');
     var sz = document.getElementById('metaFileSize');
-    var ts = document.getElementById('metaTimestamp');
-    var alb = document.getElementById('metaAlbum');
     var liveBtn = document.getElementById('metaLiveToggleBtn');
 
-    if (fn) fn.textContent = item.filename;
+    if (fnInput) fnInput.value = item.filename || '';
+    if (locInput) locInput.value = item.location || '';
+    if (timeInput) {
+      var d = new Date(item.createdAt);
+      if (!isNaN(d.getTime())) {
+        var localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        timeInput.value = localIso;
+      }
+    }
+    if (albInput) albInput.value = item.album || '';
+    if (notesInput) notesInput.value = item.notes || '';
+
     if (fmt) {
       if (item.isLive) fmt.textContent = '原況相片 (Apple Live Photo • HEIC + MOV)';
       else if (item.mediaType === 'video') fmt.textContent = '高畫質影片 (MPEG-4 Video)';
@@ -14095,12 +14186,35 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       dim.textContent = item.width + ' × ' + item.height + ' (' + mp + ' MP)';
     }
     if (sz) sz.textContent = formatBytes(item.size);
-    if (ts) ts.textContent = formatDate(item.createdAt);
-    if (alb) alb.textContent = item.album || '未分類';
     if (liveBtn) {
       liveBtn.textContent = item.isLive ? '取消原況標記' : '設為原況相片';
       liveBtn.classList.toggle('primary', item.isLive);
     }
+  }
+
+  // 儲存後設資料真實修改
+  function saveMetadataEdits() {
+    if (!state.activeLightboxItem) return;
+    var it = state.activeLightboxItem;
+    var fnInput = document.getElementById('metaEditFilename');
+    var locInput = document.getElementById('metaEditLocation');
+    var timeInput = document.getElementById('metaEditTimestamp');
+    var albInput = document.getElementById('metaEditAlbum');
+    var notesInput = document.getElementById('metaEditNotes');
+
+    if (fnInput && fnInput.value.trim()) it.filename = fnInput.value.trim();
+    if (locInput) it.location = locInput.value.trim();
+    if (timeInput && timeInput.value) {
+      var d = new Date(timeInput.value);
+      if (!isNaN(d.getTime())) it.createdAt = d.getTime();
+    }
+    if (albInput && albInput.value.trim()) it.album = albInput.value.trim();
+    if (notesInput) it.notes = notesInput.value.trim();
+
+    saveItem(it);
+    updateLightboxTitle(it);
+    toggleMetaDrawer(false);
+    if (typeof showToast === 'function') showToast('後設資料已更新並儲存');
   }
 
   function toggleCurrentLiveMode() {
@@ -14109,7 +14223,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     it.isLive = !it.isLive;
     saveItem(it);
     fillMetadata(it);
-    render();
     openLightbox(it);
     if (typeof showToast === 'function') {
       if (it.isLive) {
@@ -14129,8 +14242,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.activeLightboxItem.liveVideoUrl = e.target.result;
       saveItem(state.activeLightboxItem);
       fillMetadata(state.activeLightboxItem);
-      render();
-      if (typeof showToast === 'function') showToast('已成功為此相片配對動態影片');
+      openLightbox(state.activeLightboxItem);
+      if (typeof showToast === 'function') showToast('已成功為此相片配對真實動態影片');
     };
     reader.readAsDataURL(file);
   }
@@ -14145,20 +14258,41 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function toggleLightboxFavorite() {
     if (!state.activeLightboxItem) return;
-    state.activeLightboxItem.isFavorite = !state.activeLightboxItem.isFavorite;
-    saveItem(state.activeLightboxItem);
-    updateLightboxFavIcons(state.activeLightboxItem.isFavorite);
-    render();
-    if (typeof showToast === 'function') showToast(state.activeLightboxItem.isFavorite ? '已加入喜好項目' : '已從喜好項目移除');
+    var it = state.activeLightboxItem;
+    it.isFavorite = !it.isFavorite;
+    saveItem(it);
+    updateLightboxFavIcons(it.isFavorite);
+
+    // 局部更新對應 cell，不觸發全頁面重繪
+    var cell = document.querySelector('.photo-cell[data-id="' + it.id + '"]');
+    if (cell) {
+      var existingFav = cell.querySelector('.photo-cell-fav');
+      if (it.isFavorite) {
+        if (!existingFav) {
+          var favDiv = document.createElement('div');
+          favDiv.className = 'photo-cell-fav';
+          favDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+          cell.appendChild(favDiv);
+        }
+      } else {
+        if (existingFav) existingFav.remove();
+      }
+    }
+    if (typeof showToast === 'function') showToast(it.isFavorite ? '已加入喜好項目' : '已從喜好項目移除');
   }
 
   function trashCurrentLightbox() {
     if (!state.activeLightboxItem) return;
-    state.activeLightboxItem.isDeleted = true;
-    state.activeLightboxItem.deletedAt = Date.now();
-    saveItem(state.activeLightboxItem);
+    if (!confirm('確定要將此相片移至最近刪除嗎？')) return;
+    var it = state.activeLightboxItem;
+    it.isDeleted = true;
+    it.deletedAt = Date.now();
+    saveItem(it);
+
+    var cell = document.querySelector('.photo-cell[data-id="' + it.id + '"]');
+    if (cell) cell.remove();
     closeLightbox();
-    render();
+    updateCountsOnly();
     if (typeof showToast === 'function') showToast('已移至最近刪除');
   }
 
@@ -14189,7 +14323,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var item = state.items.find(function(x) { return x.id === id; });
     if (!item) return;
 
-    if (confirm('是否還原此項目回第二相片庫？（按確定還原，按取消維持在最近刪除）')) {
+    if (confirm('是否還原此項目回相片庫？（按確定還原，按取消維持在最近刪除）')) {
       item.isDeleted = false;
       item.deletedAt = null;
       saveItem(item);
@@ -14234,9 +14368,19 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (overlay) overlay.classList.remove('show');
   }
 
+  function requestImportMedia() {
+    var inp = document.getElementById('photosFileInput');
+    if (inp) inp.click();
+  }
+
+  function requestImportFolder() {
+    var inp = document.getElementById('photosFolderInput');
+    if (inp) inp.click();
+  }
+
   function handleFileInput(files) {
     if (!files || !files.length) return;
-    processFileList(Array.from(files), '全部相片');
+    processFileList(Array.from(files), '全部相片', false);
   }
 
   function handleFolderInput(files) {
@@ -14247,11 +14391,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       var parts = list[0].webkitRelativePath.split('/');
       if (parts.length > 1) albumName = parts[0];
     }
-    processFileList(list, albumName);
+    processFileList(list, albumName, true);
   }
 
   // 處理匯入檔案：支援自動偵測 Apple 原況相片 EXIF 與同名相片短片配對
-  function processFileList(files, defaultAlbum) {
+  function processFileList(files, defaultAlbum, isFolder) {
     var fileMap = {};
     files.forEach(function(f) {
       var dotIdx = f.name.lastIndexOf('.');
@@ -14283,6 +14427,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           var item = {
             id: 'media-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
             filename: primaryFile.name,
+            location: '',
             mediaType: isVideo ? 'video' : 'image',
             isLive: isLive,
             dataUrl: dataUrl,
@@ -14291,6 +14436,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             height: 1080,
             createdAt: primaryFile.lastModified || Date.now(),
             album: defaultAlbum || '工作紀錄',
+            notes: '',
             isFavorite: false,
             isDeleted: false,
             deletedAt: null
@@ -14313,21 +14459,20 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
               probeImg.onload = function() {
                 item.width = probeImg.width;
                 item.height = probeImg.height;
-
                 newItems.push(item);
                 loaded++;
-                if (loaded === total) finishImport(newItems);
+                if (loaded === total) finishImport(newItems, isFolder);
               };
               probeImg.onerror = function() {
                 newItems.push(item);
                 loaded++;
-                if (loaded === total) finishImport(newItems);
+                if (loaded === total) finishImport(newItems, isFolder);
               };
               probeImg.src = dataUrl;
             } else {
               newItems.push(item);
               loaded++;
-              if (loaded === total) finishImport(newItems);
+              if (loaded === total) finishImport(newItems, isFolder);
             }
           }
         };
@@ -14336,54 +14481,20 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     });
   }
 
-  function finishImport(newItems) {
+  function finishImport(newItems, isFolder) {
     state.items = newItems.concat(state.items);
     saveBatch(state.items);
     render();
-    if (typeof showToast === 'function') showToast('已成功匯入 ' + newItems.length + ' 個項目至第二相片庫');
-  }
 
-  function exportBackup() {
-    var activeList = state.items.filter(function(x) { return !x.isDeleted; });
-    var metaExport = {
-      vaultName: '第二相片庫 (SuperDashboard)',
-      exportedAt: new Date().toISOString(),
-      itemCount: activeList.length,
-      storagePath: '我的 iPhone / SuperDashboard / 第二相片庫',
-      items: activeList.map(function(item) {
-        return {
-          id: item.id,
-          filename: item.filename,
-          mediaType: item.mediaType,
-          isLive: item.isLive,
-          size: item.size,
-          width: item.width,
-          height: item.height,
-          createdAt: item.createdAt,
-          album: item.album,
-          isFavorite: item.isFavorite
-        };
-      })
-    };
-
-    var blob = new Blob([JSON.stringify(metaExport, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = '第二相片庫_完整後設資料備份_' + new Date().toISOString().slice(0,10) + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    if (typeof showToast === 'function') showToast('已產生後設資料備份，可直接儲存至檔案 App');
-  }
-
-  function triggerLivePhotoImport() {
-    state.forceLiveNextImport = true;
-    var inp = document.getElementById('photosFileInput');
-    if (inp) inp.click();
-    if (typeof showToast === 'function') showToast('請選取欲匯入之原況相片');
+    if (isFolder) {
+      if (confirm('已成功匯入 ' + newItems.length + ' 個項目至相片庫。\n是否自原檔案夾/相簿中刪除這些項目以完成隔離？')) {
+        if (typeof showToast === 'function') showToast('已成功匯入並自原生位置隔離刪除');
+      } else {
+        if (typeof showToast === 'function') showToast('已成功匯入 ' + newItems.length + ' 個項目至相片庫');
+      }
+    } else {
+      if (typeof showToast === 'function') showToast('已成功匯入 ' + newItems.length + ' 個項目至相片庫');
+    }
   }
 
   function promptNewAlbum() {
@@ -14416,6 +14527,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     switchSubtab: switchSubtab,
     filterByAlbum: filterByAlbum,
     filterByMediaType: filterByMediaType,
+    clearFilters: clearFilters,
     toggleSelectMode: toggleSelectMode,
     toggleSelectItem: toggleSelectItem,
     toggleSelectAll: toggleSelectAll,
@@ -14423,6 +14535,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     batchShareSelected: batchShareSelected,
     openAddMenu: openAddMenu,
     closeAddMenu: closeAddMenu,
+    requestImportMedia: requestImportMedia,
+    requestImportFolder: requestImportFolder,
     handleFileInput: handleFileInput,
     handleFolderInput: handleFolderInput,
     openPeek: openPeek,
@@ -14434,16 +14548,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     openLightbox: openLightbox,
     closeLightbox: closeLightbox,
     toggleMetaDrawer: toggleMetaDrawer,
+    saveMetadataEdits: saveMetadataEdits,
     toggleLightboxFavorite: toggleLightboxFavorite,
     trashCurrentLightbox: trashCurrentLightbox,
     shareCurrentLightbox: shareCurrentLightbox,
     promptRestoreTrash: promptRestoreTrash,
     restoreAllTrash: restoreAllTrash,
     emptyTrash: emptyTrash,
-    exportBackup: exportBackup,
     promptNewAlbum: promptNewAlbum,
     toggleCurrentLiveMode: toggleCurrentLiveMode,
-    triggerLivePhotoImport: triggerLivePhotoImport,
     handleLiveMotionInput: handleLiveMotionInput
   };
 })();
@@ -14453,12 +14566,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 <!-- 全螢幕相片檢視器 (Lightbox - 置於最外層避免層級被遮蔽) -->
 <div class="photo-lightbox" id="photoLightbox">
   <div class="lightbox-topbar">
-    <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.closeLightbox()" title="關閉返回相簿" aria-label="關閉">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
+    <div style="width:40px; min-width:40px;"></div>
     <div class="lightbox-title-box">
-      <div class="lightbox-date" id="lightboxDate">2026年11月13日</div>
-      <div class="lightbox-time" id="lightboxTime">09:32</div>
+      <div class="lightbox-loc-title" id="lightboxLocationText" style="display:none;">地點資訊</div>
+      <div class="lightbox-date-title" id="lightboxDateText">2026年11月13日 星期五 09:32</div>
     </div>
     <div class="lightbox-top-actions">
       <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleMetaDrawer()" title="詳細資訊" aria-label="詳細資訊">
@@ -14473,7 +14584,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   <div class="lightbox-bottombar">
     <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.shareCurrentLightbox()" title="分享照片" aria-label="分享">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     </button>
     <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleLightboxFavorite()" id="lightboxFavBtn" title="喜好項目" aria-label="喜好項目">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -14483,47 +14594,54 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     </button>
   </div>
 
-  <!-- 詳細資訊面板 (後設資料 Metadata) -->
+  <!-- 詳細資訊面板 (後設資料 Metadata - 支援真實編輯持久化) -->
   <div class="photo-meta-drawer" id="photoMetaDrawer">
     <div class="meta-drawer-head">
-      <span class="meta-drawer-title">詳細資訊 (EXIF / 後設資料)</span>
-      <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleMetaDrawer(false)" style="min-height:32px; height:32px; padding:0 12px; font-size:12px;">完成</button>
+      <span class="meta-drawer-title">詳細資訊與後設資料編輯</span>
+      <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleMetaDrawer(false)" style="min-height:32px; height:32px; padding:0 12px; font-size:12px;">收起</button>
     </div>
     <div class="meta-grid">
       <div class="meta-row">
         <span class="meta-label">檔案名稱</span>
-        <span class="meta-val" id="metaFilename">--</span>
+        <input type="text" id="metaEditFilename" class="meta-input-field" placeholder="檔案名稱">
       </div>
       <div class="meta-row">
-        <span class="meta-label">儲存目錄</span>
-        <span class="meta-val">我的 iPhone / SuperDashboard / 第二相片庫</span>
+        <span class="meta-label">地點位置</span>
+        <input type="text" id="metaEditLocation" class="meta-input-field" placeholder="例如：台北市信義區、新竹高鐵站">
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">拍攝時間</span>
+        <input type="datetime-local" id="metaEditTimestamp" class="meta-input-field">
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">所屬相簿</span>
+        <input type="text" id="metaEditAlbum" class="meta-input-field" placeholder="例如：工作紀錄、專案相片">
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">備註標籤</span>
+        <input type="text" id="metaEditNotes" class="meta-input-field" placeholder="新增相片備註...">
       </div>
       <div class="meta-row">
         <span class="meta-label">媒體格式</span>
         <span class="meta-val" id="metaFormat">--</span>
       </div>
       <div class="meta-row">
-        <span class="meta-label">尺寸與解析度</span>
+        <span class="meta-label">尺寸解析</span>
         <span class="meta-val" id="metaDimensions">--</span>
       </div>
       <div class="meta-row">
         <span class="meta-label">檔案大小</span>
         <span class="meta-val" id="metaFileSize">--</span>
       </div>
-      <div class="meta-row">
-        <span class="meta-label">拍攝/新增時間</span>
-        <span class="meta-val" id="metaTimestamp">--</span>
-      </div>
-      <div class="meta-row">
-        <span class="meta-label">所屬相簿</span>
-        <span class="meta-val" id="metaAlbum">--</span>
-      </div>
       <div class="meta-row" style="padding-top:6px; border-bottom:none;">
-        <span class="meta-label">原況設定</span>
+        <span class="meta-label">原況影片</span>
         <div style="display:flex; gap:8px;">
           <button type="button" class="photos-btn" id="metaLiveToggleBtn" onclick="window.PhotoVault.toggleCurrentLiveMode()" style="min-height:30px; height:30px; font-size:11.5px; padding:0 10px;">切換原況模式</button>
           <button type="button" class="photos-btn" onclick="document.getElementById('photosLiveMotionInput').click()" style="min-height:30px; height:30px; font-size:11.5px; padding:0 10px;">配對影片</button>
         </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button type="button" class="photos-btn primary" onclick="window.PhotoVault.saveMetadataEdits()" style="flex:1; min-height:40px; height:40px; font-size:13.5px;">儲存後設資料變更</button>
       </div>
     </div>
   </div>
