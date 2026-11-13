@@ -44,6 +44,9 @@ final class KeyboardViewController: UIInputViewController {
     private let refreshButton = UIButton(type: .system)
     private let titleButton = UIButton(type: .system)
     private let backspaceButton = UIButton(type: .system)
+    private var backspaceTimer: Timer?
+    private var backspaceInitialDelay: Timer?
+    private var emojiPagesBuilt = false
     private let glass = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
     private let emojiCategories: [(String, String)] = [
         ("face.smiling", "😮 😃 😄 😁 😆 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🫣 🤭 🫢 🫡 🤫 🫠 🫥 😶‍🌫️ 😴 🥱 🤤 😪"),
@@ -99,6 +102,8 @@ final class KeyboardViewController: UIInputViewController {
 
         emojiPager.translatesAutoresizingMaskIntoConstraints = false
         emojiPager.isPagingEnabled = true
+        emojiPager.isDirectionalLockEnabled = true
+        emojiPager.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
         emojiPager.showsHorizontalScrollIndicator = false
         emojiPager.showsVerticalScrollIndicator = false
         emojiPager.alwaysBounceHorizontal = true
@@ -120,7 +125,7 @@ final class KeyboardViewController: UIInputViewController {
         dock.axis = .horizontal
         dock.alignment = .center
         dock.distribution = .equalSpacing
-        dock.spacing = 2
+        dock.spacing = 1
         dock.translatesAutoresizingMaskIntoConstraints = false
         dock.heightAnchor.constraint(equalToConstant: 38).isActive = true
         contentArea.translatesAutoresizingMaskIntoConstraints = false
@@ -158,12 +163,13 @@ final class KeyboardViewController: UIInputViewController {
     private var groupContainer: URL? { FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) }
 
     private func reloadSharedData() {
-        if let data = defaults?.data(forKey: storeKey) ?? groupContainer.flatMap({ try? Data(contentsOf: $0.appendingPathComponent("keyboardQuick_copy.json")) }) {
+        defaults?.synchronize()
+        if let data = groupContainer.flatMap({ try? Data(contentsOf: $0.appendingPathComponent("keyboardQuick_copy.json")) }) ?? defaults?.data(forKey: storeKey) {
             shortcuts = (try? JSONDecoder().decode([ClipItem].self, from: data)) ?? []
         }
         emojiBarEnabled = defaults?.object(forKey: emojiBarEnabledKey) as? Bool ?? true
         if let data = defaults?.data(forKey: historyKey) {
-            history = (try? JSONDecoder().decode([HistoryItem].self, from: data)) ?? []
+            history = Array(((try? JSONDecoder().decode([HistoryItem].self, from: data)) ?? []).prefix(30))
         }
         let fileURL = groupContainer?.appendingPathComponent(recentEmojiFile)
         let fileCounts = fileURL.flatMap { try? Data(contentsOf: $0) }.flatMap { try? JSONDecoder().decode([String: Int].self, from: $0) } ?? [:]
@@ -181,7 +187,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func saveHistory() {
-        let data = try? JSONEncoder().encode(Array(history.prefix(30)))
+        history = Array(history.prefix(30))
+        let data = try? JSONEncoder().encode(history)
         defaults?.set(data, forKey: historyKey)
         defaults?.synchronize()
     }
@@ -254,8 +261,8 @@ final class KeyboardViewController: UIInputViewController {
             b.backgroundColor = .clear
             b.layer.cornerRadius = 14
             b.translatesAutoresizingMaskIntoConstraints = false
-            b.widthAnchor.constraint(equalToConstant: 28).isActive = true
-            b.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            b.widthAnchor.constraint(equalToConstant: 25).isActive = true
+            b.heightAnchor.constraint(equalToConstant: 25).isActive = true
             b.imageView?.contentMode = .scaleAspectFit
             b.imageEdgeInsets = UIEdgeInsets(top: -2, left: -2, bottom: -2, right: -2)
             b.isHidden = !emojiBarEnabled
@@ -274,7 +281,8 @@ final class KeyboardViewController: UIInputViewController {
         erase.translatesAutoresizingMaskIntoConstraints = false
         erase.widthAnchor.constraint(equalToConstant: 28).isActive = true
         erase.heightAnchor.constraint(equalToConstant: 28).isActive = true
-        erase.addAction(UIAction { [weak self] _ in self?.haptic.impactOccurred(); self?.textDocumentProxy.deleteBackward() }, for: .touchUpInside)
+        erase.addTarget(self, action: #selector(backspaceTouchDown), for: .touchDown)
+        erase.addTarget(self, action: #selector(backspaceTouchEnded), for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
         dock.addArrangedSubview(erase)
         dock.gestureRecognizers?.forEach { dock.removeGestureRecognizer($0) }
         let pan = UIPanGestureRecognizer(target: self, action: #selector(dragDockSelection(_:)))
@@ -296,13 +304,16 @@ final class KeyboardViewController: UIInputViewController {
 
     @objc private func dragDockSelection(_ gesture: UIPanGestureRecognizer) {
         let x = gesture.location(in: dock).x
-        let visibleButtons = dockButtons.filter { !$0.isHidden }
-        let index = max(0, min(dockButtons.count - 1, Int(x / max(1, dock.bounds.width) * CGFloat(dockButtons.count))))
+        let index = dockButtons.firstIndex(where: { !$0.isHidden && $0.frame.insetBy(dx: -5, dy: -5).contains(gesture.location(in: dock)) })
+            ?? max(0, min(dockButtons.count - 1, Int(x / max(1, dock.bounds.width) * CGFloat(dockButtons.count))))
         if gesture.state == .began || gesture.state == .changed {
             if gesture.state == .began { haptic.impactOccurred() }
             if index == 0 { selectedSection = "home" }
             else if index == 1 { selectedSection = "recent" }
-            else { selectedEmojiCategory = index - 2; selectedSection = "emoji\(selectedEmojiCategory)" }
+            else if index - 2 < emojiCategories.count {
+                selectedEmojiCategory = index - 2
+                selectedSection = "emoji\(selectedEmojiCategory)"
+            }
             updateDockSelection()
         } else if gesture.state == .ended {
             if selectedSection.hasPrefix("emoji") { showEmojiCategory(selectedEmojiCategory) }
@@ -314,8 +325,9 @@ final class KeyboardViewController: UIInputViewController {
         guard emojiBarEnabled else { selectedSection = "home"; render(); return }
         selectedEmojiCategory = (index + emojiCategories.count) % emojiCategories.count
         selectedSection = "emoji\(selectedEmojiCategory)"
-        buildEmojiPages()
+        if !emojiPagesBuilt { buildEmojiPages() }
         updateDockSelection()
+        refreshButton.isHidden = true
         emojiPager.isHidden = false
         contentScroll.isHidden = true
         if let page = emojiPageItems.indices.first(where: { $0 > 0 && $0 < emojiPageItems.count - 1 && emojiPageCategories[$0] == selectedEmojiCategory }) {
@@ -324,6 +336,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func buildEmojiPages() {
+        guard !emojiPagesBuilt else { return }
         clear(emojiPageStack)
         emojiPageCategories.removeAll()
         emojiPageItems.removeAll()
@@ -345,20 +358,20 @@ final class KeyboardViewController: UIInputViewController {
             let page = UIStackView()
             page.axis = .vertical
             page.distribution = .fillEqually
-            page.spacing = 4
+            page.spacing = 1
             page.translatesAutoresizingMaskIntoConstraints = false
             for rowIndex in 0..<4 {
                 let row = UIStackView()
                 row.axis = .horizontal
                 row.distribution = .fillEqually
-                row.spacing = 4
+                row.spacing = 1
                 for col in 0..<7 {
                     let itemIndex = rowIndex * 7 + col
                     let b = UIButton(type: .system)
                     if itemIndex < emojis.count {
                         let emoji = emojis[itemIndex]
                         b.setTitle(emoji, for: .normal)
-                        b.titleLabel?.font = .systemFont(ofSize: 30)
+                        b.titleLabel?.font = .systemFont(ofSize: 27)
                         b.addAction(UIAction { [weak self] _ in self?.insertEmoji(emoji) }, for: .touchUpInside)
                     }
                     row.addArrangedSubview(b)
@@ -372,46 +385,201 @@ final class KeyboardViewController: UIInputViewController {
         }
         view.layoutIfNeeded()
         emojiPager.contentOffset = .zero
+        emojiPagesBuilt = true
+    }
+
+    @objc private func backspaceTouchDown() {
+        haptic.impactOccurred()
+        textDocumentProxy.deleteBackward()
+        backspaceInitialDelay?.invalidate()
+        backspaceTimer?.invalidate()
+        backspaceInitialDelay = Timer.scheduledTimer(withTimeInterval: 0.38, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.backspaceTimer = Timer.scheduledTimer(withTimeInterval: 0.075, repeats: true) { [weak self] _ in
+                self?.textDocumentProxy.deleteBackward()
+            }
+        }
+    }
+
+    @objc private func backspaceTouchEnded() {
+        backspaceInitialDelay?.invalidate(); backspaceInitialDelay = nil
+        backspaceTimer?.invalidate(); backspaceTimer = nil
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        backspaceTouchEnded()
     }
 
     private func makeShortcutCell(_ item: ClipItem) -> UIView {
         let isImage = item.type == "image" || item.text.hasPrefix("data:image")
-        let b = UIButton(type: .system)
-        b.backgroundColor = .tertiarySystemFill
-        b.layer.cornerRadius = 12
-        b.contentEdgeInsets = UIEdgeInsets(top: 5, left: 6, bottom: 5, right: 6)
-        b.heightAnchor.constraint(equalToConstant: 58).isActive = true
-        b.titleLabel?.font = .systemFont(ofSize: 13, weight: .medium)
-        b.titleLabel?.numberOfLines = 2
-        b.titleLabel?.textAlignment = .center
-        b.setTitle(isImage ? (item.label.isEmpty ? "圖片" : item.label) : (item.label.isEmpty ? item.text : item.label), for: .normal)
-        b.setTitleColor(.label, for: .normal)
-        if isImage, let image = decodeImage(item.text) {
-            b.setTitle("", for: .normal)
+        let cell = makeSharedCell(title: isImage ? (item.label.isEmpty ? "圖片" : item.label) : (item.label.isEmpty ? item.text : item.label),
+                                  image: isImage ? decodeImage(item.text) : nil)
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleShortcutSingleTap(_:)))
+        singleTap.numberOfTapsRequired = 1
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleShortcutDoubleTap(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        singleTap.require(toFail: doubleTap)
+        cell.addGestureRecognizer(singleTap)
+        cell.addGestureRecognizer(doubleTap)
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleShortcutLongPress(_:)))
+        longPress.minimumPressDuration = 0.45
+        longPress.cancelsTouchesInView = true
+        cell.addGestureRecognizer(longPress)
+        cell.accessibilityIdentifier = item.id
+        return cell
+    }
+
+    private func shortcut(for gesture: UIGestureRecognizer) -> ClipItem? {
+        guard let id = gesture.view?.accessibilityIdentifier else { return nil }
+        return shortcuts.first(where: { $0.id == id })
+    }
+
+    @objc private func handleShortcutSingleTap(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended, let item = shortcut(for: gesture) else { return }
+        haptic.impactOccurred()
+        let isImage = item.type == "image" || item.text.hasPrefix("data:image")
+        if isImage {
+            if let image = decodeImage(item.text), let data = image.pngData() {
+                UIPasteboard.general.setItems([["public.png": data]], options: [.localOnly: true])
+                showImageCopiedToast()
+            }
+        } else {
+            textDocumentProxy.insertText(item.text)
+        }
+    }
+
+    @objc private func handleShortcutDoubleTap(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended, let item = shortcut(for: gesture) else { return }
+        let isImage = item.type == "image" || item.text.hasPrefix("data:image")
+        if isImage {
+            guard let image = decodeImage(item.text) else { return }
+            showImagePreview(image)
+        } else {
+            let raw = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let url = URL(string: raw),
+                  let scheme = url.scheme?.lowercased(),
+                  ["http", "https"].contains(scheme) else { return }
+            extensionContext?.open(url, completionHandler: nil)
+        }
+    }
+
+    @objc private func handleShortcutLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began, let item = shortcut(for: gesture) else { return }
+        haptic.impactOccurred()
+        showInlineShortcutDeleteConfirmation(for: item)
+    }
+
+    private func showImagePreview(_ image: UIImage) {
+        let overlay = UIView()
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.92)
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        let close = UIButton(type: .system)
+        close.setTitle("關閉", for: .normal)
+        close.setTitleColor(.white, for: .normal)
+        close.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        close.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(imageView)
+        overlay.addSubview(close)
+        view.addSubview(overlay)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: view.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            imageView.leadingAnchor.constraint(equalTo: overlay.leadingAnchor, constant: 12),
+            imageView.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: -12),
+            imageView.topAnchor.constraint(equalTo: overlay.topAnchor, constant: 12),
+            imageView.bottomAnchor.constraint(equalTo: close.topAnchor, constant: -8),
+            close.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            close.bottomAnchor.constraint(equalTo: overlay.bottomAnchor, constant: -10),
+            close.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        close.addAction(UIAction { _ in overlay.removeFromSuperview() }, for: .touchUpInside)
+    }
+
+    private func showInlineShortcutDeleteConfirmation(for item: ClipItem) {
+        let panel = UIView()
+        panel.backgroundColor = .secondarySystemBackground
+        panel.layer.cornerRadius = 14
+        panel.layer.borderWidth = 1
+        panel.layer.borderColor = UIColor.separator.cgColor
+        panel.translatesAutoresizingMaskIntoConstraints = false
+        let title = UILabel()
+        title.text = "確認刪除「\(item.label.isEmpty ? "此項目" : item.label)」？"
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        title.numberOfLines = 1
+        let cancel = UIButton(type: .system)
+        cancel.setTitle("取消", for: .normal)
+        let remove = UIButton(type: .system)
+        remove.setTitle("確認刪除", for: .normal)
+        remove.setTitleColor(.systemRed, for: .normal)
+        let actions = UIStackView(arrangedSubviews: [cancel, remove])
+        actions.axis = .horizontal
+        actions.spacing = 10
+        let row = UIStackView(arrangedSubviews: [title, UIView(), actions])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 6
+        row.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(row)
+        view.addSubview(panel)
+        NSLayoutConstraint.activate([
+            panel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            panel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            panel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            panel.heightAnchor.constraint(equalToConstant: 58),
+            row.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 10),
+            row.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -10),
+            row.topAnchor.constraint(equalTo: panel.topAnchor, constant: 6),
+            row.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -6)
+        ])
+        cancel.addAction(UIAction { _ in panel.removeFromSuperview() }, for: .touchUpInside)
+        remove.addAction(UIAction { [weak self] _ in
+            guard let self else { panel.removeFromSuperview(); return }
+            self.shortcuts.removeAll { $0.id == item.id }
+            if let data = try? JSONEncoder().encode(self.shortcuts) {
+                self.defaults?.set(data, forKey: self.storeKey)
+                self.defaults?.synchronize()
+                try? data.write(to: self.groupContainer?.appendingPathComponent("keyboardQuick_copy.json") ?? URL(fileURLWithPath: "/dev/null"), options: .atomic)
+            }
+            panel.removeFromSuperview()
+            self.render()
+        }, for: .touchUpInside)
+    }
+
+    private func makeSharedCell(title: String, image: UIImage?) -> UIButton {
+        let cell = UIButton(type: .system)
+        cell.backgroundColor = .tertiarySystemFill
+        cell.layer.cornerRadius = 12
+        cell.clipsToBounds = true
+        cell.contentEdgeInsets = UIEdgeInsets(top: 5, left: 6, bottom: 5, right: 6)
+        cell.heightAnchor.constraint(equalToConstant: 58).isActive = true
+        cell.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
+        cell.titleLabel?.numberOfLines = 2
+        cell.titleLabel?.textAlignment = .center
+        cell.setTitleColor(.label, for: .normal)
+        if let image {
+            cell.setTitle("", for: .normal)
             let preview = UIImageView(image: image)
             preview.contentMode = .scaleAspectFit
             preview.clipsToBounds = true
             preview.isUserInteractionEnabled = false
             preview.translatesAutoresizingMaskIntoConstraints = false
-            b.addSubview(preview)
+            cell.addSubview(preview)
             NSLayoutConstraint.activate([
-                preview.leadingAnchor.constraint(equalTo: b.leadingAnchor, constant: 5),
-                preview.trailingAnchor.constraint(equalTo: b.trailingAnchor, constant: -5),
-                preview.topAnchor.constraint(equalTo: b.topAnchor, constant: 5),
-                preview.bottomAnchor.constraint(equalTo: b.bottomAnchor, constant: -5),
+                preview.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 5),
+                preview.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -5),
+                preview.topAnchor.constraint(equalTo: cell.topAnchor, constant: 5),
+                preview.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: -5)
             ])
+        } else {
+            cell.setTitle(title, for: .normal)
         }
-        b.addAction(UIAction { [weak self] _ in
-            guard let self else { return }
-            self.haptic.impactOccurred()
-            if isImage {
-                if let image = self.decodeImage(item.text), let data = image.pngData() {
-                    UIPasteboard.general.setItems([["public.png": data]], options: [.localOnly: true])
-                    self.showImageCopiedToast()
-                }
-            } else { self.textDocumentProxy.insertText(item.text) }
-        }, for: .touchUpInside)
-        return b
+        return cell
     }
 
     private func decodeImage(_ value: String) -> UIImage? {
@@ -443,36 +611,15 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func makeHistoryCell(_ item: HistoryItem) -> UIView {
-        let cell = UIButton(type: .system)
-        cell.backgroundColor = .secondarySystemBackground
-        cell.layer.cornerRadius = 12
-        cell.contentEdgeInsets = UIEdgeInsets(top: 5, left: 6, bottom: 5, right: 6)
-        cell.titleLabel?.font = .systemFont(ofSize: 11)
-        cell.titleLabel?.numberOfLines = 2
-        cell.titleLabel?.textAlignment = .center
-        if item.kind == "image", let file = item.imageFile, let folder = groupContainer,
-           let image = UIImage(contentsOfFile: folder.appendingPathComponent(file).path) {
-            cell.setTitle("", for: .normal)
-            let preview = UIImageView(image: image)
-            preview.contentMode = .scaleAspectFill
-            preview.clipsToBounds = true
-            preview.layer.cornerRadius = 7
-            preview.translatesAutoresizingMaskIntoConstraints = false
-            cell.addSubview(preview)
-            NSLayoutConstraint.activate([
-                preview.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 4),
-                preview.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -4),
-                preview.topAnchor.constraint(equalTo: cell.topAnchor, constant: 4),
-                preview.bottomAnchor.constraint(equalTo: cell.bottomAnchor, constant: -4),
-                cell.heightAnchor.constraint(equalToConstant: 58)
-            ])
-        } else {
-            cell.setTitle(item.text, for: .normal)
-            cell.setTitleColor(.label, for: .normal)
-            cell.heightAnchor.constraint(equalToConstant: 58).isActive = true
-        }
+        let image: UIImage? = {
+            guard item.kind == "image", let file = item.imageFile, let folder = groupContainer else { return nil }
+            return UIImage(contentsOfFile: folder.appendingPathComponent(file).path)
+        }()
+        let cell = makeSharedCell(title: item.text ?? "圖片", image: image)
         cell.addAction(UIAction { [weak self] _ in self?.haptic.impactOccurred(); self?.handleHistoryItem(item) }, for: .touchUpInside)
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleHistoryLongPress(_:)))
+        longPress.minimumPressDuration = 0.45
+        longPress.cancelsTouchesInView = true
         cell.addGestureRecognizer(longPress)
         cell.accessibilityIdentifier = item.id
         return cell
@@ -483,15 +630,58 @@ final class KeyboardViewController: UIInputViewController {
               let id = cell.accessibilityIdentifier, let index = history.firstIndex(where: { $0.id == id }) else { return }
         haptic.impactOccurred()
         let item = history[index]
-        let menu = UIAlertController(title: "刪除剪貼紀錄？", message: nil, preferredStyle: .actionSheet)
-        menu.addAction(UIAlertAction(title: "刪除", style: .destructive) { [weak self] _ in
-            guard let self, let i = self.history.firstIndex(where: { $0.id == item.id }) else { return }
+        showInlineDeleteConfirmation(for: item)
+    }
+
+    private func showInlineDeleteConfirmation(for item: HistoryItem) {
+        let panel = UIView()
+        panel.backgroundColor = .secondarySystemBackground
+        panel.layer.cornerRadius = 14
+        panel.layer.borderWidth = 1
+        panel.layer.borderColor = UIColor.separator.cgColor
+        panel.translatesAutoresizingMaskIntoConstraints = false
+        let title = UILabel()
+        title.text = "刪除這筆剪貼紀錄？"
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        let cancel = UIButton(type: .system)
+        cancel.setTitle("取消", for: .normal)
+        let remove = UIButton(type: .system)
+        remove.setTitle("刪除", for: .normal)
+        remove.setTitleColor(.systemRed, for: .normal)
+        let actions = UIStackView(arrangedSubviews: [cancel, remove])
+        actions.axis = .horizontal
+        actions.spacing = 18
+        let row = UIStackView(arrangedSubviews: [title, UIView(), actions])
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 8
+        row.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(row)
+        view.addSubview(panel)
+        NSLayoutConstraint.activate([
+            panel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+            panel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
+            panel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            panel.heightAnchor.constraint(equalToConstant: 54),
+            row.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 12),
+            row.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -12),
+            row.topAnchor.constraint(equalTo: panel.topAnchor, constant: 6),
+            row.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -6)
+        ])
+        cancel.addAction(UIAction { _ in panel.removeFromSuperview() }, for: .touchUpInside)
+        remove.addAction(UIAction { [weak self] _ in
+            guard let self, let i = self.history.firstIndex(where: { $0.id == item.id }) else {
+                panel.removeFromSuperview()
+                return
+            }
             let removed = self.history.remove(at: i)
-            if let file = removed.imageFile, let folder = self.groupContainer { try? FileManager.default.removeItem(at: folder.appendingPathComponent(file)) }
-            self.saveHistory(); self.render()
-        })
-        menu.addAction(UIAlertAction(title: "取消", style: .cancel))
-        present(menu, animated: true)
+            if let file = removed.imageFile, let folder = self.groupContainer {
+                try? FileManager.default.removeItem(at: folder.appendingPathComponent(file))
+            }
+            self.saveHistory()
+            panel.removeFromSuperview()
+            self.render()
+        }, for: .touchUpInside)
     }
 
     private func handleHistoryItem(_ item: HistoryItem) {
@@ -517,11 +707,17 @@ final class KeyboardViewController: UIInputViewController {
         renderDock()
         emojiPager.isHidden = !selectedSection.hasPrefix("emoji")
         contentScroll.isHidden = selectedSection.hasPrefix("emoji")
+        refreshButton.isHidden = selectedSection.hasPrefix("emoji")
         if selectedSection == "home" {
             let firstSix = Array(shortcuts.filter { shortcut in
                 guard !(shortcut.type == "image" && shortcut.text.isEmpty) else { return false }
                 return !history.contains { item in
-                    if shortcut.type == "image" { return item.kind == "image" && item.text == shortcut.text }
+                    if shortcut.type == "image" || shortcut.text.hasPrefix("data:image") {
+                        guard item.kind == "image", let file = item.imageFile, let folder = groupContainer,
+                              let stored = try? Data(contentsOf: folder.appendingPathComponent(file)),
+                              let image = decodeImage(shortcut.text), let shortcutData = image.pngData() else { return false }
+                        return stored == shortcutData
+                    }
                     return item.kind == "text" && item.text == shortcut.text
                 }
             }.prefix(6))
@@ -576,7 +772,7 @@ final class KeyboardViewController: UIInputViewController {
             for emoji in emojis[start..<min(start + 7, emojis.count)] {
                 let b = UIButton(type: .system)
                 b.setTitle(emoji, for: .normal)
-                b.titleLabel?.font = .systemFont(ofSize: 30)
+                b.titleLabel?.font = .systemFont(ofSize: 27)
                 b.addAction(UIAction { [weak self] _ in self?.insertEmoji(emoji) }, for: .touchUpInside)
                 row.addArrangedSubview(b)
             }
@@ -588,7 +784,7 @@ final class KeyboardViewController: UIInputViewController {
 
 extension KeyboardViewController: UIScrollViewDelegate {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        if scrollView === emojiPager || scrollView === contentScroll { haptic.impactOccurred() }
+        // Scrolling is intentionally silent; haptics are reserved for explicit selections.
     }
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         guard scrollView === emojiPager, emojiPager.bounds.width > 0 else { return }

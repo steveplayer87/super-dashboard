@@ -80,7 +80,7 @@
 
   /* ---- content ---- */
   .content{ flex:1; display:flex; flex-direction:column; min-height:0; padding:12px 16px calc(env(safe-area-inset-bottom, 0px) + 54px); overflow-y:auto; -webkit-overflow-scrolling:touch; box-sizing:border-box; }
-  .content-header{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:8px; flex-shrink:0; gap:8px; }
+  .content-header{ display:flex; align-items:center; justify-content:flex-end; margin-bottom:8px; flex-shrink:0; gap:8px; min-height:40px; position:relative; }
   .btn{
     background:var(--panel-raised); border:1px solid var(--border); color:var(--text);
     font-size:13px; padding:6px 14px; border-radius:20px; cursor:pointer;
@@ -88,7 +88,9 @@
   .btn.cancel{ background:var(--panel-raised-2); color:var(--text-muted); }
   .btn.done{ background:var(--amber); border-color:var(--amber); color:#241705; font-weight:700; }
   .edit-actions{ display:none; gap:8px; }
-  .edit-actions.show{ display:flex; }
+  .edit-actions.show{ display:flex; position:absolute; right:0; top:0; z-index:5; width:176px; height:40px; align-items:center; justify-content:flex-end; gap:8px; }
+  #editBtn,.content-header .btn.cancel,.content-header .btn.done{height:40px;min-height:40px;min-width:84px;width:84px;padding:0 14px;box-sizing:border-box;border-radius:18px;line-height:1;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
+  .content-header:has(.edit-actions.show) #editBtn{visibility:hidden;}
 
   .section{ margin-bottom:14px; }
   .section-title{
@@ -242,7 +244,7 @@
   .family-meta-val{ font-size:12.5px; font-weight:700; color:var(--text); }
   .family-members-title{ font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center; }
   .family-member-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(155px, 1fr)); gap:8px; }
-  
+
   .family-member-card{
     display:flex; align-items:center; justify-content:space-between;
     padding:8px 10px; border-radius:10px; background:var(--panel-raised); border:1px solid var(--border);
@@ -273,6 +275,15 @@
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     transition:all .15s ease;
   }
+
+  .global-edit-mode .keycap, .global-edit-mode .fin-row, .global-edit-mode .wallet-card-slide {
+    transition: opacity .12s ease, filter .12s ease;
+  }
+  .global-edit-mode .keycap, .global-edit-mode .fin-row, .global-edit-mode .wallet-card-slide { filter: grayscale(.72); }
+  .global-edit-mode .keycap.pending-remove, .global-edit-mode .fin-row.pending-remove, .global-edit-mode .wallet-card-slide.pending-remove { opacity:.38; }
+  .global-edit-mode .v-card-delete-overlay { display:flex !important; opacity:1 !important; }
+  .global-edit-mode .wallet-card-slide { filter:grayscale(.55); }
+  .global-edit-mode .keycap::after { content:'−'; position:absolute; top:4px; right:4px; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#d94c45; color:white; font-size:16px; font-weight:800; opacity:.9; pointer-events:none; }
   .family-member-edit-btn:hover{ color:var(--text); border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); }
 
   .family-member-status{
@@ -364,7 +375,7 @@
     pointer-events: none;
   }
 
-  
+
   /* ---- 相片裁切與縮放視窗 ---- */
   .cropper-modal-overlay {
     position: fixed; inset: 0; z-index: 99999;
@@ -485,7 +496,7 @@
     cursor: pointer;
   }
 
-  
+
   /* 錢包主畫面: 星宇航空橫式登機證 (高級航太午夜深藍 + 香檳金同色系) */
   .v-card.theme-boarding{
     background: radial-gradient(120% 120% at 85% 15%, rgba(212,175,55,.28) 0%, transparent 55%),
@@ -876,7 +887,7 @@
     padding:18px 20px 22px; overflow-y:auto; flex:1; background:var(--panel-raised);
   }
 
-  
+
   /* 更多多元風格樣式 */
   /* 6. 蒸氣黃銅 */
   .style-card-mini.theme-copper, .v-card.theme-copper{
@@ -1123,7 +1134,7 @@
   }
   .success-confirm-btn:active{ transform:translateY(1.5px); }
 
-  
+
   /* 下方功能區: 卡片資訊標頭 */
   .card-info-header{
     display:flex; justify-content:space-between; align-items:center;
@@ -1357,7 +1368,7 @@
     font-size:10px; color:#888; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:1px;
   }
 
-  
+
   /* 儀表板下方 3D 透視廣告卡片 (星星虛空背景) */
   .promo-void-container{
     position:relative; overflow:hidden; border-radius:20px; padding:22px 18px 24px;
@@ -1532,12 +1543,6 @@
   }
   @keyframes groundScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   .dino-actor { position: relative; z-index: 2; margin-bottom: 22px; cursor: pointer; }
-
-  .dino-actor.duck-walking { animation: duckWalkAcross 3.8s ease-in-out infinite alternate; }
-  .dino-actor.duck-walking svg { overflow:visible; }
-  .dino-actor.duck-wiggle { animation: duckHello .58s ease-in-out; }
-  @keyframes duckWalkAcross { 0% { transform:translateX(-58px) scaleX(1); } 48% { transform:translateX(42px) scaleX(1); } 52% { transform:translateX(42px) scaleX(-1); } 100% { transform:translateX(-58px) scaleX(-1); } }
-  @keyframes duckHello { 0%,100% { transform:translateY(0) rotate(0); } 35% { transform:translateY(-7px) rotate(-5deg); } 70% { transform:translateY(0) rotate(4deg); } }
   .dino-actor.jumping { animation: dinoJump 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
   @keyframes dinoJump {
     0% { transform: translateY(0); }
@@ -2790,7 +2795,7 @@
   }
 
 
-  
+
   /* 常用方塊樣式：防爆框、溢出省略與適當上下間距 */
   .keycap {
     position: relative;
@@ -3092,18 +3097,6 @@
     transform: scale(1) translateZ(0) !important;
   }
 
-  /* 全頁子頁面必須使用不透明底色，避免底下的「更多」穿透 */
-  #settingsSubView, #gooseSubView {
-    background-color: #0E0C09 !important;
-    background-image: none !important;
-    isolation: isolate;
-    z-index: 10000;
-  }
-  body.theme-halloween #settingsSubView,
-  body.theme-halloween #gooseSubView {
-    background-color: #0C0A17 !important;
-  }
-
   /* Mini App 右側流暢滑動離開動畫 */
   #gooseSubView {
     transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.28s ease !important;
@@ -3187,12 +3180,9 @@
 
   /* ==================== 阿鵝管家 (主題全面自動調和適配) ==================== */
   #gooseSubView {
-    background: var(--panel) !important;
+    background: var(--bg) !important;
     color: var(--text) !important;
-    opacity: 1 !important;
-    isolation: isolate;
   }
-  /* Mini App 是覆蓋層，底層 More 標題保持固定可見 */
   #gooseSubView .goose-card {
     background: var(--panel) !important;
     border: 1px solid var(--border) !important;
@@ -3779,11 +3769,24 @@
     -webkit-font-smoothing: antialiased;
   }
   .photos-header {
+    position: relative;
+    top: auto;
+    z-index: 31;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+    padding: 8px 0 6px;
+    background: var(--bg);
   }
+  /* 相片庫獨立視窗：標題與分頁固定，只有內容面板捲動。 */
+  .content.photos-mode{padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 72px);overflow:hidden;overscroll-behavior:none;}
+  .content.photos-mode>.content-header{display:none!important;}
+  .content.photos-mode>#page-photos{display:flex!important;flex:1 1 auto;flex-direction:column;min-height:0;overflow:hidden;padding:0;margin:0;}
+  #page-photos .photos-header{flex:0 0 auto;margin:0 0 6px;padding:2px 0 4px;gap:4px;}
+  #page-photos .photos-subtabs{flex:0 0 auto;position:relative;top:auto;margin:0 0 8px;}
+  #page-photos>#photosSubViewAll,#page-photos>#photosSubViewAlbums,#page-photos>#photosSubViewMediaTypes,#page-photos>#photosSubViewDeleted{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px;}
+  #page-photos .photos-grid{overflow:visible;}
   .photos-title-row {
     display: flex;
     align-items: center;
@@ -3797,14 +3800,11 @@
     color: var(--text);
     margin: 0;
   }
-  .photos-actions-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .photos-actions-top { display:flex;align-items:center;gap:8px; }
+  .photos-actions-top .photos-btn{min-width:84px;width:84px;height:40px;min-height:40px;padding:0 14px;}
   .photos-btn {
-    min-height: 36px;
-    height: 36px;
+    min-height: 40px;
+    height: 40px;
     padding: 0 14px;
     background: var(--panel-raised);
     border: 1px solid var(--border);
@@ -3860,6 +3860,9 @@
 
   /* 頂部四分頁導航 (總覽 / 相簿 / 媒體類型 / 最近刪除) */
   .photos-subtabs {
+    position: relative;
+    top: auto;
+    z-index: 30;
     display: flex;
     background: #171512;
     border: 1px solid var(--border);
@@ -3883,7 +3886,7 @@
     justify-content: center;
     gap: 4px;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: background-color 0.10s ease, color 0.10s ease, border-color 0.10s ease;
   }
   .photos-subtab.active {
     background: #27221A;
@@ -4345,6 +4348,14 @@
     border-top: 1px solid rgba(255,255,255,0.06);
     z-index: 100;
   }
+  .photo-lightbox .lightbox-topbar, .photo-lightbox .lightbox-bottombar {
+    opacity:1;
+    transition:opacity .26s cubic-bezier(.22,.61,.36,1);
+  }
+  .photo-lightbox.zooming .lightbox-topbar, .photo-lightbox.zooming .lightbox-bottombar {
+    opacity:0;
+    pointer-events:none;
+  }
   .lightbox-media-wrapper {
     flex: 1;
     display: flex;
@@ -4630,7 +4641,7 @@
     <div class="content-header">
       <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
       <button class="btn wallet-more-btn" id="walletMoreBtn" style="display:none;" title="全域設定中樞"><span style="letter-spacing:1.5px;font-weight:900;">•••</span></button>
-      <button class="btn" id="editBtn" aria-label="編輯" title="編輯">編輯</button>
+      <button class="btn" id="editBtn">編輯</button>
       <div class="edit-actions" id="editActions">
         <button class="btn cancel" id="cancelBtn">取消</button>
         <button class="btn done" id="doneBtn">完成</button>
@@ -4669,7 +4680,7 @@
       </div>
     </div>
 
-    
+
     <!-- ===== 頁面二: 照片庫 (第二相片庫) ===== -->
     <div class="page" id="page-photos" style="display:none;">
       <!-- 頂部資訊與操作列 -->
@@ -4691,7 +4702,7 @@
 
       <!-- 四大分頁標籤 (總覽 / 相簿 / 媒體類型 / 最近刪除) -->
       <div class="photos-subtabs">
-        <button type="button" class="photos-subtab active" data-subtab="all" onclick="window.PhotoVault.switchSubtab('all')">總覽</button>
+        <button type="button" class="photos-subtab active" data-subtab="all" onclick="window.PhotoVault.switchSubtab('all')">全部</button>
         <button type="button" class="photos-subtab" data-subtab="albums" onclick="window.PhotoVault.switchSubtab('albums')">相簿</button>
         <button type="button" class="photos-subtab" data-subtab="mediatypes" onclick="window.PhotoVault.switchSubtab('mediatypes')">媒體類型</button>
         <button type="button" class="photos-subtab" data-subtab="deleted" onclick="window.PhotoVault.switchSubtab('deleted')">
@@ -4751,8 +4762,7 @@
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             <span>分享</span>
           </button>
-          <button type="button" class="photos-btn danger" onclick="window.PhotoVault.batchTrashSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">刪除</button>
-          <button type="button" class="photos-btn" onclick="window.PhotoVault.toggleSelectMode(false)" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;">取消</button>
+          <button type="button" class="photos-btn danger" onclick="window.PhotoVault.batchTrashSelected()" style="min-height:36px; height:36px; padding:0 10px; font-size:12px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg><span>刪除</span></button>
         </div>
       </div>
 
@@ -4811,7 +4821,7 @@
       </div>
     </div>
 
-    
+
 
     <!-- ===== 頁面二:財務 ===== -->
     <div class="page" id="page-finance" style="display:none;">
@@ -4847,7 +4857,7 @@
 
       <!-- 視圖一：卡片主視圖容器 -->
       <div id="walletSubViewCards">
-      
+
 
       <!-- 錢包無卡片時的旗艦級歡迎首頁 (圖解 + 大字功能介紹 + 右下角新增按鈕) -->
       <div class="wallet-welcome-hero" id="walletEmpty">
@@ -5300,13 +5310,14 @@
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">阿鵝管家</div>
               <div style="font-size:10px; color:var(--teal); margin-top:2px;">生活指標夥伴</div>
             </div>
-            <!-- 2. 即將推出: AI 穿搭沙盒 -->
-            <div class="mini-app-item disabled" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:16px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0.6; position:relative;">
-              <span style="position:absolute; top:6px; right:6px; font-size:8.5px; padding:1px 5px; border-radius:4px; background:rgba(212,175,55,0.15); color:var(--gold); border:1px solid rgba(212,175,55,0.25);">即將推出</span>
-              <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.04)); border:1px solid rgba(212,175,55,0.25); display:flex; align-items:center; justify-content:center; color:var(--gold); margin-bottom:8px;">
+            <!-- Wardrobe Master：以原生 WKWebView 開啟的第一個 Mini App -->
+            <div class="mini-app-item" id="entryWardrobeMiniApp" onclick="window.callNative('open-wardrobe')" style="background:var(--panel-raised); border:1px solid rgba(212,175,55,0.32); border-radius:16px; padding:16px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease; position:relative;">
+              <span style="position:absolute; top:6px; right:6px; font-size:8.5px; padding:1px 5px; border-radius:4px; background:rgba(63,169,164,0.14); color:var(--teal); border:1px solid rgba(63,169,164,0.28);">已啟用</span>
+              <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.05)); border:1px solid rgba(212,175,55,0.3); display:flex; align-items:center; justify-content:center; color:var(--gold); margin-bottom:8px;">
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
               </div>
-              <div style="font-size:12.5px; font-weight:600; color:var(--text);">穿搭沙盒</div>
+              <div style="font-size:12.5px; font-weight:700; color:var(--text);">衣櫥</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Wardrobe Master</div>
             </div>
             <!-- 3. 即將推出: 金鑰掌控中心 -->
             <div class="mini-app-item disabled" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:16px 8px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; opacity:0.6; position:relative;">
@@ -5315,20 +5326,15 @@
                 <svg class="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
               </div>
               <div style="font-size:12.5px; font-weight:600; color:var(--text);">金鑰掌控</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雙重認證中心</div>
             </div>
           </div>
-</div>
         </div>
 
         <!-- iOS 原生延伸功能中樞與清單 -->
         <div class="section" style="margin-top:24px;">
           <div class="section-title"><span class="section-icon gold"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg></span>iOS 系統級功能與清單</div>
           <div class="fin-list">
-            <div class="fin-row" id="settingsKeyboardRow" onclick="window.openSuperKeyboardSettings()" style="cursor:pointer; display:flex; align-items:center;">
-              <span class="icon" style="color:var(--teal); font-size:18px; margin-right:10px;">⌨️</span>
-              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600; color:var(--text);">超級鍵盤設定</div><div style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">測試輸入、剪貼紀錄、表情符號歷史與使用統計</div></div>
-              <span style="font-size:11px; color:var(--text-muted);">管理</span>
-            </div>
             <div class="fin-row" onclick="window.triggerLiveActivity()" style="cursor:pointer; display:flex; align-items:center;">
               <span class="icon" style="color:#a855f7; font-size:18px; margin-right:10px;"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg></span>
               <div class="fin-row-name" style="flex:1;">
@@ -5461,69 +5467,58 @@
           </div>
         </div>
 
-        <div class="section" style="margin-top:20px;">
-          <div class="section-title"><span class="section-icon teal">♫</span>農場日常音樂</div>
-          <div class="fin-list">
-            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
-              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">AI 原創配樂匯入後在此播放</div></div>
-              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" disabled title="AI 配樂尚未匯入"><span class="toggle-knob"></span></button>
-            </div>
-            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
-              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">全部介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">總開關</div></div>
-              <button type="button" class="toggle on active" id="farmSfxToggle" aria-pressed="true" onclick="window.toggleFarmSfx()"><span class="toggle-knob"></span></button>
-            </div>
-            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <span style="flex:1;font-size:12px;color:var(--text);">按鈕音效</span>
-              <button class="toggle on active sfx-toggle" data-sfx="button" aria-pressed="true" onclick="window.toggleFarmSfxType('button',this)"><span class="toggle-knob"></span></button>
-              <span style="font-size:12px;color:var(--text);">頁籤切換</span>
-              <button class="toggle on active sfx-toggle" data-sfx="switch" aria-pressed="true" onclick="window.toggleFarmSfxType('switch',this)"><span class="toggle-knob"></span></button>
-            </div>
-            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <span style="flex:1;font-size:12px;color:var(--text);">成功提示</span>
-              <button class="toggle on active sfx-toggle" data-sfx="success" aria-pressed="true" onclick="window.toggleFarmSfxType('success',this)"><span class="toggle-knob"></span></button>
-              <span style="font-size:12px;color:var(--text);">刪除提示</span>
-              <button class="toggle on active sfx-toggle" data-sfx="delete" aria-pressed="true" onclick="window.toggleFarmSfxType('delete',this)"><span class="toggle-knob"></span></button>
-            </div>
-          </div>
-          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">AI 原創配樂尚未完成製作；目前先提供可分別控制的介面音效。</div>
-        </div>
-        <!-- App Icon -->
+        <!-- App Icon 替換專區 (6款旗艦質感) -->
         <div class="section" style="margin-top:20px;">
           <div class="section-title">
             <span class="section-icon gold" style="display:inline-flex; align-items:center; justify-content:center;">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="4"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            </span>App icon
+            </span>可替換 App Icon · 旗艦風格庫
           </div>
+          <p style="font-size:11.5px; color:var(--text-muted); margin:0 0 12px 2px;">
+            點擊任一款式可開啟 1024×1024 高解析原圖，長按即可儲存至 iPhone 相簿；支援 iOS「捷徑」自訂圖標或 Safari「加入主畫面」。
+          </p>
           <div class="app-icon-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
-            <div class="app-icon-item" onclick="window.applyAppIcon('dinosaur-classic')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer;">
-              <img src="assets/icons/icon-original-dinosaur.png" style="width:58px;height:58px;border-radius:13px;margin-bottom:8px;" alt="原版恐龍" />
-              <div style="font-size:12px;font-weight:700;color:var(--teal);">原版恐龍</div>
+            <!-- 0. 經典恐龍（原廠） -->
+            <div class="app-icon-item" onclick="window.openAppIconPreview('dinosaur-classic')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+              <img src="assets/icons/icon-original-dinosaur.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="經典恐龍" />
+              <div style="font-size:12px; font-weight:700; color:var(--amber);">經典恐龍</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">原廠圖示</div>
             </div>
-
             <!-- 1. 黑曜金 -->
-            <div class="app-icon-item" onclick="window.applyAppIcon('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.openAppIconPreview('obsidian-gold')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-obsidian-gold.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="黑曜金" />
               <div style="font-size:12px; font-weight:700; color:#F5D888;">黑曜金</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">流金刻度儀表</div>
             </div>
             <!-- 2. 航太鈦銀 -->
-            <div class="app-icon-item" onclick="window.applyAppIcon('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.openAppIconPreview('aerospace-titanium')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-aerospace-titanium.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="航太鈦銀" />
               <div style="font-size:12px; font-weight:700; color:#E3EFFB;">航太鈦銀</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">雷雕 HUD 準心</div>
+            </div>
+            <!-- 3. 極夜幽靈 -->
+            <div class="app-icon-item" onclick="window.openAppIconPreview('stealth-black')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+              <img src="assets/icons/icon-stealth-black.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="極夜幽靈" />
+              <div style="font-size:12px; font-weight:700; color:#EDE6D6;">極夜幽靈</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">啞光深黑凹雕</div>
             </div>
             <!-- 4. 星宇青綠 -->
-            <div class="app-icon-item" onclick="window.applyAppIcon('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.openAppIconPreview('cosmic-teal')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-cosmic-teal.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="星宇青綠" />
               <div style="font-size:12px; font-weight:700; color:var(--teal);">星宇青綠</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">薄荷星芒光環</div>
             </div>
             <!-- 5. 復古工業 -->
-            <div class="app-icon-item" onclick="window.applyAppIcon('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <div class="app-icon-item" onclick="window.openAppIconPreview('heritage-amber')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-heritage-amber.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="復古工業" />
               <div style="font-size:12px; font-weight:700; color:var(--amber);">復古工業</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">經典機械錶盤</div>
             </div>
-            <!-- 7. 守護徽章 -->
-            <div class="app-icon-item" onclick="window.applyAppIcon('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
+            <!-- 6. 守護徽章 -->
+            <div class="app-icon-item" onclick="window.openAppIconPreview('guardian-crest')" style="background:var(--panel-raised); border:1px solid var(--border); border-radius:16px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; transition:transform .2s ease;">
               <img src="assets/icons/icon-guardian-crest.png" style="width:58px; height:58px; border-radius:13px; box-shadow:0 4px 12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.08); margin-bottom:8px;" alt="守護徽章" />
               <div style="font-size:12px; font-weight:700; color:#8CE8E3;">守護徽章</div>
+              <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">阿鵝夥伴盾徽</div>
             </div>
           </div>
         </div>
@@ -5557,7 +5552,8 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v7 · 訂閱版面與預付卡門號</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v19 · 編輯按鈕統一、原生照片選取與相片庫捲動修正</div>
+                <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
             </div>
@@ -5583,10 +5579,44 @@
 
         <div id="settingsKeyboardContainer"></div>
         <div id="settingsAppearanceContainer"></div>
+        <div class="section" id="settingsSoundSection" style="margin-top:28px; margin-bottom:28px;">
+          <div class="section-title"><span class="section-icon teal">♫</span>農場日常音樂</div>
+          <div class="fin-list">
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">背景音樂</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">AI 原創配樂匯入後在此播放</div></div>
+              <button type="button" class="toggle" id="farmMusicToggle" aria-pressed="false" disabled title="AI 配樂尚未匯入"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:12px;">
+              <div class="fin-row-name" style="flex:1;"><div style="font-weight:600;color:var(--text);">全部介面音效</div><div style="font-size:11.5px;color:var(--text-muted);font-weight:normal;">總開關</div></div>
+              <button type="button" class="toggle on active" id="farmSfxToggle" aria-pressed="true" onclick="window.toggleFarmSfx()"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">按鈕音效</span>
+              <button class="toggle on active sfx-toggle" data-sfx="button" aria-pressed="true" onclick="window.toggleFarmSfxType('button',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">頁籤切換</span>
+              <button class="toggle on active sfx-toggle" data-sfx="switch" aria-pressed="true" onclick="window.toggleFarmSfxType('switch',this)"><span class="toggle-knob"></span></button>
+            </div>
+            <div class="fin-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="flex:1;font-size:12px;color:var(--text);">成功提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="success" aria-pressed="true" onclick="window.toggleFarmSfxType('success',this)"><span class="toggle-knob"></span></button>
+              <span style="font-size:12px;color:var(--text);">刪除提示</span>
+              <button class="toggle on active sfx-toggle" data-sfx="delete" aria-pressed="true" onclick="window.toggleFarmSfxType('delete',this)"><span class="toggle-knob"></span></button>
+            </div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin:8px 2px 0;">AI 原創配樂尚未完成製作；目前先提供可分別控制的介面音效。</div>
+        </div>
+
+        <div class="section" id="settingsInteractionSection" style="margin-top:24px;">
+          <div class="section-title"><span class="section-icon gold">⌁</span>操作偏好</div>
+          <div class="settings-row" style="padding:16px 4px;">
+            <div style="flex:1;"><div class="settings-label">晃動返回更多</div><div style="font-size:11px;color:var(--text-muted);">晃動 iPhone 即可返回「更多」首頁</div></div>
+            <button type="button" class="toggle" id="toggleShakeReturn" role="switch" aria-checked="false"><span class="toggle-knob"></span></button>
+          </div>
+        </div>
       </div>
 
       <!-- 阿鵝管家 專屬子頁面 -->
-      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:#000000; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
                 <!-- 系統級手勢返回左側感應條 -->
         <div id="gooseLeftEdgeHandle" style="position:fixed; top:0; left:0; width:35px; height:100%; z-index:100; pointer-events:auto;"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
@@ -5749,7 +5779,7 @@
               <span style="color:var(--teal); font-size:12px; font-weight:600;">狀態極佳</span>
             </div>
           </div>
-        
+
         <!-- ==================== 飼料桶存量智能監測單元 ==================== -->
         <div class="goose-card" style="padding:16px; margin-bottom:14px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -5864,7 +5894,7 @@
           <div style="background:#FFFFFF; border-radius:20px; padding:20px; max-width:360px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.4); border:2px solid #F4E5D0;">
             <div style="font-size:16px; font-weight:800; color:#2F261D; margin-bottom:4px;">新增阿鵝動作模式</div>
             <div style="font-size:11.5px; color:#8C7862; margin-bottom:14px;">設定 Mario Odyssey 風格按鍵組合與動作動圖</div>
-            
+
             <div style="margin-bottom:10px;">
               <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">動作名稱</span>
               <input id="actionInputName" placeholder="例如: 展翅高歌、激動拍打" maxlength="40" style="width:100%; border:1.5px solid #EAD8C2; border-radius:10px; padding:8px 10px; font-size:13.5px; box-sizing:border-box; background:#FFFDF8;">
@@ -6221,7 +6251,7 @@
 
         <span class="field-label" id="modalLabel1">名稱</span>
         <input id="modalInput" placeholder="輸入名稱" maxlength="60">
-        
+
         <div class="field-group" id="modalField2" style="display:none;">
           <span class="field-label" id="modalLabel2">起始金額</span>
           <input id="modalInput2" placeholder="0" maxlength="200">
@@ -6263,7 +6293,7 @@
         </div>
 
 
-        
+
         <!-- 新增卡片 5 秒寫入動畫層 -->
         <div id="modalAddProgress" style="display:none; padding:24px 10px; text-align:center;">
           <div id="modalAddSpinnerBox">
@@ -6537,13 +6567,11 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-
-    <h2 id="updateNotesTitle">已更新至 v15</h2>
-
+    <h2 id="updateNotesTitle">已更新至 v18</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>App icon 改為直接點選切換，原版恐龍圖標從舊版 Git 歷史還原並置於首位</li><li>音效新增按鈕、頁籤切換、成功、刪除四種獨立開關</li><li>通知徽章改為依序累加，顯示目前通知數量</li><li>新增原創輕農場循環配樂與介面音效，可在「更多」獨立開關</li><li>原版恐龍 App Icon 回歸圖標庫，可一鍵還原預設圖標</li><li>通知加入 App 圖示紅色數字徽章，開啟 App 後清除</li><li>固定支出新增「預付卡門號（中華電信）」：每半年 $50，每半年的 7 號到中華電信 App 儲值，上次 9/9，下次 3/7</li><li>週期型項目支援「標記為已儲值」，會自動推算下一次日期；月總額按月攤提計算</li><li>每筆固定支出顯示下次扣款日與倒數天數，依最近到期排序</li></ul></div>
-      <div class="update-notes-group"><strong>調整</strong><ul><li>Mini App 覆蓋整個畫面與原標題列，加入自己的返回列；移除重複手勢監聽，底層 More 不再縮放</li><li>音樂設定移至視覺主題風格下方</li><li>Mini App 改為固定底層的右側覆蓋頁，滑動返回時不再縮放或推移「更多」首頁</li><li>鍵盤表情分類列開關改用錢包快速交通卡同款樣式</li><li>訂閱與固定支出改為卡片式版面：服務圖示、分類、週期與扣款管道一目了然</li><li>YouTube Premium 家庭成員改為單欄清單，並顯示已收款人數</li><li>帳戶與固定支出支援 iOS 式左滑刪除</li><li>編輯項目時不再自動彈出鍵盤；金額欄位只顯示數字鍵盤；隱藏鍵盤上方的上下／完成工具列</li></ul></div>
-      <div class="update-notes-group"><strong>修復</strong><ul><li>修復家庭成員欄位文字被擠成直排的問題</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
+      <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
+      <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
     </div>
   </div>
 </div>
@@ -6603,7 +6631,7 @@
           <div class="col"><span>SEAT 座位</span><b id="pPassSeat">12A</b></div>
           <div class="col"><span>ZONE 登機組</span><b>1</b></div>
         </div>
-        
+
         <!-- 中下區塊留白 + 向量 QR Code -->
         <div class="p-pass-qr-wrapper">
           <div class="p-pass-qr-container locked" id="pPassQrBox"></div>
@@ -6612,7 +6640,7 @@
             <span class="qr-lock-text" id="qrLockText"></span>
           </div>
         </div>
-        
+
         <div class="p-pass-footer-ticket" id="pPassTicketNo">TKT 289-9817263541</div>
       </div>
 
@@ -6623,7 +6651,7 @@
         </svg>
       </div>
     </div>
-    
+
     <!-- 正統 Apple Face ID 認證圖示 (微張四角括號, 縱向雙眼, 簡練鼻線與自然微弧) -->
     <div class="face-scan-icon" id="faceScanIcon">
       <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
@@ -6640,19 +6668,6 @@
   </div>
   <div class="reader-badge approach-hint" id="approachHint"><span id="iconApproachWifi"></span><span id="approachText">靠近讀卡機</span></div>
   <button class="sense-cancel-btn" id="senseCancelBtn">取消</button>
-</div>
-
-
-<div class="modal-overlay" id="superKeyboardSettingsModal" style="z-index:12000;">
- <div class="modal" style="width:min(92vw,440px);max-height:86vh;overflow:auto;padding:20px;border-radius:20px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h3 style="margin:0;font-size:17px;">超級鍵盤設定</h3><button onclick="window.closeSuperKeyboardSettings()" style="border:0;background:none;color:var(--text-muted);font-size:22px;">×</button></div>
-  <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;">輸入測試（可貼上文字或圖片）</label>
-  <div id="keyboardTestBox" contenteditable="true" style="min-height:140px;max-height:308px;overflow:auto;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel-raised);outline:none;" data-placeholder="在這裡輸入或貼上文字／圖片…"></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin:4px 0 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);"><div><div style="font-weight:600;font-size:13px;">顯示表情分類列</div><div style="font-size:11px;color:var(--text-muted);">關閉後隱藏鍵盤底部表情分類圖示</div></div><button type="button" class="toggle on active" id="keyboardEmojiBarToggle" aria-pressed="true" onclick="window.setKeyboardEmojiBar(!(this.classList.contains('on')))"><span class="toggle-knob"></span></button></div>
-  <div style="display:flex;gap:8px;margin:10px 0 16px;"><button class="btn" onclick="document.getElementById('keyboardTestImage').click()">貼上圖片</button><input id="keyboardTestImage" type="file" accept="image/*" style="display:none" onchange="window.previewKeyboardTestImage(this)"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><button class="btn" onclick="window.clearSuperKeyboardData('clipboard')" style="color:var(--danger);">清除剪貼紀錄</button><button class="btn" onclick="window.clearSuperKeyboardData('emoji')" style="color:var(--danger);">清除表情符號歷史</button></div>
-  <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);"><div style="font-weight:700;font-size:13px;margin-bottom:8px;">表情符號使用統計</div><div id="keyboardEmojiStats" style="font-size:12px;color:var(--text-muted);">載入中…</div></div>
- </div>
 </div>
 
 <!-- ===== 浮動球與恐龍互動 ===== -->
@@ -6684,11 +6699,11 @@
       <span style="color:var(--teal)"></span>
       <span>超級暴龍 · 狀態正常</span>
     </div>
-    
+
     <div class="dino-stage-wrap">
       <div class="dino-bubble" id="dinoSpeechBubble">快做事！不要一直滑！</div>
       <div class="dino-ground"></div>
-      
+
       <div class="dino-actor" id="dinoActor" title="點我跳一下！">
         <svg viewBox="0 0 70 60" width="96" height="82" fill="none">
           <g class="dino-tail">
@@ -6725,8 +6740,8 @@
         </svg>
       </div>
     </div>
-    
-    <button class="dino-action-btn" id="dinoJumpBtn">暴龍大跳躍</button>
+
+    <button class="dino-action-btn" id="dinoJumpBtn">讓恐龍跳一下！</button>
   </div>
 </div>
 
@@ -6781,7 +6796,7 @@
       <div class="hub-section" id="hubTabLoyalty">
         <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
           <span class="field-label" style="margin:0;">各大實體通路會員卡</span>
-          
+
         </div>
         <div class="loyalty-grid" id="loyaltyHubList"></div>
         <button type="button" class="loyalty-add-btn loyalty-add-member-trigger" id="loyaltyAddMemberBtnHub">＋ 加入更多會員</button>
@@ -6980,7 +6995,7 @@
     </div>
     <h3 id="appIconModalTitle" style="font-size:17px; font-weight:800; color:var(--text); margin:0 0 4px;">黑曜金 · 尊榮黑卡</h3>
     <div id="appIconModalDesc" style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">1024×1024 Retina 高解析無失真原圖</div>
-    
+
     <div style="background:var(--panel-raised-2); border:1px solid var(--border); border-radius:12px; padding:12px; text-align:left; font-size:11.5px; color:var(--text-muted); margin-bottom:16px; line-height:1.5;">
       <div style="color:var(--text); font-weight:700; margin-bottom:4px;">換圖方式指引：</div>
       1. 點擊下方按鈕或長按圖片儲存至相簿<br>
@@ -7041,36 +7056,6 @@ window.state = window.state || { copyItems:[], shortcutItems:[], accounts:[], ex
 var state = window.state;
 
 // ==================== 全域安全導航與防崩潰初始化 ====================
-
-window.openSuperKeyboardSettings = function(){
- var m=document.getElementById('superKeyboardSettingsModal'); if(m)m.classList.add('show');
- window.refreshSuperKeyboardStats();
- var t=document.getElementById('keyboardEmojiBarToggle');if(t&&window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'getSettings'});
-};
-window.setKeyboardEmojiBar = function(enabled){
- var t=document.getElementById('keyboardEmojiBarToggle');
- if(t){t.classList.toggle('on',!!enabled);t.classList.toggle('active',!!enabled);t.setAttribute('aria-pressed',!!enabled?'true':'false');}
- if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings)window.webkit.messageHandlers.keyboardSettings.postMessage({action:'setEmojiBar',enabled:!!enabled});
- showToast(enabled?'已開啟表情分類列':'已關閉表情分類列');
-};
-window.closeSuperKeyboardSettings = function(){var m=document.getElementById('superKeyboardSettingsModal');if(m)m.classList.remove('show');};
-window.previewKeyboardTestImage = function(input){var f=input.files&&input.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var img=document.createElement('img');img.src=r.result;img.style.cssText='max-width:100%;max-height:160px;display:block;margin-top:8px;border-radius:8px';document.getElementById('keyboardTestBox').appendChild(img);};r.readAsDataURL(f);};
-window.refreshSuperKeyboardStats = function(){
- try{if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'stats'});return;} var counts=window.__keyboardEmojiCounts||{}; var entries=Object.entries(counts).sort(function(a,b){return b[1]-a[1]});
- var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent=entries.length?entries.slice(0,20).map(function(x){return x[0]+' × '+x[1]}).join('　'): '尚無表情符號使用紀錄';
- }catch(e){var el=document.getElementById('keyboardEmojiStats');if(el)el.textContent='目前無法讀取統計資料';}
-};
-window.clearSuperKeyboardData = function(kind){
- var suite='group.com.steveplayer87.superdashboard';
- try{
-  if(window.NativeBridge&&typeof window.NativeBridge.clearKeyboardData==='function'){window.NativeBridge.clearKeyboardData(kind);}
-  else if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.keyboardSettings){window.webkit.messageHandlers.keyboardSettings.postMessage({action:'clear',kind:kind});}
-  else { alert('目前無法直接操作鍵盤共享資料，請更新應用程式後再試。'); return; }
-  showToast(kind==='clipboard'?'已送出清除剪貼紀錄':'已送出清除表情符號歷史');
-  setTimeout(window.refreshSuperKeyboardStats,300);
- }catch(e){showToast('清除失敗，請稍後再試');}
-};
-
 window.showMoreSubView = function(view) {
   try {
     var hub = document.getElementById('moreHubView');
@@ -7108,6 +7093,7 @@ window.initMoreSettings = function() {
   var settings = document.getElementById('settingsSubView');
   if (!settings || settings.dataset.initialized === '1') return;
   settings.dataset.initialized = '1';
+  settings.querySelectorAll('.section').forEach(function(section){ section.style.marginTop='48px'; section.style.marginBottom='40px'; });
   var shortcutRows = [
     ['openDashboard', '開啟超級儀表板'],
     ['openWallet', '開啟超級錢包'],
@@ -7151,7 +7137,7 @@ window.initMoreSettings = function() {
     var node = document.querySelector(fromSelector);
     var section = node && node.closest('.section');
     var host = document.getElementById(destination);
-    if (section && host) host.appendChild(section);
+    if (section && host) { section.style.marginTop='48px'; section.style.marginBottom='40px'; host.appendChild(section); }
   }
   // 桌面寵物、主題、音效、App 圖示全部收進設定。
   moveSection('#petRoleDino', 'settingsAppearanceContainer');
@@ -7176,8 +7162,50 @@ window.syncSuperShortcutOptions = function(enabled) {
     }
   } catch(e) { console.error('syncSuperShortcutOptions error', e); }
 };
-document.addEventListener('DOMContentLoaded', function(){ window.initMoreSettings(); });
+document.addEventListener('click', function(e){
+  if (!state.editMode) return;
+  var row = e.target && e.target.closest ? e.target.closest('.fin-row[data-item-id]') : null;
+  if (!row) return;
+  var type=row.dataset.itemType, id=row.dataset.itemId;
+  if (!type || !id || !pendingRemove[type]) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  pendingRemove[type].add(id); row.classList.add('pending-remove');
+  if (typeof showToast === 'function') showToast('已標記刪除；按完成才會永久刪除');
+}, true);
 
+document.addEventListener('DOMContentLoaded', function(){
+  window.initMoreSettings();
+  var settings=document.getElementById('settingsSubView'), startX=0, startY=0;
+  if(settings){
+    settings.addEventListener('touchstart',function(e){var t=e.changedTouches[0];startX=t.clientX;startY=t.clientY;},{passive:true});
+    settings.addEventListener('touchend',function(e){var t=e.changedTouches[0],dx=t.clientX-startX,dy=t.clientY-startY;if(startX<28&&dx>75&&Math.abs(dy)<90)window.showMoreSubView('hub');},{passive:true});
+  }
+  var shake=document.getElementById('toggleShakeReturn');
+  if(shake){
+    var enabled=localStorage.getItem('shakeReturnsToMore')==='true';
+    function paint(){shake.classList.toggle('active',enabled);shake.classList.toggle('on',enabled);shake.setAttribute('aria-checked',enabled?'true':'false');}
+    paint(); window.callNative('set-shake-return',{enabled:enabled});
+    shake.addEventListener('click',function(){enabled=!enabled;localStorage.setItem('shakeReturnsToMore',String(enabled));paint();window.callNative('set-shake-return',{enabled:enabled});});
+  }
+  // 原創輕農場配樂：Web Audio 合成，無第三方遊戲音樂素材
+  (function(){
+    var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true, sfxTypes={button:true,switch:true,success:true,delete:true};
+
+    function audio(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.16;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume();return true;}
+    function tone(freq,dur,vol,type,when){if(!audio())return;var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,when);g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),when+.025);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);o.start(when);o.stop(when+dur+.03);}
+    function tick(){clearTimeout(timer);}
+    function paint(id,on){var b=document.getElementById(id);if(b){b.classList.toggle('on',!!on);b.classList.toggle('active',!!on);b.setAttribute('aria-pressed',on?'true':'false');}}
+    window.toggleFarmMusic=function(){musicOn=!musicOn;paint('farmMusicToggle',musicOn);try{localStorage.setItem('sd-farm-music',musicOn?'1':'0');}catch(e){}if(musicOn){musicOn=false;paint('farmMusicToggle',false);showToast('AI 配樂尚未匯入，暫不播放合成音樂');}else{clearTimeout(timer);}};
+    window.toggleFarmSfx=function(){sfxOn=!sfxOn;paint('farmSfxToggle',sfxOn);try{localStorage.setItem('sd-farm-sfx',sfxOn?'1':'0');}catch(e){}};
+    window.toggleFarmSfxType=function(k,b){sfxTypes[k]=!sfxTypes[k];b.classList.toggle('on',sfxTypes[k]);b.classList.toggle('active',sfxTypes[k]);b.setAttribute('aria-pressed',sfxTypes[k]?'true':'false');try{localStorage.setItem('sd-sfx-'+k,sfxTypes[k]?'1':'0');}catch(e){}};
+    window.playFarmSfx=function(kind){kind=kind||'button';if(!sfxOn||!sfxTypes[kind]||!audio())return;var t=ctx.currentTime;if(kind==='success'){tone(784,.14,.08,'sine',t);tone(1046,.22,.07,'sine',t+.09);}else if(kind==='switch'){tone(660,.07,.045,'triangle',t);}else if(kind==='delete'){tone(330,.11,.06,'triangle',t);tone(220,.14,.045,'sine',t+.06);}else{tone(587,.055,.035,'sine',t);}};
+    document.addEventListener('click',function(e){var el=e.target.closest('button,.mini-app-item,.app-icon-item,.fin-row,.tab-btn,.nav-item');if(!el||el.id==='farmMusicToggle'||el.id==='farmSfxToggle')return;window.playFarmSfx(el.dataset.sound||(el.matches('.tab,.photos-subtab')?'switch':'button'));},true);
+    document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(timer);if(ctx&&master)master.gain.setTargetAtTime(.0001,ctx.currentTime,.08);}else if(musicOn&&audio()){master.gain.setTargetAtTime(.16,ctx.currentTime,.15);tick();}});
+    try{musicOn=localStorage.getItem('sd-farm-music')==='1';sfxOn=localStorage.getItem('sd-farm-sfx')!=='0';['button','switch','success','delete'].forEach(function(k){sfxTypes[k]=localStorage.getItem('sd-sfx-'+k)!=='0';});}catch(e){}
+    document.addEventListener('DOMContentLoaded',function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);});
+    setTimeout(function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);},1000);
+  })();
 window.switchPage = function(page) {
   try {
     if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
@@ -7268,12 +7296,12 @@ window.safeSetIcon = safeSetIcon;
           if(!state.copyItems) state.copyItems = [];
           state.copyItems.unshift(newItem);
           saveData();
-          
+
           // 若在其它頁面，自動切換至儀錶板並重新渲染
           if(typeof switchPage === 'function') switchPage('dashboard');
           if(typeof renderGrid === 'function' && typeof copyGrid !== 'undefined') renderGrid(copyGrid, 'copy');
           if(typeof renderAll === 'function') renderAll();
-          
+
           showToast(isImg ? '已成功分享圖片至常用項目！' : ('已成功分享儲存：' + (newText.length > 25 ? (newText.substring(0, 25) + '...') : newText)));
         }
       }
@@ -7591,7 +7619,7 @@ window.safeSetIcon = safeSetIcon;
 (function(){
   document.addEventListener('touchstart', function(){}, false);
 
-  
+
   // 頁面上下滑動時防誤觸按鈕 active 動畫
   (function initScrollActiveGuard(){
     var scrollTimer = null;
@@ -7666,7 +7694,7 @@ window.safeSetIcon = safeSetIcon;
     'info':'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
     'database':'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>'
   };
-  
+
   // ==================== 財政部標準 Code 39 手機載具條碼繪製 (Canvas) ====================
   var CODE39_MAP = {
     '0':'000110100','1':'100100001','2':'001100001','3':'101100000','4':'000110001',
@@ -8317,7 +8345,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }catch(e){}
     return null;
   }
-  
+
   // ==================== 家庭成員自訂與頭像彈窗邏輯 ====================
   var memberEditContext = null;
   var currentMemAvatarPhoto = '';
@@ -8541,7 +8569,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   // 原創輕農場配樂：Web Audio 合成，無第三方遊戲音樂素材
   (function(){
     var ctx=null, master=null, timer=null, step=0, musicOn=false, sfxOn=true, sfxTypes={button:true,switch:true,success:true,delete:true};
-    
+
     function audio(){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.16;master.connect(ctx.destination);}if(ctx.state==='suspended')ctx.resume();return true;}
     function tone(freq,dur,vol,type,when){if(!audio())return;var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';o.frequency.setValueAtTime(freq,when);g.gain.setValueAtTime(.0001,when);g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),when+.025);g.gain.exponentialRampToValueAtTime(.0001,when+dur);o.connect(g);g.connect(master);o.start(when);o.stop(when+dur+.03);}
     function tick(){clearTimeout(timer);}
@@ -8557,8 +8585,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     setTimeout(function(){paint('farmMusicToggle',musicOn);paint('farmSfxToggle',sfxOn);},1000);
   })();
 
-  var APP_VERSION = 'v15';
 
+  var APP_VERSION = 'v20';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -8569,7 +8597,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   if(aboutVersionRow){ aboutVersionRow.addEventListener('click', openUpdateNotes); aboutVersionRow.style.cursor = 'pointer'; }
   var brandTitle = document.querySelector('.brand');
   if(brandTitle) brandTitle.addEventListener('click', openUpdateNotes);
-  try { if(localStorage.getItem('super-dashboard-seen-version') !== APP_VERSION){ localStorage.setItem('super-dashboard-seen-version', APP_VERSION); setTimeout(openUpdateNotes, 650); } } catch(e) { setTimeout(openUpdateNotes, 650); }
+  try { localStorage.setItem('super-dashboard-seen-version', APP_VERSION); } catch(e) {}
 
   // ==================== 儀錶板頁 ====================
   function renderGrid(container, type){
@@ -8602,6 +8630,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           showToast('已標記刪除；按完成才會永久刪除');
         };
       } else {
+        cap.dataset.itemId = item.id;
+        cap.dataset.itemType = type;
         var isImg = (type === 'copy' && (item.type === 'image' || (item.text && item.text.startsWith('data:image'))));
         var mono = type === 'copy' && isNumericCode(label);
         var isLink = (type === 'copy' && !!item.isLink);
@@ -8644,6 +8674,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         // 手勢：點一下複製、長按編輯、連點兩下開啟（網址 / 圖片）
         var lastTapAt = 0;
         cap.onclick = function(e){
+          if(state.editMode){
+            pendingRemove[type].add(item.id);
+            cap.classList.add('pending-remove');
+            if(typeof showToast === 'function') showToast('已標記刪除；按完成才會永久刪除');
+            return;
+          }
           if(didLongPress){
             didLongPress = false;
             return;
@@ -9036,6 +9072,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
       } else {
         var row = document.createElement('div');
+        row.dataset.itemId = item.id;
+        row.dataset.itemType = type;
         if(state.editMode){
           row.className = 'fin-row delete-row';
           row.innerHTML = icon('trash-2','row-trash-icon') + '<span class="fin-row-name">' + escapeHtml(item.name) + '</span>';
@@ -9417,7 +9455,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
-  
+
     function logCardTx(cardId, title, amount){
     if(!state.cardTx) state.cardTx = [];
     var numAmt = (typeof amount === 'number') ? amount : (amount ? parseFloat(String(amount).replace(/[^0-9.-]/g, '')) : null);
@@ -9476,7 +9514,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     });
   }
 
-  
+
   // 手動加值確認視窗狀態
   var pendingTopup = null;
 
@@ -9564,7 +9602,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     ['cardCarrierBadge','linkedCarrierCodeBadge'].forEach(function(id){ var el = document.getElementById(id); if(el) el.textContent = gCarrier; });
 
     var settingsEl = document.getElementById('walletSettings');
-    
+
     // 更新下方功能區卡片名稱與餘額 (卡面上不印製，下方清楚標示)
     var cardNameEl = document.getElementById('cardDetailName');
     var cardTypeEl = document.getElementById('cardDetailType');
@@ -9954,7 +9992,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             e.stopPropagation();
             if(!window.confirm('要將「' + (cards[idx].name || '這張卡片') + '」標記為刪除嗎？按「完成」才會永久刪除，按「取消」則保留。')) return;
             pendingRemove.card.add(cards[idx].id);
-            renderEverything();
+            slide.classList.add('pending-remove');
             showToast('已標記刪除；按完成才會永久刪除');
           } else if(targetAction === 'edit'){
             e.stopPropagation();
@@ -10443,32 +10481,38 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     // 在錢包頁面隨時可新增第二張以上卡片
     if(addCardHeaderBtn){
-      addCardHeaderBtn.style.display = (isWallet && !state.editMode) ? 'inline-flex' : 'none';
+      addCardHeaderBtn.style.display = isWallet ? 'inline-flex' : 'none';
+      addCardHeaderBtn.disabled = !!state.editMode;
+      addCardHeaderBtn.style.opacity = state.editMode ? '0.38' : '1';
     }
     if(editBtn){
+      editBtn.textContent='編輯';
+      editBtn.removeAttribute('aria-label');
+      editBtn.removeAttribute('title');
+      editBtn.style.width='';
+      editBtn.style.minWidth='76px';
+      editBtn.style.padding='6px 14px';
       if(isWallet){
         // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
-        editBtn.style.display = (!state.editMode && hasCards) ? 'inline-block' : 'none';
+        editBtn.style.display = hasCards ? 'inline-block' : 'none';
       } else if(cur === 'photos'){
         // 照片庫頁面：隱藏通用編輯按鈕，由照片庫原生工具列掌控
         editBtn.style.display = 'none';
       } else if(cur === 'more'){
-        // 更多頁面右上角以齒輪作為設定入口。
+        // 更多頁面右上角以齒輪作為設定入口，不進入編輯模式。
+        if(editActions) editActions.classList.remove('show');
         editBtn.style.display = 'inline-flex';
         editBtn.setAttribute('aria-label', '設定');
         editBtn.title = '設定';
-        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1.4 -1.1)"/></svg>';
-        editBtn.style.padding = '7px 9px';
-        editBtn.style.minWidth = '36px';
+        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 3a1.65 1.65 0 0 0 1.08-1.51V1a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15.08 2.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 7a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15Z"/></svg>';
+        editBtn.style.padding = '6px 14px';
+        editBtn.style.width = '84px';
+        editBtn.style.minWidth = '84px';
+        editBtn.style.height = '40px';
         editBtn.style.justifyContent = 'center';
       } else {
         // 在儀表板或財務頁面：正常顯示編輯按鈕
-        editBtn.style.display = state.editMode ? 'none' : 'inline-block';
-        editBtn.textContent = '編輯';
-        editBtn.setAttribute('aria-label', '編輯');
-        editBtn.title = '編輯';
-        editBtn.style.padding = '';
-        editBtn.style.minWidth = '';
+        editBtn.style.display = 'inline-block';
       }
     }
     if(walletMoreBtn){
@@ -10562,25 +10606,27 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function enterEdit(){
     state.editMode = true;
     resetPending();
-    editBtn.style.display = 'none';
+    editBtn.style.display = 'inline-block';
+    editBtn.textContent = '編輯中';
+    editBtn.disabled = true;
     editActions.classList.add('show');
     var floatBar = document.getElementById('floatEditDoneBar');
-    if(floatBar){
-      floatBar.style.display = 'flex';
-      floatBar.onclick = commitEdit;
-    }
+    if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
-    renderEverything();
+    document.body.classList.add('global-edit-mode');
   }
   function cancelEdit(){
     state.editMode = false;
     resetPending();
     editBtn.style.display = '';
+    editBtn.textContent = '編輯';
+    editBtn.disabled = false;
     editActions.classList.remove('show');
     var floatBar = document.getElementById('floatEditDoneBar');
     if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
-    renderEverything();
+    document.body.classList.remove('global-edit-mode');
+    document.querySelectorAll('.pending-remove').forEach(function(el){ el.classList.remove('pending-remove'); });
   }
   function commitEdit(){
     state.copyItems = state.copyItems.filter(function(i){ return !pendingRemove.copy.has(i.id); });
@@ -10594,16 +10640,24 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     state.editMode = false;
     resetPending();
     editBtn.style.display = '';
+    editBtn.textContent = '編輯';
+    editBtn.disabled = false;
     editActions.classList.remove('show');
     var floatBar = document.getElementById('floatEditDoneBar');
     if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
+    document.body.classList.remove('global-edit-mode');
     saveData();
     renderEverything();
     showToast('已完成編輯並離開');
   }
   editBtn.addEventListener('click', function(){
-    if ((window.currentPage || currentPage) === 'more') { window.showMoreSubView('settings'); return; }
+    if ((window.currentPage || currentPage) === 'more') {
+      if (editActions) editActions.classList.remove('show');
+      if (state.editMode) cancelEdit();
+      window.showMoreSubView('settings');
+      return;
+    }
     enterEdit();
   });
   cancelBtn.addEventListener('click', cancelEdit);
@@ -11235,7 +11289,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
-  
+
   var copyIsLinkBtn = document.getElementById('copyIsLinkToggle');
   if(copyIsLinkBtn){
     copyIsLinkBtn.addEventListener('click', function(){
@@ -11559,11 +11613,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   var DINO_BALL_SVG = '<svg viewBox="0 0 40 40" width="34" height="34" fill="none"><path d="M12 28 C10 24 14 18 22 18 C26 18 29 20 30 23 C31 27 29 31 23 32 Z" fill="#3FA9A4"/><path d="M22 18 C22 12 25 8 32 8 C37 8 39 11 39 15 C39 17 36 18 33 18 Z" fill="#3FA9A4"/><circle cx="32" cy="12" r="2" fill="#EDE6D6"/><circle cx="33" cy="12" r="1" fill="#1A1815"/><polygon points="15,19 17,15 19,19" fill="#FF9F1C"/><polygon points="21,18 23,14 25,18" fill="#FF9F1C"/><path d="M16 32 L15 37 L18 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/><path d="M24 32 L25 37 L28 37" stroke="#3FA9A4" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
-  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="45" cy="66" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M22 62 Q43 40 65 62 Q48 78 25 73Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M66 54 Q70 25 87 27 Q98 28 98 41 Q97 53 84 55 L74 58Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="88" cy="38" r="3.2" fill="#172033"/><circle cx="89" cy="37" r="1" fill="#fff"/><path d="M97 44 L100 48 L96 51 Q93 48 97 44Z" fill="#F59E0B"/><path d="M28 83 L25 91 M42 85 L41 92" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/></svg>';
+  var DUCK_BALL_SVG = '<svg viewBox="0 0 100 100" width="34" height="34" fill="none"><ellipse cx="50" cy="86" rx="26" ry="6" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><path d="M 32 54 C 28 62 36 72 48 68 C 50 62 42 54 32 54 Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.8"/><circle cx="50" cy="34" r="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/><ellipse cx="36" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><ellipse cx="64" cy="38" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.6"/><circle cx="41" cy="32" r="3.2" fill="#1E293B"/><circle cx="40" cy="31" r="1.1" fill="#FFFFFF"/><circle cx="59" cy="32" r="3.2" fill="#1E293B"/><circle cx="58" cy="31" r="1.1" fill="#FFFFFF"/><path d="M 44 38 Q 50 35 56 38 Q 54 46 50 47 Q 46 46 44 38 Z" fill="#FF9F1C" stroke="#E07A00" stroke-width="1.4"/><path d="M 42 80 L 40 85 M 42 80 L 43 85 M 42 80 L 46 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/><path d="M 58 80 L 56 85 M 58 80 L 59 85 M 58 80 L 62 84" stroke="#FF9F1C" stroke-width="2" stroke-linecap="round"/></svg>';
 
   var DINO_ACTOR_SVG = '<svg viewBox="0 0 70 60" width="96" height="82" fill="none"><g class="dino-tail"><path d="M18 34 C11 34 4 39 2 45 C8 45 15 41 20 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><polygon points="12,34 9,28 7,35" fill="#FF9F1C"/><polygon points="17,32 15,26 13,33" fill="#FF9F1C"/></g><path d="M16 36 C16 26 24 22 36 22 C42 22 46 25 48 30 C50 36 47 44 38 45 C28 46 16 45 16 36 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><path d="M22 38 C26 43 34 43 37 40 C35 44 26 45 22 38 Z" fill="#2E7E7A"/><polygon points="22,23 25,17 27,23" fill="#FF9F1C"/><polygon points="30,22 33,16 35,22" fill="#FF9F1C"/><polygon points="38,23 41,17 43,24" fill="#FF9F1C"/><g class="dino-head"><path d="M34 22 C34 13 39 7 51 7 C59 7 63 11 63 17 C63 20 59 22 55 22 L46 22 C42 22 38 23 34 22 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.5"/><circle cx="51" cy="13" r="3.6" fill="#EDE6D6"/><circle cx="52.5" cy="13" r="1.8" fill="#14120D"/><circle cx="53" cy="12" r="0.7" fill="#FFF"/><ellipse cx="46" cy="17" rx="2" ry="1.2" fill="#FF9F1C" opacity="0.6"/><path d="M49 22 L61 22 C59 26 53 27 49 27 Z" fill="#241705" stroke="#100E0A" stroke-width="1"/><polygon points="52,22 54,24 56,22" fill="#FFF"/><polygon points="56,22 58,24 60,22" fill="#FFF"/></g><g class="dino-hand"><path d="M38 29 C42 30 45 32 44 34 C43 35 40 33 37 32 Z" fill="#3FA9A4" stroke="#100E0A" stroke-width="1.2"/></g><g class="dino-leg-left"><path d="M24 43 L23 52 L28 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 43 L23 52 L28 52" stroke="#3FA9A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="dino-leg-right"><path d="M34 43 L36 52 L41 52" stroke="#100E0A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 43 L36 52 L41 52" stroke="#2E7E7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>';
 
-  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 120 90" width="116" height="86" fill="none"><ellipse cx="54" cy="78" rx="43" ry="6" fill="rgba(0,0,0,.18)"/><ellipse cx="49" cy="52" rx="34" ry="23" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><path d="M27 49 Q44 27 68 49 Q52 67 30 61Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/><path d="M72 43 Q76 18 95 19 Q109 20 109 34 Q108 45 96 47 L83 48Z" fill="#fff" stroke="#CBD5E1" stroke-width="2.5"/><circle cx="99" cy="30" r="3.4" fill="#172033"/><circle cx="100" cy="29" r="1" fill="#fff"/><path d="M108 36 L120 40 L108 44 Q105 40 108 36Z" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/><path d="M31 69 L28 80 M42 71 L41 81" stroke="#F59E0B" stroke-width="3.5" stroke-linecap="round"/><path d="M17 50 Q8 43 6 48 Q11 57 22 58" fill="#fff" stroke="#CBD5E1" stroke-width="2"/></svg>';
+  var DUCK_ACTOR_SVG = '<svg viewBox="0 0 100 100" width="104" height="104" fill="none"><ellipse cx="50" cy="88" rx="34" ry="7" fill="rgba(0,0,0,0.2)"/><ellipse cx="50" cy="60" rx="30" ry="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><path d="M 28 54 C 22 64 34 74 48 68 C 50 62 42 54 28 54 Z" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/><circle cx="50" cy="32" r="24" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2.5"/><ellipse cx="34" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><ellipse cx="66" cy="37" rx="5" ry="3.5" fill="#FFAAA6" opacity="0.65"/><circle cx="40" cy="29" r="3.5" fill="#0F172A"/><circle cx="39" cy="28" r="1.2" fill="#FFFFFF"/><circle cx="60" cy="29" r="3.5" fill="#0F172A"/><circle cx="59" cy="28" r="1.2" fill="#FFFFFF"/><path d="M 43 36 Q 50 33 57 36 Q 55 45 50 46 Q 45 45 43 36 Z" fill="#FF9F1C" stroke="#D97706" stroke-width="1.8"/><path d="M 42 84 L 38 90 M 42 84 L 43 90 M 42 84 L 47 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/><path d="M 58 84 L 54 90 M 58 84 L 59 90 M 58 84 L 63 89" stroke="#FF9F1C" stroke-width="2.6" stroke-linecap="round"/></svg>';
 
   var DINO_QUOTES = [
     '嗷嗚！超級儀錶板運作正常！',
@@ -11611,9 +11665,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var dinoActor = document.getElementById('dinoActor');
     if(dinoActor){
       dinoActor.innerHTML = isDuck ? DUCK_ACTOR_SVG : DINO_ACTOR_SVG;
-      dinoActor.classList.toggle('duck-walking', isDuck);
     }
-    var jumpBtnText = document.getElementById('dinoJumpBtn');
+    var jumpBtnText = document.querySelector('#dinoJumpBtn span:last-child');
     if(jumpBtnText){
       jumpBtnText.textContent = isDuck ? '拍拍翅膀嘎嘎叫' : '暴龍大跳躍';
     }
@@ -11650,8 +11703,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }, 650);
     }
 
-    if (dinoActor) dinoActor.addEventListener('click', function(){ if(currentPetRole==='duck'){ dinoActor.classList.remove('duck-wiggle'); void dinoActor.offsetWidth; dinoActor.classList.add('duck-wiggle'); if(dinoBubble)dinoBubble.textContent='嘎！我在這裡散步呢！'; setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650); } else makeDinoJump(); });
-    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', function(){ if(currentPetRole==='duck'){ if(dinoActor){dinoActor.classList.remove('duck-wiggle');void dinoActor.offsetWidth;dinoActor.classList.add('duck-wiggle');setTimeout(function(){dinoActor.classList.remove('duck-wiggle')},650);} if(dinoBubble)dinoBubble.textContent='嘎嘎！拍拍翅膀，繼續散步！'; } else makeDinoJump(); });
+    if (dinoActor) dinoActor.addEventListener('click', makeDinoJump);
+    if (dinoJumpBtn) dinoJumpBtn.addEventListener('click', makeDinoJump);
     if (dinoClose) dinoClose.addEventListener('click', function() {
       if (dinoModal) dinoModal.classList.remove('show');
     });
@@ -12047,14 +12100,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.cardTx = [];
       saveData();
     }
-
-
-  // 初始化完成後再同步一次，確保資料載入後的完整清單進入 iOS App Group。
-  setTimeout(function(){
-    var count = window.syncKeyboardQuickCopy ? window.syncKeyboardQuickCopy() : 0;
-    console.log('[QuickCopy] App Group sync requested:', count, 'items');
-  }, 1200);
-
 
   // ==================== 全域設定中樞 (Global Hub) 邏輯 ====================
   var DEFAULT_LOYALTY_BRANDS = [
@@ -12531,7 +12576,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   renderEverything();
   })();
 
-  
+
   var expToggleModal = document.getElementById('expressTransitToggle');
   if(expToggleModal){
     expToggleModal.addEventListener('click', function(e){
@@ -12547,39 +12592,83 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   // ==================== Mini App 系統級指尖騰空滑動返回手勢 ====================
   function initMiniAppSwipeBack() {
-    ['gooseSubView', 'settingsSubView'].forEach(function(id){
-      var sub = document.getElementById(id);
-      if (!sub || sub.dataset.swipeReady) return;
-      sub.dataset.swipeReady = '1';
-      var sx=0, sy=0, dx=0, active=false, horizontal=false;
-      sub.addEventListener('touchstart', function(e){
-        if(e.touches.length!==1 || sub.style.display==='none') return;
-        var t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; active=(sx<36); horizontal=false;
-      }, {passive:true});
-      sub.addEventListener('touchmove', function(e){
-        if(!active || e.touches.length!==1) return;
-        var t=e.touches[0], x=t.clientX-sx, y=t.clientY-sy;
-        if(!horizontal && x>8 && Math.abs(x)>Math.abs(y)*1.25) horizontal=true;
-        if(horizontal && x>0){ dx=x; sub.style.transition='none'; sub.style.transform='translate3d('+x+'px,0,0)'; }
-      }, {passive:true});
-      function finish(){
-        if(!active)return; active=false;
-        if(horizontal && dx>Math.min(120,window.innerWidth*.28)){
-          sub.style.transition='transform .24s cubic-bezier(.2,.9,.4,1)';
-          sub.style.transform='translate3d(100%,0,0)';
-          var done=function(){
-            sub.style.display='none'; sub.style.transform='translate3d(100%,0,0)';
-            sub.style.transition=''; sub.style.opacity=''; document.body.classList.remove('goose-view-active');
-          };
-          sub.addEventListener('transitionend',done,{once:true}); setTimeout(done,300);
-        } else if(horizontal){
-          sub.style.transition='transform .22s ease-out'; sub.style.transform='translate3d(0,0,0)';
-          setTimeout(function(){sub.style.transition='';},240);
-        }
-        dx=0; horizontal=false;
+    var subView = document.getElementById('gooseSubView');
+    var hubView = document.getElementById('moreHubView');
+    if (!subView || !hubView) return;
+
+    var startX = 0, startY = 0, currentX = 0, isDragging = false;
+
+    subView.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      var touch = e.touches[0];
+      // 支援自左側邊緣滑動，或在頁面上方捏住往右拖曳
+      if (touch.clientX < 80 || touch.clientY < 180) {
+        startX = touch.clientX;
+        startY = touch.clientY;
+        currentX = startX;
+        isDragging = true;
+        subView.style.transition = 'none';
+        subView.style.transformOrigin = 'left center';
       }
-      sub.addEventListener('touchend',finish,{passive:true});
-      sub.addEventListener('touchcancel',finish,{passive:true});
+    }, { passive: true });
+
+    subView.addEventListener('touchmove', function(e) {
+      if (!isDragging || e.touches.length !== 1) return;
+      var touch = e.touches[0];
+      var dx = touch.clientX - startX;
+      var dy = touch.clientY - startY;
+
+      // 如果主要是水平向右滑動
+      if (dx > 0 && Math.abs(dx) > Math.abs(dy) * 0.8) {
+        currentX = touch.clientX;
+        var progress = Math.min(1, dx / 280);
+        // 系統級別指尖掌握騰空縮小動畫：隨著手指拖曳縮小為 0.88、圓角放大、陰影騰空
+        var scale = 1 - (progress * 0.12);
+        var radius = 16 + (progress * 24);
+        var translateY = dy * 0.25;
+
+        subView.style.transform = 'translate3d(' + (dx * 0.85) + 'px, ' + translateY + 'px, 0) scale(' + scale + ')';
+        subView.style.borderRadius = radius + 'px';
+        subView.style.boxShadow = '0 ' + (12 + progress * 24) + 'px ' + (24 + progress * 36) + 'px rgba(0,0,0,' + (0.4 + progress * 0.35) + ')';
+
+        // 底層 moreHubView 呈現反向縮放進場
+        hubView.style.display = 'block';
+        hubView.style.opacity = '' + (0.5 + progress * 0.5);
+        hubView.style.transform = 'scale(' + (0.94 + progress * 0.06) + ')';
+      }
+    }, { passive: true });
+
+    subView.addEventListener('touchend', function(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      var dx = currentX - startX;
+
+      if (dx > 90) {
+        // 超過門檻：流暢滑出並回到更多首頁
+        subView.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.24s ease';
+        subView.style.transform = 'translate3d(100vw, 0, 0) scale(0.85)';
+        subView.style.opacity = '0';
+        setTimeout(function() {
+          subView.style.display = 'none';
+          subView.style.transform = '';
+          subView.style.opacity = '';
+          subView.style.borderRadius = '';
+          subView.style.boxShadow = '';
+          hubView.style.display = 'block';
+          hubView.style.opacity = '1';
+          hubView.style.transform = 'scale(1)';
+        }, 260);
+      } else {
+        // 未過門檻：彈性回彈復原
+        subView.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-radius 0.28s ease, box-shadow 0.28s ease';
+        subView.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        subView.style.borderRadius = '';
+        subView.style.boxShadow = '';
+        setTimeout(function() {
+          subView.style.transition = '';
+          hubView.style.display = 'none';
+        }, 300);
+      }
     });
   }
 
@@ -12955,10 +13044,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     customGooseActions.forEach(function(item){
       var card = document.createElement('div');
       card.className = 'odyssey-action-card custom-odyssey-card';
-      var imgHtml = item.image ? 
+      var imgHtml = item.image ?
         ('<img src="' + item.image + '" style="width:100%; height:100%; object-fit:cover;">') :
         ('<div style="font-size:30px;"></div>');
-      card.innerHTML = 
+      card.innerHTML =
         '<div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
           imgHtml +
         '</div>' +
@@ -12983,6 +13072,113 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function initMorePageAndGooseButler() {
     updateGooseDisplay();
+
+  // 支援 iOS 系統級手勢右滑返回 (Interactive Swipe-Back Gesture)
+  (function initGooseSwipeBack() {
+    var gooseView = document.getElementById('gooseSubView');
+    var moreHub = document.getElementById('moreHubView');
+    if (!gooseView) return;
+
+    var startX = 0, startY = 0, currentDiff = 0, isDragging = false;
+
+    function handleStart(e) {
+      if (e.touches.length !== 1) return;
+      var t = e.touches[0];
+      // 支援左邊緣 80px 內觸發手勢返回
+      if (t.clientX <= 80) {
+        startX = t.clientX;
+        startY = t.clientY;
+        isDragging = false;
+        currentDiff = 0;
+      }
+    }
+
+    function handleMove(e) {
+      if (!startX) return;
+      var t = e.touches[0];
+      var diffX = t.clientX - startX;
+      var diffY = t.clientY - startY;
+
+      if (!isDragging) {
+        if (diffX > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+          isDragging = true;
+          if (moreHub) {
+            moreHub.style.display = 'block';
+            moreHub.style.opacity = '0.7';
+            moreHub.style.transform = 'scale(0.96)';
+          }
+        } else if (Math.abs(diffY) > 10) {
+          startX = 0;
+          return;
+        }
+      }
+
+      if (isDragging && diffX > 0) {
+        currentDiff = diffX;
+        var screenW = window.innerWidth || 375;
+        var progress = Math.min(diffX / screenW, 1);
+
+        // 阿鵝頁面右移並帶有輕微縮小騰空感 (Pinch / Floating Effect)
+        var scale = 1 - progress * 0.06;
+        gooseView.style.transition = 'none';
+        gooseView.style.transform = 'translateX(' + diffX + 'px) scale(' + scale + ')';
+        gooseView.style.boxShadow = '-12px 0 32px rgba(0,0,0,0.6)';
+
+        // 底層「更多中樞」同步放大回彈 (iOS 系統級平行位移視差)
+        if (moreHub) {
+          moreHub.style.transition = 'none';
+          moreHub.style.transform = 'scale(' + (0.96 + progress * 0.04) + ')';
+          moreHub.style.opacity = (0.7 + progress * 0.3);
+        }
+      }
+    }
+
+    function handleEnd(e) {
+      if (!isDragging) { startX = 0; return; }
+      isDragging = false;
+      var screenW = window.innerWidth || 375;
+      var shouldPop = currentDiff > (screenW * 0.28);
+
+      if (shouldPop) {
+        // 完成滑出動畫
+        gooseView.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
+        gooseView.style.transform = 'translateX(100%) scale(0.94)';
+        if (moreHub) {
+          moreHub.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
+          moreHub.style.transform = 'scale(1)';
+          moreHub.style.opacity = '1';
+        }
+        setTimeout(function() {
+          window.showMoreSubView('hub');
+        }, 220);
+      } else {
+        // 取消並回彈原位
+        gooseView.style.transition = 'transform 0.2s ease-out';
+        gooseView.style.transform = 'translateX(0) scale(1)';
+        gooseView.style.boxShadow = 'none';
+        if (moreHub) {
+          moreHub.style.transition = 'opacity 0.2s ease-out';
+          moreHub.style.opacity = '0';
+          setTimeout(function() {
+            if (gooseView.style.display !== 'none') moreHub.style.display = 'none';
+          }, 200);
+        }
+      }
+      startX = 0;
+      currentDiff = 0;
+    }
+
+    gooseView.addEventListener('touchstart', handleStart, { passive: true });
+    gooseView.addEventListener('touchmove', handleMove, { passive: true });
+    gooseView.addEventListener('touchend', handleEnd, { passive: true });
+
+    var edge = document.getElementById('gooseLeftEdgeHandle');
+    if (edge) {
+      edge.addEventListener('touchstart', handleStart, { passive: true });
+      edge.addEventListener('touchmove', handleMove, { passive: true });
+      edge.addEventListener('touchend', handleEnd, { passive: true });
+    }
+  })();
 
     var moreHubView = document.getElementById('moreHubView');
     var gooseSubView = document.getElementById('gooseSubView');
@@ -13062,7 +13258,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     // 阿鵝管家 生活指標狀態
     var lastBath = localStorage.getItem('ah_goose_last_bath');
     var petCount = parseInt(localStorage.getItem('ah_goose_pet_count') || '87', 10);
-    
+
     function updateBathDisplay() {
       var daysEl = document.getElementById('daysSinceBath');
       var badgeEl = document.getElementById('bathStatusBadge');
@@ -13109,7 +13305,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       localStorage.setItem('ah_goose_pet_count', petCount.toString());
       var countEl = document.getElementById('petCount');
       if (countEl) countEl.innerHTML = petCount + ' <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">次</span>';
-      
+
       var avatar = document.getElementById('gooseAvatar');
       if (avatar) {
         avatar.style.transform = 'scale(1.2) rotate(6deg)';
@@ -13535,11 +13731,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var filterLabel = document.getElementById('photosFilterLabel');
     if (filterLabel) {
       if (state.albumFilter) {
-        filterLabel.innerHTML = '<span>' + filterDesc + '</span>' +
-          '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'albums\')" style="min-height:28px; height:28px; padding:0 10px; font-size:12px; margin-left:8px;">‹ 返回相簿</button>';
+        filterLabel.innerHTML = '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'albums\')">‹ 返回相簿</button><span>' + filterDesc + '</span>';
       } else if (state.mediaTypeFilter) {
-        filterLabel.innerHTML = '<span>' + filterDesc + '</span>' +
-          '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'mediatypes\')" style="min-height:28px; height:28px; padding:0 10px; font-size:12px; margin-left:8px;">‹ 返回媒體類型</button>';
+        filterLabel.style.justifyContent='flex-start'; filterLabel.style.gap='10px'; filterLabel.innerHTML = '<button type="button" class="photos-btn" onclick="window.PhotoVault.switchSubtab(\'mediatypes\')">‹ 返回媒體類型</button><span>' + filterDesc + '</span>';
       } else {
         filterLabel.innerHTML = '<span>全部相片與影片</span>';
       }
@@ -13579,9 +13773,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }
     }
 
-    renderAlbums();
-    renderMediaTypes();
-    renderDeletedGrid(trashList);
+    if(state.subtab==='albums') renderAlbums();
+    if(state.subtab==='mediatypes') renderMediaTypes();
+    if(state.subtab==='deleted') renderDeletedGrid(trashList);
     updateSelectToolbar();
   }
 
@@ -13733,7 +13927,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
 
     document.querySelectorAll('.photos-subtab').forEach(function(b) {
-      b.classList.toggle('active', b.dataset.subtab === tab);
+      b.classList.toggle('active', b.dataset.subtab === ((state.mediaTypeFilter && tab === 'all') ? 'mediatypes' : tab));
     });
 
     var viewAll = document.getElementById('photosSubViewAll');
@@ -13781,7 +13975,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       btn.classList.toggle('primary', state.selectMode);
     }
 
-    render();
+    // 僅切換既有 cell class，保留 img 與 DOM，避免取消選取時照片重載。
+    document.querySelectorAll('#photosGrid .photo-cell').forEach(function(cell) {
+      cell.classList.toggle('select-mode', state.selectMode);
+      cell.classList.toggle('selected', state.selectedIds.has(cell.dataset.id));
+    });
+    updateSelectToolbar();
   }
 
   function toggleSelectItem(id) {
@@ -13805,7 +14004,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     } else {
       activeList.forEach(function(x) { state.selectedIds.add(x.id); });
     }
-    render();
+    document.querySelectorAll('#photosGrid .photo-cell').forEach(function(cell) {
+      cell.classList.toggle('selected', state.selectedIds.has(cell.dataset.id));
+    });
+    updateSelectToolbar();
   }
 
   function updateSelectToolbar() {
@@ -14089,6 +14291,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var wrapper = document.getElementById('lightboxMediaWrapper');
 
     if (!box || !wrapper) return;
+    box.classList.add('zooming');
 
     var appTopbar = document.querySelector('.topbar');
     if (appTopbar) appTopbar.style.display = 'none';
@@ -14116,6 +14319,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       wrapper.offsetWidth; // 強制重繪
 
       requestAnimationFrame(function() {
+        box.classList.remove('zooming');
         wrapper.style.transition = 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease, border-radius 0.32s ease';
         wrapper.style.transform = 'translate(0px, 0px) scale(1)';
         wrapper.style.borderRadius = '0px';
@@ -14130,6 +14334,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       wrapper.style.transform = '';
       wrapper.style.opacity = '1';
       box.classList.add('show');
+      requestAnimationFrame(function(){ box.classList.remove('zooming'); });
     }
 
     // 綁定手勢：水平左右滑動切換相片 + 垂直向下滑動退出
@@ -14216,6 +14421,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         wrapper.style.transform = 'translateX(' + dampedDx + 'px)';
       } else if (gestureDirection === 'v') {
         if (dy > 0) {
+          var lightbox = document.getElementById('photoLightbox'); if (lightbox) lightbox.classList.add('zooming');
           currentDeltaY = dy;
           var scale = Math.max(0.68, 1 - (dy / 900));
           var opacity = Math.max(0.35, 1 - (dy / 550));
@@ -14255,6 +14461,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             wrapper.style.transition = '';
           }, 190);
         } else {
+          var lightbox = document.getElementById('photoLightbox'); if (lightbox) lightbox.classList.remove('zooming');
           wrapper.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease';
           wrapper.style.transform = 'translateY(0px) scale(1)';
           wrapper.style.opacity = '1';
@@ -14356,7 +14563,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function closeLightbox() {
     var box = document.getElementById('photoLightbox');
-    if (box) box.classList.remove('show');
+    if (box) {
+      box.classList.add('zooming');
+      setTimeout(function(){ box.classList.remove('show','zooming'); }, 180);
+    }
     toggleMetaDrawer(false);
 
     var appTopbar = document.querySelector('.topbar');
@@ -14583,9 +14793,46 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   function requestImportMedia() {
+    // iOS 原生 App 先取得持續性的相片圖庫讀取權限，再開啟系統相片選擇器。
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
+      window.callNative('present-photo-picker');
+      return;
+    }
     var inp = document.getElementById('photosFileInput');
     if (inp) inp.click();
   }
+
+  window.onPhotoLibraryPermission = function(allowed, status) {
+    if (!allowed) {
+      if (typeof showToast === 'function') showToast(status === 'denied' ? '相片圖庫權限未允許，請至 iPhone 設定開啟完整存取' : '目前無法存取相片圖庫');
+      return;
+    }
+    if (status === 'limited' && typeof showToast === 'function') showToast('目前為所選相片權限；可至 iPhone 設定改為完整存取');
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
+      if (typeof showToast === 'function') showToast('正在載入系統照片與原況影片…');
+      window.callNative('request-photo-library-assets', { offset: 0 });
+    } else {
+      var inp = document.getElementById('photosFileInput');
+      if (inp) inp.click();
+    }
+  };
+
+  window.onNativePhotoAssets = function(payload, hasMore, nextOffset) {
+    if (!payload || payload.error) { if (typeof showToast === 'function') showToast('無法讀取系統照片，請確認相簿權限'); return; }
+    var imported = (payload.items || []).map(function(record) {
+      return { id:record.id, filename:record.filename||'Photo', location:'', mediaType:record.mediaType||'image',
+        isLive:!!record.isLive, dataUrl:record.dataUrl, liveVideoUrl:'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
+        width:record.width||0, height:record.height||0, createdAt:record.createdAt||Date.now(), album:'全部相片',
+        notes:'', isFavorite:false, isDeleted:false, deletedAt:null, source:'apple-photos' };
+    }).filter(function(item){ return !!item.dataUrl; });
+    if (imported.length) {
+      var seen = new Set(imported.map(function(item){ return item.id; }));
+      state.items = imported.concat(state.items.filter(function(old){ return !seen.has(old.id); }));
+      saveBatch(state.items); render();
+    }
+    if (hasMore) window.callNative('request-photo-library-assets', { offset:nextOffset });
+    else if (typeof showToast === 'function') showToast('系統照片與原況影片載入完成');
+  };
 
   function requestImportFolder() {
     var inp = document.getElementById('photosFolderInput');
@@ -14696,6 +14943,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   function finishImport(newItems, isFolder) {
+    // 匯入內容同步一份至 App Group，讓 Files File Provider 能列出原始檔案。
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
+      newItems.forEach(function(item){
+        if (item.dataUrl) window.callNative('store-file-provider-photo', { filename:item.filename, dataUrl:item.dataUrl });
+        if (item.liveVideoUrl) window.callNative('store-file-provider-photo', { filename:(item.filename||'LivePhoto').replace(/\.[^.]+$/, '')+'.mov', dataUrl:item.liveVideoUrl });
+      });
+    }
     state.items = newItems.concat(state.items);
     saveBatch(state.items);
     render();
@@ -14732,12 +14986,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       seedDefaultPhotos();
     } else {
       state.items = items;
+      // 舊版已存在 IndexedDB 的項目做一次性遷移，之後 Files 會看到這些檔案。
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard && localStorage.getItem('sd-file-provider-migrated') !== '1') {
+        items.forEach(function(item){
+          if (item.dataUrl) window.callNative('store-file-provider-photo', { filename:item.filename||'Photo', dataUrl:item.dataUrl });
+          if (item.liveVideoUrl) window.callNative('store-file-provider-photo', { filename:(item.filename||'LivePhoto').replace(/\.[^.]+$/, '')+'.mov', dataUrl:item.liveVideoUrl });
+        });
+        localStorage.setItem('sd-file-provider-migrated','1');
+      }
     }
     render();
   });
 
   window.PhotoVault = {
     render: render,
+    refreshVisibleView: function(){ /* IndexedDB 已在啟動時載入；切回頁面不重建整張相片網格。 */ },
     switchSubtab: switchSubtab,
     filterByAlbum: filterByAlbum,
     filterByMediaType: filterByMediaType,

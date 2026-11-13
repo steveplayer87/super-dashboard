@@ -97,12 +97,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 enum InstallationExpiryReminder {
     private static let requestID = "superdashboard.install-expiry-6-5-days"
     private static let scheduledKey = "superdashboard.install-expiry-reminder-scheduled"
+    private static let deadlineKey = "superdashboard.install-expiry-deadline"
 
     static func scheduleIfNeeded() {
         let defaults = UserDefaults.standard
-        guard !defaults.bool(forKey: scheduledKey) else { return }
+        // 舊版已排程但未保存實際時間的裝置，於首次升級到此版本時補齊一次期限與通知。
+        guard defaults.double(forKey: deadlineKey) <= 0 else { return }
 
         let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [requestID])
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized ||
                   settings.authorizationStatus == .provisional ||
@@ -121,6 +124,7 @@ enum InstallationExpiryReminder {
                     print("[InstallExpiry] Failed to schedule: \(error.localizedDescription)")
                 } else {
                     defaults.set(true, forKey: scheduledKey)
+                    defaults.set(Date().addingTimeInterval(561600).timeIntervalSince1970, forKey: deadlineKey)
                     print("[InstallExpiry] Reminder scheduled for 6.5 days after install.")
                 }
             }

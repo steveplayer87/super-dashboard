@@ -3,6 +3,11 @@ import Capacitor
 import ActivityKit
 import UserNotifications
 import WebKit
+import Photos
+import PhotosUI
+import UniformTypeIdentifiers
+import AVFoundation
+import FileProvider
 import LocalAuthentication
 import AudioToolbox
 
@@ -359,6 +364,42 @@ class BiometricManager {
 }
 
 // MARK: - Notification Manager (完整支援自訂動作選項、圖片貼圖與文字即時回覆)
+// MARK: - App 圖示切換（供網頁訊息與網址連結共用）
+enum AppIconManager {
+    /// name 為 nil / "" / "default" 時還原成主要圖示（AppIcon，也就是恐龍原廠圖示）
+    static func apply(name: String?, completion: @escaping (Bool, String) -> Void) {
+        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let target: String? = (trimmed.isEmpty || trimmed.lowercased() == "default") ? nil : trimmed
+        DispatchQueue.main.async {
+            guard UIApplication.shared.supportsAlternateIcons else {
+                completion(false, "此裝置不支援更換 App 圖示")
+                return
+            }
+            if UIApplication.shared.alternateIconName == target {
+                completion(true, "目前已經是這個圖示")
+                return
+            }
+            UIApplication.shared.setAlternateIconName(target) { err in
+                DispatchQueue.main.async {
+                    if let err = err {
+                        print("[AppIcon] Error setting alternate icon: \(err.localizedDescription)")
+                        completion(false, "切換失敗：\(err.localizedDescription)")
+                    } else {
+                        print("[AppIcon] Successfully set alternate icon to: \(String(describing: target))")
+                        completion(true, "已切換 App 圖示")
+                    }
+                }
+            }
+        }
+    }
+
+    /// 把結果回報給網頁（window.onAppIconResult）
+    static func report(success: Bool, message: String) {
+        let escaped = message.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+        NotificationManager.evaluateJS("if(typeof window.onAppIconResult==='function') window.onAppIconResult(\(success), '\(escaped)');")
+    }
+}
+
 class NotificationManager {
 
     // 全域待跳轉目標，解決冷啟動時 WebKit 還在加載導致 evaluateJS 丟失
@@ -740,7 +781,15 @@ class NotificationManager {
 }
 
 // MARK: - 自訂 Bridge ViewController (支援 JavaScript MessageHandler、URL Scheme 與原生 Face ID)
-class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
+class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate, PHPickerViewControllerDelegate {
+    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+    override var prefersStatusBarHidden: Bool { false }
+    override var canBecomeFirstResponder: Bool { true }
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        guard motion == .motionShake,
+              UserDefaults.standard.bool(forKey: "shakeReturnsToMore") else { return }
+        webView?.evaluateJavaScript("if(typeof window.switchPage==='function'){window.switchPage('more');if(typeof window.showMoreSubView==='function')window.showMoreSubView('hub');}", completionHandler: nil)
+    }
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         setupDelegatesAndHandlers()
@@ -808,6 +857,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        becomeFirstResponder()
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
     }
@@ -1018,6 +1068,50 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
     private func handleUnifiedAction(action: String, params: Any?) {
         let act = action.lowercased()
+        if act == "open-wardrobe" || act == "openwardrobe" {
+            DispatchQueue.main.async { [weak self] in
+                self?.presentWardrobeMiniApp()
+            }
+            return
+        }
+        if act == "present-photo-picker" || act == "request-photo-library-access" || act == "request-photo-library-assets" {
+            presentSystemPhotoPicker()
+            return
+        }
+        if act == "set-shake-return" {
+            let enabled = (params as? [String: Any])?["enabled"] as? Bool ?? false
+            UserDefaults.standard.set(enabled, forKey: "shakeReturnsToMore")
+            return
+        }
+        if act == "get-install-expiry-deadline" {
+            UNUserNotificationCenter.current().getPendingNotificationRequests { [weak self] requests in
+                let stored = UserDefaults.standard.double(forKey: "superdashboard.install-expiry-deadline")
+                let hasPending = requests.contains(where: { $0.identifier == "superdashboard.install-expiry-6-5-days" })
+                let deadline = stored > 0 ? stored : (hasPending ? 0 : 0)
+                DispatchQueue.main.async {
+                    self?.webView?.evaluateJavaScript("if(typeof window.onInstallExpiryDeadline==='function')window.onInstallExpiryDeadline(\(deadline));", completionHandler: nil)
+                }
+            }
+            return
+        }
+        if act == "store-file-provider-photo", let dict = params as? [String: Any],
+           let dataURL = dict["dataUrl"] as? String, let filename = dict["filename"] as? String {
+            let payload = dataURL.components(separatedBy: ",").last ?? dataURL
+            let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
+            if let data = Data(base64Encoded: payload),
+               let manager = NSFileProviderManager(for: domain) {
+                let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+                try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                let safeName = URL(fileURLWithPath: filename).lastPathComponent
+                do {
+                    try data.write(to: folder.appendingPathComponent(safeName), options: .atomic)
+                    manager.signalEnumerator(for: .rootContainer) { error in
+                        if let error { NSLog("[FileProvider] refresh after write: %@", error.localizedDescription) }
+                    }
+                } catch { NSLog("[FileProvider] write failed: %@", error.localizedDescription) }
+            }
+            return
+        }
         if act == "copy-to-clipboard" {
             let dict = params as? [String: Any]
             let text = dict?["text"] as? String ?? ""
@@ -1121,6 +1215,14 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             return
         }
 
+        if act == "set-app-icon" || act == "setappicon" {
+            let name = (params as? [String: Any])?["name"] as? String
+            AppIconManager.apply(name: name) { success, message in
+                AppIconManager.report(success: success, message: message)
+            }
+            return
+        }
+
         if act == "open-settings" {
             NotificationManager.openSystemSettings()
             return
@@ -1149,6 +1251,307 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 self.webView?.evaluateJavaScript("if(typeof showToast==='function') showToast('已成功儲存圖片至系統照片！');", completionHandler: nil)
             }
         }
+    }
+
+
+    // 使用 Apple 原生 PHPicker；不掃描整個相簿、不要求整庫權限，也不把整庫逐張送進 WebView。
+    private func presentSystemPhotoPicker() {
+        guard presentedViewController == nil else { return }
+        var config = PHPickerConfiguration(photoLibrary: .shared())
+        config.filter = .any(of: [.images, .videos])
+        config.selectionLimit = 0
+        config.preferredAssetRepresentationMode = .current
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        guard !results.isEmpty else { return }
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var records = [[String: Any]]()
+        let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
+        let manager = NSFileProviderManager(for: domain)
+        let folder = manager?.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+        if let folder { try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+
+        for (index, result) in results.enumerated() {
+            let provider = result.itemProvider
+            let id = "picker-\(UUID().uuidString)"
+            if provider.canLoadObject(ofClass: UIImage.self) {
+                group.enter()
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    defer { group.leave() }
+                    guard let image = object as? UIImage, let jpeg = image.jpegData(compressionQuality: 0.82) else { return }
+                    let name = "Photo-\(index + 1)-\(UUID().uuidString.prefix(8)).jpg"
+                    if let folder { try? jpeg.write(to: folder.appendingPathComponent(name), options: .atomic) }
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(jpeg.base64EncodedString())", "size": jpeg.count, "width": Int(image.size.width * image.scale), "height": Int(image.size.height * image.scale), "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
+                    lock.lock(); records.append(record); lock.unlock()
+                }
+            } else if let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .movie) == true }) {
+                group.enter()
+                provider.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
+                    defer { group.leave() }
+                    guard let url else { return }
+                    let name = "Video-\(index + 1)-\(UUID().uuidString.prefix(8)).mov"
+                    var preview = Data()
+                    let destination = folder?.appendingPathComponent(name)
+                    if let destination { try? FileManager.default.copyItem(at: url, to: destination) }
+                    let asset = AVURLAsset(url: url)
+                    let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
+                    if let cg = try? generator.copyCGImage(at: .zero, actualTime: nil) { preview = UIImage(cgImage: cg).jpegData(compressionQuality: 0.72) ?? Data() }
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
+                    lock.lock(); records.append(record); lock.unlock()
+                }
+            }
+        }
+        group.notify(queue: .main) { [weak self] in
+            if let manager { manager.signalEnumerator(for: .rootContainer) { _ in } }
+            guard let data = try? JSONSerialization.data(withJSONObject: ["items": records]), let json = String(data: data, encoding: .utf8) else { return }
+            self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),false,0);", completionHandler: nil)
+        }
+    }
+
+    /// 從 Photos 讀取圖庫：原始檔直接寫入 File Provider 儲存區，僅將縮圖送到 WebView，避免大量 Base64 導致記憶體暴增。
+    private func importPhotoLibraryAssets(params: Any?) {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .authorized || status == .limited else {
+            webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'photo_permission_required'});", completionHandler: nil)
+            return
+        }
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        let assets = PHAsset.fetchAssets(with: options)
+        let dict = params as? [String: Any] ?? [:]
+        let offset = max(0, dict["offset"] as? Int ?? 0)
+        let batch = min(1, max(0, assets.count - offset))
+        guard batch > 0 else {
+            webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({items:[]},false,\(offset));", completionHandler: nil)
+            return
+        }
+        let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
+        guard let manager = NSFileProviderManager(for: domain) else {
+            webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'file_provider_unavailable'});", completionHandler: nil)
+            return
+        }
+        let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+        do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+        catch {
+            webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'file_storage_unavailable'});", completionHandler: nil)
+            return
+        }
+        let asset = assets.object(at: offset)
+        let isLive = asset.mediaSubtypes.contains(.photoLive)
+        let safeID = asset.localIdentifier.replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: ":", with: "_")
+        let fileExt = asset.mediaType == .video ? "mov" : "jpg"
+        let filename = "\(safeID).\(fileExt)"
+        let destination = folder.appendingPathComponent(filename)
+        let finish: ([String: Any]?, String?) -> Void = { [weak self] record, errorText in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if let errorText {
+                    let escaped = errorText.replacingOccurrences(of: "'", with: "\\'")
+                    self.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'\(escaped)'});", completionHandler: nil)
+                    return
+                }
+                manager.signalEnumerator(for: .rootContainer) { error in
+                    if let error { NSLog("[FileProvider] refresh after Photos import: %@", error.localizedDescription) }
+                }
+                let items = record.map { [$0] } ?? []
+                guard let jsonData = try? JSONSerialization.data(withJSONObject: ["items": items]), let json = String(data: jsonData, encoding: .utf8) else { return }
+                let hasMore = offset + 1 < assets.count
+                self.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),\(hasMore),\(offset + 1));", completionHandler: nil)
+            }
+        }
+        if asset.mediaType == .image {
+            let request = PHImageRequestOptions()
+            request.version = .original
+            request.deliveryMode = .highQualityFormat
+            request.isNetworkAccessAllowed = true
+            PHImageManager.default().requestImageDataAndOrientation(for: asset, options: request) { data, _, _, info in
+                guard let data else { finish(nil, "無法讀取相片原始檔"); return }
+                do { try data.write(to: destination, options: .atomic) }
+                catch { finish(nil, "無法儲存相片：\(error.localizedDescription)"); return }
+                let thumbOptions = PHImageRequestOptions()
+                thumbOptions.deliveryMode = .fastFormat
+                thumbOptions.resizeMode = .fast
+                thumbOptions.isNetworkAccessAllowed = true
+                PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 720, height: 720), contentMode: .aspectFit, options: thumbOptions) { image, _ in
+                    let thumb = image?.jpegData(compressionQuality: 0.72) ?? data
+                    var liveMovieName = ""
+                    let deliver: () -> Void = {
+                        let record: [String: Any] = [
+                            "id": "phasset-\(asset.localIdentifier)", "filename": filename,
+                            "mediaType": "image", "isLive": isLive, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                            "liveVideoUrl": "", "liveVideoFilename": liveMovieName,
+                            "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
+                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": data.count, "album": "全部相片"
+                        ]
+                        finish(record, nil)
+                    }
+                    guard isLive else { deliver(); return }
+                    let videoOptions = PHVideoRequestOptions()
+                    videoOptions.version = .original
+                    videoOptions.deliveryMode = .highQualityFormat
+                    videoOptions.isNetworkAccessAllowed = true
+                    PHImageManager.default().requestAVAsset(forVideo: asset, options: videoOptions) { avAsset, _, _ in
+                        guard let avAsset, let export = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetPassthrough) else { deliver(); return }
+                        liveMovieName = "\(safeID)-paired.mov"
+                        let movieURL = folder.appendingPathComponent(liveMovieName)
+                        export.outputURL = movieURL
+                        export.outputFileType = .mov
+                        export.exportAsynchronously {
+                            if export.status != .completed { liveMovieName = "" }
+                            deliver()
+                        }
+                    }
+                }
+            }
+        } else if asset.mediaType == .video {
+            let videoOptions = PHVideoRequestOptions()
+            videoOptions.version = .original
+            videoOptions.deliveryMode = .highQualityFormat
+            videoOptions.isNetworkAccessAllowed = true
+            PHImageManager.default().requestAVAsset(forVideo: asset, options: videoOptions) { avAsset, _, _ in
+                guard let avAsset, let export = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetPassthrough) else { finish(nil, "無法讀取影片原始檔"); return }
+                export.outputURL = destination
+                export.outputFileType = .mov
+                export.exportAsynchronously {
+                    guard export.status == .completed else { finish(nil, "影片匯出失敗"); return }
+                    let thumbOptions = PHImageRequestOptions()
+                    thumbOptions.deliveryMode = .fastFormat
+                    thumbOptions.isNetworkAccessAllowed = true
+                    PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 720, height: 720), contentMode: .aspectFit, options: thumbOptions) { image, _ in
+                        let thumb = image?.jpegData(compressionQuality: 0.72) ?? Data()
+                        let record: [String: Any] = [
+                            "id": "phasset-\(asset.localIdentifier)", "filename": filename,
+                            "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                            "liveVideoUrl": "", "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
+                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0, "album": "全部相片"
+                        ]
+                        finish(record, nil)
+                    }
+                }
+            }
+        } else { finish(nil, "不支援的媒體格式") }
+    }
+
+    func presentWardrobeMiniApp() {
+        guard presentedViewController == nil else { return }
+        let miniApp = WardrobeMiniAppViewController()
+        miniApp.modalPresentationStyle = .fullScreen
+        present(miniApp, animated: true)
+    }
+}
+
+/// Wardrobe Master Mini App：使用持久化 WKWebsiteDataStore，讓 localStorage、IndexedDB、Cookie
+/// 與網站快取在 App 關閉後仍可保留。這是獨立 WebKit 儲存環境，不會自動與 Safari PWA 共用。
+final class WardrobeMiniAppViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIGestureRecognizerDelegate {
+    override var canBecomeFirstResponder: Bool { true }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        becomeFirstResponder()
+    }
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        guard motion == .motionShake, UserDefaults.standard.bool(forKey: "shakeReturnsToMore") else { return }
+        dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            for scene in UIApplication.shared.connectedScenes {
+                guard let ws = scene as? UIWindowScene else { continue }
+                for window in ws.windows {
+                    if let main = window.rootViewController as? MainViewController {
+                        main.webView?.evaluateJavaScript("if(typeof window.switchPage==='function')window.switchPage('more');", completionHandler: nil)
+                    }
+                }
+            }
+        }
+    }
+    private let wardrobeURL = URL(string: "https://steveplayer87.github.io/wardrobe-master/")!
+    private var webView: WKWebView!
+    private let loading = UIActivityIndicatorView(style: .medium)
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        configuration.allowsInlineMediaPlayback = true
+
+        let web = WKWebView(frame: .zero, configuration: configuration)
+        web.translatesAutoresizingMaskIntoConstraints = false
+        web.navigationDelegate = self
+        web.uiDelegate = self
+        web.allowsBackForwardNavigationGestures = false
+        web.scrollView.contentInsetAdjustmentBehavior = .never
+        web.backgroundColor = .systemBackground
+        web.isOpaque = false
+        webView = web
+        view.addSubview(web)
+
+        loading.translatesAutoresizingMaskIntoConstraints = false
+        loading.hidesWhenStopped = true
+        view.addSubview(loading)
+
+        NSLayoutConstraint.activate([
+            web.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            web.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            web.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            web.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            loading.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loading.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+
+        // 只在螢幕最左側起手的原生邊緣手勢；往右滑即可退出 Mini App。
+        let edgeBack = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handleEdgeBack(_:)))
+        edgeBack.edges = .left
+        edgeBack.delegate = self
+        edgeBack.cancelsTouchesInView = false
+        view.addGestureRecognizer(edgeBack)
+
+        loading.startAnimating()
+        web.load(URLRequest(url: wardrobeURL, cachePolicy: .useProtocolCachePolicy, timeoutInterval: 30))
+    }
+
+    @objc private func handleEdgeBack(_ gesture: UIScreenEdgePanGestureRecognizer) {
+        guard gesture.state == .ended else { return }
+        let translation = gesture.translation(in: view)
+        let velocity = gesture.velocity(in: view)
+        if translation.x > 70 || velocity.x > 650 {
+            dismiss(animated: true)
+        }
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        loading.startAnimating()
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        loading.stopAnimating()
+        print("[MiniApp:Wardrobe] loaded \(webView.url?.absoluteString ?? "unknown URL")")
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        loading.stopAnimating()
+        print("[MiniApp:Wardrobe] navigation failed: \(error.localizedDescription)")
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        loading.stopAnimating()
+        print("[MiniApp:Wardrobe] initial load failed: \(error.localizedDescription)")
+    }
+
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let url = navigationAction.request.url {
+            webView.load(URLRequest(url: url))
+        }
+        return nil
     }
 }
 
@@ -1236,8 +1639,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
+        registerDashboardFileProvider()
         drainSharedInbox()
         drainDashboardNotificationEvents()
+    }
+
+    private func registerDashboardFileProvider() {
+        let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
+        NSFileProviderManager.add(domain) { error in
+            if let error = error { NSLog("[FileProvider] domain registration: %@", error.localizedDescription) }
+            else {
+                NSLog("[FileProvider] domain registered")
+                if let manager = NSFileProviderManager(for: domain) {
+                    let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+                    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                }
+            }
+        }
     }
 
     fileprivate func drainDashboardNotificationEvents() {
@@ -1490,22 +1908,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
         let urlStr = url.absoluteString
         print("Handling deep link: \(urlStr)")
 
+        if urlStr.contains("open-wardrobe") {
+            DispatchQueue.main.async {
+                for scene in UIApplication.shared.connectedScenes {
+                    guard let windowScene = scene as? UIWindowScene else { continue }
+                    for window in windowScene.windows {
+                        if let mainVC = window.rootViewController as? MainViewController {
+                            mainVC.presentWardrobeMiniApp()
+                            return
+                        }
+                    }
+                }
+            }
+            return
+        }
+
         if urlStr.contains("set-app-icon") {
             let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
             let iconName = components?.queryItems?.first(where: { $0.name == "name" })?.value
-            let target = (iconName == "default" || iconName == nil || iconName == "") ? nil : iconName
-            DispatchQueue.main.async {
-                if UIApplication.shared.supportsAlternateIcons {
-                    UIApplication.shared.setAlternateIconName(target) { err in
-                        if let err = err {
-                            print("[AppIcon] Error setting alternate icon: \(err.localizedDescription)")
-                        } else {
-                            print("[AppIcon] Successfully set alternate icon to: \(String(describing: target))")
-                        }
-                    }
-                } else {
-                    print("[AppIcon] Alternate icons not supported on this device.")
-                }
+            AppIconManager.apply(name: iconName) { success, message in
+                AppIconManager.report(success: success, message: message)
             }
             return
         }

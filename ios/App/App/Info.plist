@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSFaceIDUsageDescription</key>
-	<string>靠近掃碼器或讀卡機</string>
 	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -21,23 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>需要存取相簿以匯入相片與影片至第二相片庫。</string>
-	<key>NSCameraUsageDescription</key>
-	<string>需要相機權限以拍攝相片與影片並存入第二相片庫。</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>需要存取相簿以將常用項目的圖片安全儲存至您的照片 App 中。</string>
+	<string>20</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -51,49 +33,22 @@
 			</array>
 		</dict>
 	</array>
-	<key>UIApplicationShortcutItems</key>
-	<array>
-		<dict>
-			<key>UIApplicationShortcutItemType</key>
-			<string>copy_c1</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>複製「三山羊長老」</string>
-			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>一鍵複製至剪貼簿</string>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeCompose</string>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemType</key>
-			<string>copy_c2</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>複製「我屁股好痛」</string>
-			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>一鍵複製至剪貼簿</string>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeCompose</string>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemType</key>
-			<string>copy_c3</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>複製「9879-2456」</string>
-			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>一鍵複製至剪貼簿</string>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeCompose</string>
-		</dict>
-		<dict>
-			<key>UIApplicationShortcutItemType</key>
-			<string>tab_wallet</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>全能數位錢包</string>
-			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>感應卡片與會員載具</string>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeBookmark</string>
-		</dict>
-	</array>
+	<key>CFBundleVersion</key>
+	<string>20</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>需要相機權限以拍攝相片與影片並存入第二相片庫。</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>靠近掃碼器或讀卡機</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>需要存取相簿以將常用項目的圖片安全儲存至您的照片 App 中。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要存取相簿以匯入相片與影片至第二相片庫。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -113,6 +68,51 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>一鍵複製至剪貼簿</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>複製「三山羊長老」</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>copy_c1</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>一鍵複製至剪貼簿</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>複製「我屁股好痛」</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>copy_c2</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeCompose</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>一鍵複製至剪貼簿</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>複製「9879-2456」</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>copy_c3</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeBookmark</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>感應卡片與會員載具</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>全能數位錢包</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>tab_wallet</string>
+		</dict>
+	</array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -127,83 +127,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>CFBundleIcons</key>
-	<dict>
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>AppIcon</string>
-			</array>
-			<key>CFBundleIconName</key>
-			<string>AppIcon</string>
-		</dict>
-		<key>CFBundleAlternateIcons</key>
-		<dict>
-			<key>AppIcon-ObsidianGold</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-ObsidianGold</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-AerospaceTitanium</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-AerospaceTitanium</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-StealthBlack</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-StealthBlack</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-CosmicTeal</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-CosmicTeal</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-HeritageAmber</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-HeritageAmber</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-GuardianCrest</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-GuardianCrest</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>AppIcon-DinosaurClassic</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon-DinosaurClassic</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-		</dict>
-	</dict>
 </dict>
 </plist>

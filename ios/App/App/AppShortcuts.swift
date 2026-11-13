@@ -142,8 +142,8 @@ struct SuperShortcutIntent: AppIntent {
                 return .result(dialog: "桃園捷運即時動態島需要 iOS 16.2 或更新版本。")
             }
         case .openWardrobe:
-            await open("https://steveplayer87.github.io/wardrobe-master/")
-            return .result(dialog: "正在開啟衣櫥。")
+            await open("superdashboard://open-wardrobe")
+            return .result(dialog: "正在於超級儀表板內開啟衣櫥。")
         }
     }
 
