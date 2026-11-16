@@ -6581,9 +6581,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v18</h2>
+    <h2 id="updateNotesTitle">已更新至 v22</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增</strong><ul><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
+      <div class="update-notes-group"><strong>新增</strong><ul><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器支援雙指捏合縮放，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取可取得的拍攝地點</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
     </div>
@@ -8631,7 +8631,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v21';
+  var APP_VERSION = 'v22';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -14267,6 +14267,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       video.src = item.videoUrl || item.originalVideoUrl || (item.dataUrl && item.dataUrl.indexOf('data:video/') === 0 ? item.dataUrl : '');
       if (!video.src) { wrapper.innerHTML = '<div style="color:#fff;text-align:center;padding:24px;">找不到原始影片檔，請重新匯入此影片</div>'; return; }
       video.controls = true;
+      video.setAttribute('disablePictureInPicture',''); video.setAttribute('controlsList','nodownload noplaybackrate'); video.setAttribute('x-webkit-airplay','deny'); video.setAttribute('playsinline','');
       video.autoplay = true;
       video.playsInline = true;
       video.style.maxWidth = '100%';
@@ -14309,6 +14310,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           wrapper.appendChild(liveVideo);
         }
 
+        var liveModes=['live','loop','bounce','long','off']; var liveModeIndex=0; var liveTimer=null;
+        indicator.title='原況效果：即時照片（長按播放；點圖示切換效果）';
         var startLivePlay = function(e) {
           if (!item.isLive) return;
           if (!liveVideo) {
@@ -14320,8 +14323,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
           liveVideo.currentTime = 0;
           liveVideo.style.opacity = '1';
+          liveVideo.loop = liveModes[liveModeIndex] === 'loop';
           var p = liveVideo.play();
           if (p && p.catch) p.catch(function(){});
+          if(liveModes[liveModeIndex]==='bounce'){liveVideo.addEventListener('ended',function bounce(){if(liveModes[liveModeIndex]!=='bounce')return;liveVideo.playbackRate=-1;liveVideo.currentTime=Math.max(.05,liveVideo.duration-.05);liveVideo.play().catch(function(){});},{once:true});}
+          if(liveModes[liveModeIndex]==='long'){liveVideo.style.filter='blur(.35px)';}
+          else liveVideo.style.filter='none';
         };
 
         var stopLivePlay = function() {
@@ -14332,8 +14339,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           }
         };
 
-        indicator.addEventListener('click', function(e){ e.stopPropagation(); if (!liveVideo) { if (typeof showToast === 'function') showToast('此原況相片沒有配對影片'); return; } if (liveVideo.paused) startLivePlay(e); else stopLivePlay(); });
-        if (liveVideo) liveVideo.addEventListener('click', function(e){ e.stopPropagation(); if (liveVideo.paused) startLivePlay(e); else stopLivePlay(); });
+        var pressStart=function(e){if(!liveVideo)return;e.preventDefault();startLivePlay(e);};
+        var pressEnd=function(){stopLivePlay();};
+        img.addEventListener('pointerdown',pressStart); img.addEventListener('pointerup',pressEnd); img.addEventListener('pointercancel',pressEnd); img.addEventListener('pointerleave',pressEnd);
+        indicator.addEventListener('click', function(e){e.stopPropagation();liveModeIndex=(liveModeIndex+1)%liveModes.length;var mode=liveModes[liveModeIndex];indicator.classList.toggle('active',mode!=='off');indicator.title='原況效果：'+({live:'即時照片',loop:'循環',bounce:'來回',long:'長曝',off:'關閉'}[mode]);if(mode==='off')stopLivePlay();if(typeof showToast==='function')showToast('原況效果：'+indicator.title.replace('原況效果：',''));});
       }
     }
   }
@@ -14436,11 +14445,13 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     var startX = 0, startY = 0;
     var currentDeltaX = 0, currentDeltaY = 0;
+    var pinchStart=0, pinchScale=1, isPinching=false;
     var isDragging = false;
     var gestureDirection = null; // 'h' (horizontal) 或 'v' (vertical)
 
     function onTouchStart(e) {
-      if (e.touches.length === 1) {
+      if(e.touches.length===2){isPinching=true;isDragging=false;var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;pinchStart=Math.hypot(dx,dy);var media=wrapper.querySelector('img,video');pinchScale=media?Number(media.dataset.zoom||1):1;wrapper.dataset.pinch='1';return;}
+      if (e.touches.length === 1 && !isPinching) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         currentDeltaX = 0;
@@ -14452,6 +14463,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
 
     function onTouchMove(e) {
+      if(isPinching && e.touches.length===2){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;var media=wrapper.querySelector('img,video');if(media){var z=Math.max(1,Math.min(5,pinchScale*Math.hypot(dx,dy)/Math.max(1,pinchStart)));media.dataset.zoom=z;media.style.transform='scale('+z+')';}return;}
       if (!isDragging || e.touches.length !== 1) return;
       var dx = e.touches[0].clientX - startX;
       var dy = e.touches[0].clientY - startY;
@@ -14488,7 +14500,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }
     }
 
-    function onTouchEnd() {
+    function onTouchEnd(e) {
+      if(isPinching && (!e || e.touches.length<2)){isPinching=false;wrapper.dataset.pinch='';return;}
       if (!isDragging) return;
       isDragging = false;
 
@@ -14529,8 +14542,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       gestureDirection = null;
     }
 
-    wrapper.addEventListener('touchstart', onTouchStart, { passive: true });
-    wrapper.addEventListener('touchmove', onTouchMove, { passive: true });
+    wrapper.addEventListener('touchstart', onTouchStart, { passive: false });
+    wrapper.addEventListener('touchmove', onTouchMove, { passive: false });
     wrapper.addEventListener('touchend', onTouchEnd);
 
     // 滑鼠支援 (桌面瀏覽器)
@@ -14771,9 +14784,24 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (typeof showToast === 'function') showToast(it.isFavorite ? '已加入喜好項目' : '已從喜好項目移除');
   }
 
+  function showPhotoTrashConfirm(anchor, onConfirm) {
+    var old = document.getElementById('photoTrashConfirm'); if (old) old.remove();
+    var pop = document.createElement('div'); pop.id='photoTrashConfirm';
+    pop.style.cssText='position:fixed;z-index:1000005;width:min(260px,calc(100vw - 32px));padding:14px;border-radius:16px;background:rgba(35,35,38,.97);border:1px solid rgba(255,255,255,.16);box-shadow:0 12px 36px #0009;color:white;';
+    pop.innerHTML='<div style="font-size:14px;font-weight:650;margin-bottom:5px">移至最近刪除？</div><div style="font-size:12px;color:#bbb;margin-bottom:12px">之後仍可從「最近刪除」還原。</div><div style="display:flex;gap:8px"><button type="button" data-cancel style="flex:1;border:0;border-radius:9px;padding:9px;background:#555;color:white">取消</button><button type="button" data-ok style="flex:1;border:0;border-radius:9px;padding:9px;background:#c93636;color:white">移至垃圾桶</button></div>';
+    document.body.appendChild(pop);
+    var r=anchor.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+    var left=Math.max(16,Math.min(innerWidth-w-16,r.left+r.width/2-w/2));
+    var top=r.top-h-10; if(top<12) top=Math.min(innerHeight-h-12,r.bottom+10);
+    pop.style.left=left+'px'; pop.style.top=top+'px';
+    pop.querySelector('[data-cancel]').onclick=function(){pop.remove();};
+    pop.querySelector('[data-ok]').onclick=function(){pop.remove();onConfirm();};
+    pop.addEventListener('keydown',function(e){if(e.key==='Escape')pop.remove();});
+  }
   function trashCurrentLightbox() {
     if (!state.activeLightboxItem) return;
-    if (!confirm('確定要將此相片移至最近刪除嗎？')) return;
+    var btn=document.querySelector('.lightbox-icon-btn.danger');
+    showPhotoTrashConfirm(btn||document.getElementById('photoLightbox'),function(){
     var it = state.activeLightboxItem;
     it.isDeleted = true;
     it.deletedAt = Date.now();
@@ -14784,6 +14812,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     closeLightbox();
     updateCountsOnly();
     if (typeof showToast === 'function') showToast('已移至最近刪除');
+    });
   }
 
   function shareCurrentLightbox() {

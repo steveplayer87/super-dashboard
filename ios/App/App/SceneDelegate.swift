@@ -435,6 +435,26 @@ class NotificationManager {
     }
 
     // 當收到使用者的文字回覆時，即時派發系統反饋通知
+    static func scheduleUpdateNotification(version: String) {
+        let defaults = UserDefaults.standard
+        let key = "sd-notified-update-version"
+        guard defaults.string(forKey: key) != version else { return }
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional || settings.authorizationStatus == .ephemeral else { return }
+            let content = UNMutableNotificationContent()
+            content.title = "超級儀表板已更新至 \(version)"
+            content.body = "相機與相片庫有更新，點擊品牌標題或關於版本可查看更新說明。"
+            content.sound = .default
+            if #available(iOS 15.0, *) { content.interruptionLevel = .active }
+            let request = UNNotificationRequest(identifier: "superdashboard-update-\(version)", content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false))
+            center.add(request) { error in
+                if error == nil { defaults.set(version, forKey: key) }
+                else { NSLog("[UpdateNotice] schedule failed: %@", error!.localizedDescription) }
+            }
+        }
+    }
+
     static func scheduleFeedbackNotification(replyText: String) {
         let center = UNUserNotificationCenter.current()
         let content = UNMutableNotificationContent()
@@ -862,6 +882,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         becomeFirstResponder()
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
+        NotificationManager.scheduleUpdateNotification(version: "v22")
     }
 
     private func setupDelegatesAndHandlers() {
@@ -1384,7 +1405,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                                 "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
                                 "liveVideoFilename": movieName, "size": data.count,
                                 "width": asset.pixelWidth, "height": asset.pixelHeight,
-                                "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "album": "全部相片"
+                                "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"
                             ]
                             lock.lock(); records.append(record); lock.unlock()
                             group.leave()
@@ -1532,7 +1553,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                             "mediaType": "image", "isLive": isLive, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
                             "liveVideoUrl": liveMovieDataURL, "liveVideoFilename": liveMovieName,
                             "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
-                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": data.count, "album": "全部相片"
+                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": data.count, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"
                         ]
                         finish(record, nil)
                     }
@@ -1576,7 +1597,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                             "id": "phasset-\(asset.localIdentifier)", "filename": filename,
                             "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
                             "videoUrl": "data:video/quicktime;base64,\((try? Data(contentsOf: destination))?.base64EncodedString() ?? "")", "liveVideoUrl": "", "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
-                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0, "album": "全部相片"
+                            "width": asset.pixelWidth, "height": asset.pixelHeight, "size": (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"
                         ]
                         finish(record, nil)
                     }
@@ -2318,6 +2339,15 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         requestCameraAccessAndStart()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            if !self.session.isRunning { self.session.startRunning() }
+            DispatchQueue.main.async { self.shutterButton.isEnabled = true; self.shutterButton.alpha = 1 }
+        }
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
@@ -2556,6 +2586,12 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
 
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int { latestPreviewURL == nil ? 0 : 1 }
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { latestPreviewURL! as NSURL }
+    func previewControllerDidDismiss(_ controller: QLPreviewController) {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            if !self.session.isRunning { self.session.startRunning() }
+        }
+    }
 
     @objc private func zoomWithPinch(_ gesture: UIPinchGestureRecognizer) {
         guard let device = currentInput?.device else { return }
