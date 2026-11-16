@@ -14848,7 +14848,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   };
 
-  window.onNativePhotoAssets = function(payload, hasMore, nextOffset) {
+  window.onNativePhotoAssets = function(payload, hasMore, nextOffset, isFinal) {
     if (!payload || payload.error) { if (typeof showToast === 'function') showToast('無法讀取系統照片，請確認相簿權限'); return; }
     var imported = (payload.items || []).map(function(record) {
       return { id:record.id, filename:record.filename||'Photo', location:'', mediaType:record.mediaType||'image',
@@ -14862,7 +14862,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       saveBatch(state.items); render();
     }
     if (hasMore) window.callNative('request-photo-library-assets', { offset:nextOffset });
-    else if (typeof showToast === 'function') showToast('系統照片與原況影片載入完成');
+    else if (isFinal !== false && typeof showToast === 'function') showToast('系統照片與原況影片載入完成');
   };
 
   function requestImportFolder() {

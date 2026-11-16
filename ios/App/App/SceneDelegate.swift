@@ -7,6 +7,7 @@ import Photos
 import PhotosUI
 import UniformTypeIdentifiers
 import AVFoundation
+import ImageIO
 import FileProvider
 import LocalAuthentication
 import AudioToolbox
@@ -1280,14 +1281,29 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         for (index, result) in results.enumerated() {
             let provider = result.itemProvider
             let id = "picker-\(UUID().uuidString)"
-            if provider.canLoadObject(ofClass: UIImage.self) {
+            if let imageType = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .image) == true }) {
+                // 不把原始高解析度 UIImage 載入記憶體；直接處理暫存檔，縮圖限制 720px。
                 group.enter()
-                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                provider.loadFileRepresentation(forTypeIdentifier: imageType) { url, _ in
                     defer { group.leave() }
-                    guard let image = object as? UIImage, let jpeg = image.jpegData(compressionQuality: 0.82) else { return }
-                    let name = "Photo-\(index + 1)-\(UUID().uuidString.prefix(8)).jpg"
-                    if let folder { try? jpeg.write(to: folder.appendingPathComponent(name), options: .atomic) }
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(jpeg.base64EncodedString())", "size": jpeg.count, "width": Int(image.size.width * image.scale), "height": Int(image.size.height * image.scale), "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
+                    guard let url, let folder else { return }
+                    let ext = url.pathExtension.isEmpty ? "jpg" : url.pathExtension
+                    let name = "Photo-\(index + 1)-\(UUID().uuidString.prefix(8)).\(ext)"
+                    let destination = folder.appendingPathComponent(name)
+                    do { try FileManager.default.copyItem(at: url, to: destination) } catch { return }
+                    guard let source = CGImageSourceCreateWithURL(destination as CFURL, nil),
+                          let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                          let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                            kCGImageSourceCreateThumbnailFromImageAlways: true,
+                            kCGImageSourceThumbnailMaxPixelSize: 720,
+                            kCGImageSourceCreateThumbnailWithTransform: true
+                          ] as CFDictionary) else { return }
+                    let thumb = UIImage(cgImage: thumbnail).jpegData(compressionQuality: 0.72) ?? Data()
+                    guard !thumb.isEmpty else { return }
+                    let width = (properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue ?? thumbnail.width
+                    let height = (properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue ?? thumbnail.height
+                    let fileSize = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": fileSize, "width": width, "height": height, "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             } else if let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .movie) == true }) {
@@ -1309,8 +1325,23 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         }
         group.notify(queue: .main) { [weak self] in
             if let manager { manager.signalEnumerator(for: .rootContainer) { _ in } }
-            guard let data = try? JSONSerialization.data(withJSONObject: ["items": records]), let json = String(data: data, encoding: .utf8) else { return }
-            self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),false,0);", completionHandler: nil)
+            // 分批送入 WebView，避免一次建立超大的 JSON/Base64 字串造成記憶體尖峰。
+            let chunks = stride(from: 0, to: records.count, by: 3).map { start in
+                Array(records[start..<min(start + 3, records.count)])
+            }
+            guard !chunks.isEmpty else {
+                self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({items:[]},false,0);", completionHandler: nil)
+                return
+            }
+            func deliver(_ index: Int) {
+                guard index < chunks.count else { return }
+                guard let data = try? JSONSerialization.data(withJSONObject: ["items": chunks[index]]),
+                      let json = String(data: data, encoding: .utf8) else { return }
+                self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),false,0,\(index == chunks.count - 1));") { _, _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { deliver(index + 1) }
+                }
+            }
+            deliver(0)
         }
     }
 
