@@ -1079,6 +1079,10 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             presentSystemPhotoPicker()
             return
         }
+        if act == "present-native-camera" {
+            presentNativePhotoVaultCamera()
+            return
+        }
         if act == "set-shake-return" {
             let enabled = (params as? [String: Any])?["enabled"] as? Bool ?? false
             UserDefaults.standard.set(enabled, forKey: "shakeReturnsToMore")
@@ -1256,11 +1260,48 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     }
 
 
-    // 使用 Apple 原生 PHPicker；不掃描整個相簿、不要求整庫權限，也不把整庫逐張送進 WebView。
+    private func presentNativePhotoVaultCamera() {
+        guard presentedViewController == nil else { return }
+        guard let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID) else {
+            webView?.evaluateJavaScript("if(typeof showToast==='function')showToast('無法開啟相片庫儲存空間');", completionHandler: nil)
+            return
+        }
+        let folder = container.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+        do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+        catch {
+            webView?.evaluateJavaScript("if(typeof showToast==='function')showToast('無法建立相片儲存資料夾');", completionHandler: nil)
+            return
+        }
+        let camera = DashboardCameraViewController(destinationFolder: folder) { [weak self] record in
+            guard let self, let record,
+                  let data = try? JSONSerialization.data(withJSONObject: ["items": [record]]),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
+            NSFileProviderManager(for: domain)?.signalEnumerator(for: .rootContainer) { error in
+                if let error { NSLog("[FileProvider] camera capture refresh: %@", error.localizedDescription) }
+            }
+            self.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),false,0,true);")
+        }
+        camera.modalPresentationStyle = .fullScreen
+        present(camera, animated: true)
+    }
+
+    // 使用 Apple 原生 PHPicker；先取得可選的 Photos 讀取授權，才能用 assetIdentifier 還原 Live Photo 配對資源。
     private func presentSystemPhotoPicker() {
         guard presentedViewController == nil else { return }
+        if PHPhotoLibrary.authorizationStatus(for: .readWrite) == .notDetermined {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] _ in
+                DispatchQueue.main.async { self?.presentSystemPhotoPickerController() }
+            }
+            return
+        }
+        presentSystemPhotoPickerController()
+    }
+
+    private func presentSystemPhotoPickerController() {
+        guard presentedViewController == nil else { return }
         var config = PHPickerConfiguration(photoLibrary: .shared())
-        config.filter = .any(of: [.images, .videos])
+        config.filter = .any(of: [.images, .videos, .livePhotos])
         config.selectionLimit = 0
         config.preferredAssetRepresentationMode = .current
         let picker = PHPickerViewController(configuration: config)
@@ -1282,7 +1323,59 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         for (index, result) in results.enumerated() {
             let provider = result.itemProvider
             let id = "picker-\(UUID().uuidString)"
-            if let imageType = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .image) == true }) {
+            // Live Photo 必須由 assetIdentifier 找回 PHAsset，才能取得原始照片與配對 MOV。
+            let photoStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+            let selectedAsset: PHAsset? = {
+                guard (photoStatus == .authorized || photoStatus == .limited), let assetID = result.assetIdentifier else { return nil }
+                return PHAsset.fetchAssets(withLocalIdentifiers: [assetID], options: nil).firstObject
+            }()
+            if let asset = selectedAsset, asset.mediaSubtypes.contains(.photoLive), let folder {
+                group.enter()
+                let imageOptions = PHImageRequestOptions()
+                imageOptions.version = .original
+                imageOptions.deliveryMode = .highQualityFormat
+                imageOptions.isNetworkAccessAllowed = true
+                PHImageManager.default().requestImageDataAndOrientation(for: asset, options: imageOptions) { data, _, _, _ in
+                    guard let data else { group.leave(); return }
+                    let originalName = PHAssetResource.assetResources(for: asset).first(where: { $0.type == .photo })?.originalFilename ?? "LivePhoto.heic"
+                    let ext = URL(fileURLWithPath: originalName).pathExtension.isEmpty ? "heic" : URL(fileURLWithPath: originalName).pathExtension
+                    let name = "Live-\(index + 1)-\(UUID().uuidString.prefix(8)).\(ext)"
+                    let destination = folder.appendingPathComponent(name)
+                    do { try data.write(to: destination, options: .atomic) }
+                    catch { group.leave(); return }
+                    let thumbOptions = PHImageRequestOptions()
+                    thumbOptions.deliveryMode = .fastFormat
+                    thumbOptions.resizeMode = .fast
+                    thumbOptions.isNetworkAccessAllowed = true
+                    PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 720, height: 720), contentMode: .aspectFit, options: thumbOptions) { image, _ in
+                        let thumb = image?.jpegData(compressionQuality: 0.72) ?? data
+                        let videoOptions = PHVideoRequestOptions()
+                        videoOptions.version = .original
+                        videoOptions.deliveryMode = .highQualityFormat
+                        videoOptions.isNetworkAccessAllowed = true
+                        PHImageManager.default().requestAVAsset(forVideo: asset, options: videoOptions) { avAsset, _, _ in
+                            guard let avAsset, let export = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetPassthrough) else { group.leave(); return }
+                            let movieName = name.replacingOccurrences(of: ".\(ext)", with: "-paired.mov")
+                            let movieURL = folder.appendingPathComponent(movieName)
+                            export.outputURL = movieURL
+                            export.outputFileType = .mov
+                            export.exportAsynchronously {
+                                guard export.status == .completed, let movieData = try? Data(contentsOf: movieURL) else { group.leave(); return }
+                                let record: [String: Any] = [
+                                    "id": id, "filename": name, "mediaType": "image", "isLive": true,
+                                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                                    "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
+                                    "liveVideoFilename": movieName, "size": data.count,
+                                    "width": asset.pixelWidth, "height": asset.pixelHeight,
+                                    "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "album": "全部相片"
+                                ]
+                                lock.lock(); records.append(record); lock.unlock()
+                                group.leave()
+                            }
+                        }
+                    }
+                }
+            } else if let imageType = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .image) == true }) {
                 // 不把原始高解析度 UIImage 載入記憶體；直接處理暫存檔，縮圖限制 720px。
                 group.enter()
                 provider.loadFileRepresentation(forTypeIdentifier: imageType) { url, _ in
@@ -2134,5 +2227,362 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
     func evaluateJS(_ js: String) {
         NotificationManager.evaluateJS(js)
+    }
+}
+
+
+// MARK: - PhotoVault 原生相機：直接使用 AVFoundation，原始媒體寫入 App Group，不經過系統照片圖庫。
+private final class DashboardCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate {
+    private let destinationFolder: URL
+    private let onCaptured: ([String: Any]?) -> Void
+    private let session = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
+    private let movieOutput = AVCaptureMovieFileOutput()
+    private let sessionQueue = DispatchQueue(label: "com.superdashboard.camera.session")
+    private var previewLayer: AVCaptureVideoPreviewLayer!
+    private var currentInput: AVCaptureDeviceInput?
+    private var audioInput: AVCaptureDeviceInput?
+    private var isVideoMode = false
+    private var isLiveEnabled = true
+    private var isRecording = false
+    private var pendingPhotoData: Data?
+    private var pendingLiveMovieURL: URL?
+    private var waitingForLiveMovie = false
+    private var pendingFilename = ""
+    private var pendingCaptureID = ""
+    private var pendingPhotoExtension = "jpg"
+    private var flashEnabled = false
+
+    private let closeButton = UIButton(type: .system)
+    private let shutterButton = UIButton(type: .system)
+    private let flipButton = UIButton(type: .system)
+    private let flashButton = UIButton(type: .system)
+    private let liveButton = UIButton(type: .system)
+    private let modeControl = UISegmentedControl(items: ["照片", "影片"])
+    private let hintLabel = UILabel()
+
+    init(destinationFolder: URL, onCaptured: @escaping ([String: Any]?) -> Void) {
+        self.destinationFolder = destinationFolder
+        self.onCaptured = onCaptured
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override var prefersStatusBarHidden: Bool { true }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .portrait }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        configureControls()
+        configurePreview()
+        requestCameraAccessAndStart()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer.frame = view.bounds
+    }
+
+    private func configurePreview() {
+        previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.insertSublayer(previewLayer, at: 0)
+    }
+
+    private func configureControls() {
+        func style(_ button: UIButton, title: String? = nil, symbol: String? = nil) {
+            if let title { button.setTitle(title, for: .normal) }
+            if let symbol { button.setImage(UIImage(systemName: symbol), for: .normal) }
+            button.tintColor = .white
+            button.backgroundColor = UIColor.black.withAlphaComponent(0.38)
+            button.layer.cornerRadius = 22
+            button.clipsToBounds = true
+            button.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(button)
+        }
+        style(closeButton, symbol: "xmark")
+        style(flipButton, symbol: "camera.rotate")
+        style(flashButton, symbol: "bolt.slash")
+        style(liveButton, title: "● LIVE")
+        liveButton.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
+        liveButton.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.92)
+        liveButton.setTitleColor(.black, for: .normal)
+        liveButton.layer.cornerRadius = 16
+        style(shutterButton)
+        shutterButton.backgroundColor = .white
+        shutterButton.layer.cornerRadius = 37
+        shutterButton.layer.borderWidth = 5
+        shutterButton.layer.borderColor = UIColor.white.withAlphaComponent(0.45).cgColor
+        shutterButton.addTarget(self, action: #selector(shutterPressed), for: .touchUpInside)
+        closeButton.addTarget(self, action: #selector(closePressed), for: .touchUpInside)
+        flipButton.addTarget(self, action: #selector(flipCamera), for: .touchUpInside)
+        flashButton.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
+        liveButton.addTarget(self, action: #selector(toggleLive), for: .touchUpInside)
+
+        modeControl.selectedSegmentIndex = 0
+        modeControl.selectedSegmentTintColor = .white
+        modeControl.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
+        modeControl.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
+        modeControl.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        modeControl.translatesAutoresizingMaskIntoConstraints = false
+        modeControl.addTarget(self, action: #selector(modeChanged), for: .valueChanged)
+        view.addSubview(modeControl)
+
+        hintLabel.text = "原況照片已開啟"
+        hintLabel.textColor = .white
+        hintLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        hintLabel.textAlignment = .center
+        hintLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(hintLabel)
+
+        NSLayoutConstraint.activate([
+            closeButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 18),
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            closeButton.widthAnchor.constraint(equalToConstant: 44), closeButton.heightAnchor.constraint(equalToConstant: 44),
+            flashButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -18),
+            flashButton.topAnchor.constraint(equalTo: closeButton.topAnchor),
+            flashButton.widthAnchor.constraint(equalToConstant: 44), flashButton.heightAnchor.constraint(equalToConstant: 44),
+            liveButton.leadingAnchor.constraint(equalTo: closeButton.trailingAnchor, constant: 12),
+            liveButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
+            liveButton.heightAnchor.constraint(equalToConstant: 32), liveButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 74),
+            modeControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            modeControl.bottomAnchor.constraint(equalTo: shutterButton.topAnchor, constant: -28),
+            modeControl.widthAnchor.constraint(equalToConstant: 160), modeControl.heightAnchor.constraint(equalToConstant: 34),
+            shutterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            shutterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+            shutterButton.widthAnchor.constraint(equalToConstant: 74), shutterButton.heightAnchor.constraint(equalToConstant: 74),
+            flipButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -22),
+            flipButton.centerYAnchor.constraint(equalTo: shutterButton.centerYAnchor),
+            flipButton.widthAnchor.constraint(equalToConstant: 48), flipButton.heightAnchor.constraint(equalToConstant: 48),
+            hintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            hintLabel.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -14)
+        ])
+        updateLiveButton()
+    }
+
+    private func requestCameraAccessAndStart() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized: configureSession()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    if granted { self.configureSession() } else { self.showCameraError("請在設定中允許超級儀表板使用相機") }
+                }
+            }
+        default: showCameraError("請在 iPhone 設定中允許超級儀表板使用相機")
+        }
+    }
+
+    private func configureSession() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.session.beginConfiguration()
+            self.session.sessionPreset = .photo
+            if let input = self.currentInput { self.session.removeInput(input) }
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                  let input = try? AVCaptureDeviceInput(device: device), self.session.canAddInput(input) else {
+                self.session.commitConfiguration()
+                DispatchQueue.main.async { self.showCameraError("無法啟動相機") }
+                return
+            }
+            self.session.addInput(input)
+            self.currentInput = input
+            if self.session.canAddOutput(self.photoOutput) && !self.session.outputs.contains(self.photoOutput) { self.session.addOutput(self.photoOutput) }
+            if self.session.canAddOutput(self.movieOutput) && !self.session.outputs.contains(self.movieOutput) { self.session.addOutput(self.movieOutput) }
+            if self.photoOutput.isLivePhotoCaptureSupported { self.photoOutput.isLivePhotoCaptureEnabled = true }
+            self.session.commitConfiguration()
+            self.session.startRunning()
+            DispatchQueue.main.async { self.updateLiveButton() }
+        }
+    }
+
+    @objc private func closePressed() {
+        if isRecording { movieOutput.stopRecording(); return }
+        sessionQueue.async { self.session.stopRunning() }
+        dismiss(animated: true)
+    }
+
+    @objc private func flipCamera() {
+        sessionQueue.async { [weak self] in
+            guard let self, let old = self.currentInput else { return }
+            let nextPosition: AVCaptureDevice.Position = old.device.position == .back ? .front : .back
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: nextPosition),
+                  let input = try? AVCaptureDeviceInput(device: device) else { return }
+            self.session.beginConfiguration()
+            self.session.removeInput(old)
+            if self.session.canAddInput(input) { self.session.addInput(input); self.currentInput = input }
+            else { self.session.addInput(old) }
+            self.session.commitConfiguration()
+        }
+    }
+
+    @objc private func toggleFlash() {
+        flashEnabled.toggle()
+        flashButton.setImage(UIImage(systemName: flashEnabled ? "bolt.fill" : "bolt.slash"), for: .normal)
+        if isVideoMode, let device = currentInput?.device, device.hasTorch {
+            try? device.lockForConfiguration()
+            device.torchMode = flashEnabled ? .on : .off
+            device.unlockForConfiguration()
+        }
+    }
+
+    @objc private func toggleLive() {
+        guard photoOutput.isLivePhotoCaptureSupported else { showCameraError("此裝置目前不支援原況照片拍攝"); return }
+        isLiveEnabled.toggle()
+        updateLiveButton()
+    }
+
+    private func updateLiveButton() {
+        liveButton.isHidden = isVideoMode
+        liveButton.alpha = isLiveEnabled ? 1 : 0.55
+        liveButton.setTitle(isLiveEnabled ? "● LIVE" : "LIVE 關閉", for: .normal)
+        hintLabel.text = isVideoMode ? "影片將直接儲存至儀表板相片庫" : (isLiveEnabled ? "原況照片已開啟" : "原況照片已關閉")
+    }
+
+    @objc private func modeChanged() {
+        isVideoMode = modeControl.selectedSegmentIndex == 1
+        if isVideoMode {
+            switch AVCaptureDevice.authorizationStatus(for: .audio) {
+            case .authorized: addMicrophoneInput()
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+                    guard let self else { return }
+                    if granted { self.addMicrophoneInput() }
+                    else { DispatchQueue.main.async { self.modeControl.selectedSegmentIndex = 0; self.isVideoMode = false; self.updateLiveButton(); self.showCameraError("未允許麥克風，無法錄製有聲影片") } }
+                }
+            default:
+                modeControl.selectedSegmentIndex = 0
+                isVideoMode = false
+                showCameraError("請在 iPhone 設定中允許麥克風，才能錄製有聲影片")
+            }
+        }
+        sessionQueue.async { self.session.beginConfiguration(); self.session.sessionPreset = self.isVideoMode ? .high : .photo; self.session.commitConfiguration() }
+        updateLiveButton()
+        shutterButton.backgroundColor = isVideoMode ? .systemRed : .white
+    }
+
+    private func addMicrophoneInput() {
+        sessionQueue.async { [weak self] in
+            guard let self, self.audioInput == nil,
+                  let microphone = AVCaptureDevice.default(for: .audio),
+                  let input = try? AVCaptureDeviceInput(device: microphone), self.session.canAddInput(input) else { return }
+            self.session.beginConfiguration()
+            self.session.addInput(input)
+            self.audioInput = input
+            self.session.commitConfiguration()
+        }
+    }
+
+    @objc private func shutterPressed() {
+        guard !isRecording else { movieOutput.stopRecording(); return }
+        if isVideoMode {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("DashboardVideo-\(UUID().uuidString).mov")
+            isRecording = true
+            shutterButton.backgroundColor = .systemRed
+            movieOutput.startRecording(to: url, recordingDelegate: self)
+            return
+        }
+        let id = UUID().uuidString
+        pendingCaptureID = id
+        let supportsHEVC = photoOutput.availablePhotoCodecTypes.contains(.hevc)
+        pendingPhotoExtension = supportsHEVC ? "heic" : "jpg"
+        pendingFilename = "IMG_\(Int(Date().timeIntervalSince1970))_\(id.prefix(6)).\(pendingPhotoExtension)"
+        pendingPhotoData = nil
+        pendingLiveMovieURL = nil
+        waitingForLiveMovie = isLiveEnabled && photoOutput.isLivePhotoCaptureSupported
+        let settings: AVCapturePhotoSettings
+        if supportsHEVC { settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc]) }
+        else { settings = AVCapturePhotoSettings() }
+        if let device = currentInput?.device, device.hasFlash { settings.flashMode = flashEnabled ? .on : .off }
+        if waitingForLiveMovie {
+            settings.livePhotoMovieFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("Live-\(id).mov")
+        }
+        shutterButton.alpha = 0.55
+        photoOutput.capturePhoto(with: settings, delegate: self)
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        DispatchQueue.main.async {
+            guard error == nil, let data = photo.fileDataRepresentation() else { self.showCameraError("拍攝失敗，請再試一次"); return }
+            self.pendingPhotoData = data
+            if !self.waitingForLiveMovie { self.finishPhotoCapture() }
+        }
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishRecordingLivePhotoMovieForEventualFileAt outputFileURL: URL, resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+        DispatchQueue.main.async {
+            if error == nil { self.pendingLiveMovieURL = outputFileURL }
+            self.waitingForLiveMovie = false
+            self.finishPhotoCapture()
+        }
+    }
+
+    private func finishPhotoCapture() {
+        guard let data = pendingPhotoData, !waitingForLiveMovie else { return }
+        let filename = pendingFilename
+        let photoURL = destinationFolder.appendingPathComponent(filename)
+        do { try data.write(to: photoURL, options: .atomic) }
+        catch { showCameraError("無法儲存照片：\(error.localizedDescription)"); return }
+        var liveFilename = ""
+        var liveDataURL = ""
+        if let movieURL = pendingLiveMovieURL {
+            liveFilename = filename.replacingOccurrences(of: ".heic", with: "-paired.mov")
+            let movieDestination = destinationFolder.appendingPathComponent(liveFilename)
+            do {
+                if FileManager.default.fileExists(atPath: movieDestination.path) { try FileManager.default.removeItem(at: movieDestination) }
+                try FileManager.default.moveItem(at: movieURL, to: movieDestination)
+                liveDataURL = "data:video/quicktime;base64,\(try Data(contentsOf: movieDestination).base64EncodedString())"
+            } catch { NSLog("[PhotoVaultCamera] Live Photo paired movie save failed: %@", error.localizedDescription); liveFilename = "" }
+        }
+        let image = UIImage(data: data)
+        let thumb = image?.jpegData(compressionQuality: 0.76) ?? data
+        let record: [String: Any] = [
+            "id": "camera-\(pendingCaptureID)", "filename": filename, "mediaType": "image", "source": "native-camera",
+            "isLive": !liveFilename.isEmpty, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+            "liveVideoUrl": liveDataURL, "liveVideoFilename": liveFilename,
+            "size": data.count, "width": image?.cgImage?.width ?? 0, "height": image?.cgImage?.height ?? 0,
+            "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
+        ]
+        pendingPhotoData = nil; pendingLiveMovieURL = nil; pendingFilename = ""; pendingCaptureID = ""
+        shutterButton.alpha = 1
+        onCaptured(record)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        hintLabel.text = "已儲存至儀表板相片庫"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { self.hintLabel.text = self.isLiveEnabled ? "原況照片已開啟" : "原況照片已關閉" }
+    }
+
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        DispatchQueue.main.async {
+            self.isRecording = false
+            self.shutterButton.backgroundColor = .systemRed
+            guard error == nil else { self.showCameraError("影片拍攝失敗"); return }
+            let filename = "VID_\(Int(Date().timeIntervalSince1970)).mov"
+            let destination = self.destinationFolder.appendingPathComponent(filename)
+            do {
+                try FileManager.default.copyItem(at: outputFileURL, to: destination)
+                let asset = AVURLAsset(url: destination)
+                let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
+                let frame = try? generator.copyCGImage(at: .zero, actualTime: nil)
+                let thumb = frame.flatMap { UIImage(cgImage: $0).jpegData(compressionQuality: 0.72) } ?? Data()
+                let size = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0
+                let record: [String: Any] = [
+                    "id": "camera-\(UUID().uuidString)", "filename": filename, "mediaType": "video", "source": "native-camera", "isLive": false,
+                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": size,
+                    "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
+                ]
+                self.onCaptured(record)
+                self.hintLabel.text = "影片已儲存至儀表板相片庫"
+            } catch { self.showCameraError("無法儲存影片：\(error.localizedDescription)") }
+        }
+    }
+
+    private func showCameraError(_ message: String) {
+        let alert = UIAlertController(title: "相機", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "知道了", style: .default))
+        present(alert, animated: true)
     }
 }

@@ -4784,7 +4784,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
           <span>匯入整個檔案夾</span>
         </button>
-        <button type="button" class="photos-menu-item" onclick="document.getElementById('photosCameraInput').click(); window.PhotoVault.closeAddMenu();">
+        <button type="button" class="photos-menu-item" onclick="window.PhotoVault.requestNativeCamera(); window.PhotoVault.closeAddMenu();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
           <span>使用相機拍攝</span>
         </button>
@@ -14823,6 +14823,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (overlay) overlay.classList.remove('show');
   }
 
+  function requestNativeCamera() {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
+      window.callNative('present-native-camera');
+      return;
+    }
+    var inp = document.getElementById('photosCameraInput');
+    if (inp) inp.click();
+  }
+
   function requestImportMedia() {
     // iOS 原生 App 先取得持續性的相片圖庫讀取權限，再開啟系統相片選擇器。
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
@@ -14852,9 +14861,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (!payload || payload.error) { if (typeof showToast === 'function') showToast('無法讀取系統照片，請確認相簿權限'); return; }
     var imported = (payload.items || []).map(function(record) {
       return { id:record.id, filename:record.filename||'Photo', location:'', mediaType:record.mediaType||'image',
-        isLive:!!record.isLive, dataUrl:record.dataUrl, liveVideoUrl:'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
+        isLive:!!record.isLive, dataUrl:record.dataUrl, liveVideoUrl:record.liveVideoUrl||'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
         width:record.width||0, height:record.height||0, createdAt:record.createdAt||Date.now(), album:'全部相片',
-        notes:'', isFavorite:false, isDeleted:false, deletedAt:null, source:'apple-photos' };
+        notes:'', isFavorite:false, isDeleted:false, deletedAt:null, source:record.source||'apple-photos' };
     }).filter(function(item){ return !!item.dataUrl; });
     if (imported.length) {
       var seen = new Set(imported.map(function(item){ return item.id; }));
@@ -15031,6 +15040,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   window.PhotoVault = {
     render: render,
+    requestNativeCamera: requestNativeCamera,
     refreshVisibleView: function(){ /* IndexedDB 已在啟動時載入；切回頁面不重建整張相片網格。 */ },
     switchSubtab: switchSubtab,
     filterByAlbum: filterByAlbum,

@@ -43,6 +43,8 @@
 	<string>需要相機權限以拍攝相片與影片並存入第二相片庫。</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>靠近掃碼器或讀卡機</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>需要麥克風權限以在儀表板相機錄影時同步錄製聲音。</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>需要存取相簿以將常用項目的圖片安全儲存至您的照片 App 中。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
