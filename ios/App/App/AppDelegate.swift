@@ -103,11 +103,14 @@ enum InstallationExpiryReminder {
         let defaults = UserDefaults.standard
         let now = Date()
         // Caches 不會隨 iCloud／裝置備份還原；重裝後標記消失，即使 UserDefaults 被還原也會重新起算。
-        let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("superdashboard-install-instance.marker")
-        let isFreshInstall = !FileManager.default.fileExists(atPath: cacheURL.path)
+        let supportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: supportURL, withIntermediateDirectories: true)
+        let markerURL = supportURL.appendingPathComponent("superdashboard-install-instance.marker")
+        let isFreshInstall = !FileManager.default.fileExists(atPath: markerURL.path)
         if isFreshInstall {
-            try? Data("installed".utf8).write(to: cacheURL, options: .atomic)
+            try? Data("installed".utf8).write(to: markerURL, options: .atomic)
+            var values = URLResourceValues(); values.isExcludedFromBackup = true
+            var mutableURL = markerURL; try? mutableURL.setResourceValues(values)
             defaults.removeObject(forKey: deadlineKey)
             defaults.removeObject(forKey: scheduledKey)
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [requestID])
