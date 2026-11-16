@@ -1100,13 +1100,14 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             let payload = dataURL.components(separatedBy: ",").last ?? dataURL
             let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
             if let data = Data(base64Encoded: payload),
-               let manager = NSFileProviderManager(for: domain) {
-                let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+               let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID) {
+                let folder = container.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
                 try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                let manager = NSFileProviderManager(for: domain)
                 let safeName = URL(fileURLWithPath: filename).lastPathComponent
                 do {
                     try data.write(to: folder.appendingPathComponent(safeName), options: .atomic)
-                    manager.signalEnumerator(for: .rootContainer) { error in
+                    manager?.signalEnumerator(for: .rootContainer) { error in
                         if let error { NSLog("[FileProvider] refresh after write: %@", error.localizedDescription) }
                     }
                 } catch { NSLog("[FileProvider] write failed: %@", error.localizedDescription) }
@@ -1275,7 +1276,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         var records = [[String: Any]]()
         let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
         let manager = NSFileProviderManager(for: domain)
-        let folder = manager?.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+        let folder = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID)?.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
         if let folder { try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
 
         for (index, result) in results.enumerated() {
@@ -1363,11 +1364,12 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             return
         }
         let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier("superdashboard.photos"), displayName: "超級儀表板", pathRelativeToDocumentStorage: "SuperDashboardFiles")
-        guard let manager = NSFileProviderManager(for: domain) else {
+        guard let manager = NSFileProviderManager(for: domain),
+              let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID) else {
             webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'file_provider_unavailable'});", completionHandler: nil)
             return
         }
-        let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+        let folder = container.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
         do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
         catch {
             webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({error:'file_storage_unavailable'});", completionHandler: nil)
@@ -1681,8 +1683,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             if let error = error { NSLog("[FileProvider] domain registration: %@", error.localizedDescription) }
             else {
                 NSLog("[FileProvider] domain registered")
-                if let manager = NSFileProviderManager(for: domain) {
-                    let folder = manager.documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+                if let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SceneDelegate.sharedGroupID) {
+                    let folder = container.appendingPathComponent("SuperDashboardFiles", isDirectory: true)
                     try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
                 }
             }
@@ -1724,7 +1726,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
     }
 
     // MARK: - App Group 收件匣（Share Extension 寫入，主 App 取出）
-    private static let sharedGroupID = "group.com.steveplayer87.superdashboard"
+    static let sharedGroupID = "group.com.steveplayer87.superdashboard"
     private static let sharedInboxKey = "sharedInbox"
     private static let sharedInboxFolder = "SharedInbox"
 

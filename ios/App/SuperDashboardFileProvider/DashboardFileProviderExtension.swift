@@ -2,7 +2,11 @@ import FileProvider
 import UniformTypeIdentifiers
 
 final class DashboardFileProviderExtension: NSFileProviderExtension {
-    private var sharedFolder: URL { documentStorageURL.appendingPathComponent("SuperDashboardFiles", isDirectory: true) }
+    private var sharedFolder: URL {
+        let groupID = "group.com.steveplayer87.superdashboard"
+        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
+        return (container ?? documentStorageURL).appendingPathComponent("SuperDashboardFiles", isDirectory: true)
+    }
 
     override func item(for identifier: NSFileProviderItemIdentifier) throws -> NSFileProviderItem {
         if identifier == .rootContainer {
