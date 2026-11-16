@@ -1089,7 +1089,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 let hasPending = requests.contains(where: { $0.identifier == "superdashboard.install-expiry-6-5-days" })
                 let deadline = stored > 0 ? stored : (hasPending ? 0 : 0)
                 DispatchQueue.main.async {
-                    self?.webView?.evaluateJavaScript("if(typeof window.onInstallExpiryDeadline==='function')window.onInstallExpiryDeadline(\(deadline));", completionHandler: nil)
+                    self?.webView?.evaluateJavaScript("if(typeof window.onInstallExpiryDeadline==='function')window.onInstallExpiryDeadline(\(deadline), \(hasPending));", completionHandler: nil)
                 }
             }
             return

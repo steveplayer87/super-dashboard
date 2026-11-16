@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleDisplayName</key><string>超級儀表板</string>
+<key>CFBundlePackageType</key><string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
+<key>NSExtensionFileProviderDocumentGroup</key><string>group.com.steveplayer87.superdashboard</string>
+<key>NSExtension</key><dict><key>NSExtensionPointIdentifier</key><string>com.apple.fileprovider-nonui</string><key>NSExtensionPrincipalClass</key><string>$(PRODUCT_MODULE_NAME).DashboardFileProviderExtension</string></dict>
+</dict></plist>

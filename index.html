@@ -7574,6 +7574,36 @@ window.safeSetIcon = safeSetIcon;
     window.callNative('auth-faceid');
   };
 
+
+  // 重新安裝提醒：由原生端提供持久化期限，前端只負責即時顯示倒數。
+  window.onInstallExpiryDeadline = function(deadline, notificationPending){
+    var el = document.getElementById('installExpiryCountdown');
+    if(!el) return;
+    if(window._installExpiryInterval) clearInterval(window._installExpiryInterval);
+    var end = Number(deadline) || 0;
+    function render(){
+      if(!end){ el.textContent = '重新安裝提醒倒數：尚未建立期限'; return; }
+      var seconds = Math.max(0, Math.floor(end - Date.now()/1000));
+      var days = Math.floor(seconds/86400);
+      var hours = Math.floor((seconds%86400)/3600);
+      var minutes = Math.floor((seconds%3600)/60);
+      var secs = seconds%60;
+      if(seconds <= 0){
+        el.textContent = '重新安裝提醒：期限已到，請重新安裝';
+      } else {
+        el.textContent = '重新安裝提醒倒數：' + days + '天 ' + hours + '小時 ' + minutes + '分 ' + secs + '秒' + (notificationPending ? ' · 通知已排程' : ' · 通知未排程（請檢查通知權限）');
+      }
+    }
+    render();
+    window._installExpiryInterval = setInterval(render, 1000);
+  };
+  if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard){
+    window.callNative('get-install-expiry-deadline');
+  } else {
+    var expiryEl = document.getElementById('installExpiryCountdown');
+    if(expiryEl) expiryEl.textContent = '重新安裝提醒倒數：僅限 iOS App';
+  }
+
   window.onFaceIDSuccess = function(){
     if(window._faceIdCallback){
       window._faceIdCallback(true, null);

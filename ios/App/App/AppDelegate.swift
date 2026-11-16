@@ -101,11 +101,17 @@ enum InstallationExpiryReminder {
 
     static func scheduleIfNeeded() {
         let defaults = UserDefaults.standard
-        // 舊版已排程但未保存實際時間的裝置，於首次升級到此版本時補齊一次期限與通知。
-        guard defaults.double(forKey: deadlineKey) <= 0 else { return }
+        let now = Date()
+        var deadline = defaults.double(forKey: deadlineKey)
+        if deadline <= 0 {
+            // 先保存期限，再檢查通知權限；即使使用者拒絕通知，畫面倒數仍可正常運作。
+            deadline = now.addingTimeInterval(561600).timeIntervalSince1970
+            defaults.set(deadline, forKey: deadlineKey)
+        }
+        guard !defaults.bool(forKey: scheduledKey), deadline > now.timeIntervalSince1970 else { return }
+        let deadlineTimestamp = deadline
 
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [requestID])
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized ||
                   settings.authorizationStatus == .provisional ||
@@ -116,16 +122,15 @@ enum InstallationExpiryReminder {
             content.body = "再不重裝就要過期了"
             content.sound = .default
 
-            // 6 天 12 小時 = 561,600 秒
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 561600, repeats: false)
+            let remaining = max(1, deadlineTimestamp - Date().timeIntervalSince1970)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: remaining, repeats: false)
             let request = UNNotificationRequest(identifier: requestID, content: content, trigger: trigger)
             center.add(request) { error in
                 if let error = error {
                     print("[InstallExpiry] Failed to schedule: \(error.localizedDescription)")
                 } else {
                     defaults.set(true, forKey: scheduledKey)
-                    defaults.set(Date().addingTimeInterval(561600).timeIntervalSince1970, forKey: deadlineKey)
-                    print("[InstallExpiry] Reminder scheduled for 6.5 days after install.")
+                    print("[InstallExpiry] Reminder scheduled; remaining seconds: \(Int(remaining)).")
                 }
             }
         }
