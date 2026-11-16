@@ -3909,6 +3909,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: nowrap;
     font-size: 11.5px;
     color: var(--text-muted);
     margin-bottom: 8px;
@@ -4716,7 +4719,7 @@
         <div class="photos-meta-summary">
           <span id="photosItemsSummary">載入中...</span>
           <div style="display:flex;align-items:center;gap:6px;">
-            <span id="photosFilterLabel">全部相片與影片</span>
+            <span id="photosFilterLabel" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">全部相片與影片</span>
             <select id="photosSortSelect" aria-label="相片排序" onchange="window.PhotoVault.setSort(this.value)" style="width:116px;min-width:116px;min-height:32px;border:1px solid var(--border-color);border-radius:9px;background:var(--card-bg);color:var(--text-primary);font-size:11px;font-weight:650;padding:4px 7px;white-space:nowrap;">
               <option value="created_desc">拍攝時間（新到舊）</option>
               <option value="created_asc">拍攝時間（舊到新）</option>
@@ -14472,13 +14475,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         currentDeltaX = dx;
         wrapper.style.transform = 'translateX(' + dampedDx + 'px)';
       } else if (gestureDirection === 'v') {
+        currentDeltaY = dy;
         if (dy > 0) {
           var lightbox = document.getElementById('photoLightbox'); if (lightbox) lightbox.classList.add('zooming');
-          currentDeltaY = dy;
           var scale = Math.max(0.68, 1 - (dy / 900));
           var opacity = Math.max(0.35, 1 - (dy / 550));
           wrapper.style.transform = 'translateY(' + dy + 'px) scale(' + scale + ')';
           wrapper.style.opacity = opacity;
+        } else {
+          wrapper.style.transform = 'translateY(' + (dy * 0.25) + 'px)';
         }
       }
     }
