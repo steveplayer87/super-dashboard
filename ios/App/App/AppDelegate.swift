@@ -102,6 +102,17 @@ enum InstallationExpiryReminder {
     static func scheduleIfNeeded() {
         let defaults = UserDefaults.standard
         let now = Date()
+        // Caches 不會隨 iCloud／裝置備份還原；重裝後標記消失，即使 UserDefaults 被還原也會重新起算。
+        let cacheURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("superdashboard-install-instance.marker")
+        let isFreshInstall = !FileManager.default.fileExists(atPath: cacheURL.path)
+        if isFreshInstall {
+            try? Data("installed".utf8).write(to: cacheURL, options: .atomic)
+            defaults.removeObject(forKey: deadlineKey)
+            defaults.removeObject(forKey: scheduledKey)
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [requestID])
+            print("[InstallExpiry] Fresh installation detected; resetting deadline.")
+        }
         var deadline = defaults.double(forKey: deadlineKey)
         if deadline <= 0 {
             // 先保存期限，再檢查通知權限；即使使用者拒絕通知，畫面倒數仍可正常運作。

@@ -4717,7 +4717,7 @@
           <span id="photosItemsSummary">載入中...</span>
           <div style="display:flex;align-items:center;gap:6px;">
             <span id="photosFilterLabel">全部相片與影片</span>
-            <select id="photosSortSelect" aria-label="相片排序" onchange="window.PhotoVault.setSort(this.value)" style="max-width:116px;min-height:30px;border:1px solid var(--border-color);border-radius:8px;background:var(--card-bg);color:var(--text-primary);font-size:11px;padding:3px 5px;">
+            <select id="photosSortSelect" aria-label="相片排序" onchange="window.PhotoVault.setSort(this.value)" style="width:116px;min-width:116px;min-height:32px;border:1px solid var(--border-color);border-radius:9px;background:var(--card-bg);color:var(--text-primary);font-size:11px;font-weight:650;padding:4px 7px;white-space:nowrap;">
               <option value="created_desc">拍攝時間（新到舊）</option>
               <option value="created_asc">拍攝時間（舊到新）</option>
               <option value="saved_desc">儲存時間（新到舊）</option>
@@ -13938,7 +13938,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var favoriteCount = activeList.filter(function(x) { return x.isFavorite; }).length;
 
     var rows = [
-      { id: 'live', name: '原況相片 (LIVE)', count: liveCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>' },
+      { id: 'live', name: '原況相片', count: liveCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>' },
       { id: 'video', name: '影片 (Videos)', count: videoCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>' },
       { id: 'screenshot', name: '螢幕截圖 (Screenshots)', count: screenshotCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>' },
       { id: 'favorite', name: '已收藏項目 (Favorites)', count: favoriteCount, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>' }
@@ -14261,7 +14261,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
     if (item.mediaType === 'video') {
       var video = document.createElement('video');
-      video.src = item.dataUrl;
+      video.src = item.videoUrl || item.originalVideoUrl || (item.dataUrl && item.dataUrl.indexOf('data:video/') === 0 ? item.dataUrl : '');
+      if (!video.src) { wrapper.innerHTML = '<div style="color:#fff;text-align:center;padding:24px;">找不到原始影片檔，請重新匯入此影片</div>'; return; }
       video.controls = true;
       video.autoplay = true;
       video.playsInline = true;
@@ -14281,12 +14282,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if (item.isLive) {
         var indicator = document.createElement('div');
         indicator.className = 'lightbox-live-indicator active';
-        indicator.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg><span>' + (item.liveVideoUrl ? 'LIVE' : 'LIVE (待配對短片)') + '</span>';
-        indicator.title = '點擊切換原況/靜態模式';
-        indicator.onclick = function(e) {
-          e.stopPropagation();
-          window.PhotoVault.toggleCurrentLiveMode();
-        };
+        indicator.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>';
+        indicator.title = '播放原況照片';
         wrapper.appendChild(indicator);
 
         var liveVideo = null;
@@ -14332,10 +14329,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           }
         };
 
-        wrapper.addEventListener('touchstart', startLivePlay, { passive: true });
-        wrapper.addEventListener('touchend', stopLivePlay);
-        wrapper.addEventListener('mousedown', startLivePlay);
-        wrapper.addEventListener('mouseup', stopLivePlay);
+        indicator.addEventListener('click', function(e){ e.stopPropagation(); if (!liveVideo) { if (typeof showToast === 'function') showToast('此原況相片沒有配對影片'); return; } if (liveVideo.paused) startLivePlay(e); else stopLivePlay(); });
+        if (liveVideo) liveVideo.addEventListener('click', function(e){ e.stopPropagation(); if (liveVideo.paused) startLivePlay(e); else stopLivePlay(); });
       }
     }
   }
@@ -14343,6 +14338,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   // 開啟相片檢視 (支援自縮圖無縫展開之原生彈性過渡動畫)
   function openLightbox(item, sourceEl) {
     state.activeLightboxItem = item;
+    state.activeLightboxSource = sourceEl || null;
     var box = document.getElementById('photoLightbox');
     var wrapper = document.getElementById('lightboxMediaWrapper');
 
@@ -14461,7 +14457,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
           if (Math.abs(dx) > Math.abs(dy)) {
             gestureDirection = 'h';
-          } else if (dy > 8) {
+          } else {
             gestureDirection = 'v';
           }
         }
@@ -14506,7 +14502,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           setTimeout(function() { wrapper.style.transition = ''; }, 250);
         }
       } else if (gestureDirection === 'v') {
-        if (currentDeltaY > 85) {
+        if (currentDeltaY < -70) { toggleMetaDrawer(true); wrapper.style.transition='transform .2s ease'; wrapper.style.transform='translateY(0) scale(1)'; wrapper.style.opacity='1'; }
+        else if (currentDeltaY > 85) {
           wrapper.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
           wrapper.style.transform = 'translateY(100vh) scale(0.6)';
           wrapper.style.opacity = '0';
@@ -14619,10 +14616,18 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function closeLightbox() {
     var box = document.getElementById('photoLightbox');
-    if (box) {
+    var wrapper = document.getElementById('lightboxMediaWrapper');
+    var source = state.activeLightboxItem && document.querySelector('.photo-cell[data-id="' + state.activeLightboxItem.id + '"]');
+    if (box && wrapper && source && source.isConnected) {
+      var r = source.getBoundingClientRect(), w = wrapper.offsetWidth || innerWidth, h = wrapper.offsetHeight || innerHeight;
+      var scale = Math.max(r.width / w, r.height / h);
+      var dx = r.left + r.width/2 - (w/2), dy = r.top + r.height/2 - (h/2);
       box.classList.add('zooming');
-      setTimeout(function(){ box.classList.remove('show','zooming'); }, 180);
-    }
+      wrapper.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1),opacity .24s ease,border-radius .28s ease';
+      wrapper.style.transform = 'translate('+dx+'px,'+dy+'px) scale('+scale+')';
+      wrapper.style.borderRadius = '12px'; wrapper.style.opacity = '.7';
+      setTimeout(function(){ box.classList.remove('show','zooming'); wrapper.style.transform=''; wrapper.style.transition=''; wrapper.style.borderRadius=''; wrapper.style.opacity=''; }, 290);
+    } else if (box) { box.classList.add('zooming'); setTimeout(function(){ box.classList.remove('show','zooming'); }, 180); }
     toggleMetaDrawer(false);
 
     var appTopbar = document.querySelector('.topbar');
@@ -14892,7 +14897,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (!payload || payload.error) { if (typeof showToast === 'function') showToast(payload && payload.error === 'no_importable_assets' ? '選取項目未能取得原始媒體，請確認照片權限後重試' : '無法讀取系統照片，請確認相簿權限'); return; }
     var imported = (payload.items || []).map(function(record) {
       return { id:record.id, filename:record.filename||'Photo', location:'', mediaType:record.mediaType||'image',
-        isLive:!!record.isLive, dataUrl:record.dataUrl, liveVideoUrl:record.liveVideoUrl||'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
+        isLive:!!record.isLive, dataUrl:record.dataUrl, videoUrl:record.videoUrl||'', liveVideoUrl:record.liveVideoUrl||'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
         width:record.width||0, height:record.height||0, createdAt:record.createdAt||Date.now(), savedAt:Date.now(), album:'全部相片',
         notes:'', isFavorite:false, isDeleted:false, deletedAt:null, source:record.source||'apple-photos' };
     }).filter(function(item){ return !!item.dataUrl; });
@@ -15124,9 +15129,6 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       <div class="lightbox-date-title" id="lightboxDateText">2026年11月13日 星期五 09:32</div>
     </div>
     <div class="lightbox-top-actions">
-      <button type="button" class="lightbox-icon-btn" onclick="window.PhotoVault.toggleMetaDrawer()" title="詳細資訊" aria-label="詳細資訊">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-      </button>
     </div>
   </div>
 

@@ -5,6 +5,7 @@ import UserNotifications
 import WebKit
 import Photos
 import PhotosUI
+import QuickLook
 import UniformTypeIdentifiers
 import AVFoundation
 import ImageIO
@@ -1414,7 +1415,8 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     let asset = AVURLAsset(url: url)
                     let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
                     if let cg = try? generator.copyCGImage(at: .zero, actualTime: nil) { preview = UIImage(cgImage: cg).jpegData(compressionQuality: 0.72) ?? Data() }
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
+                    let movieData = destination.flatMap { try? Data(contentsOf: $0) } ?? Data()
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             }
@@ -1510,11 +1512,12 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 720, height: 720), contentMode: .aspectFit, options: thumbOptions) { image, _ in
                     let thumb = image?.jpegData(compressionQuality: 0.72) ?? data
                     var liveMovieName = ""
+                    var liveMovieDataURL = ""
                     let deliver: () -> Void = {
                         let record: [String: Any] = [
                             "id": "phasset-\(asset.localIdentifier)", "filename": filename,
                             "mediaType": "image", "isLive": isLive, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
-                            "liveVideoUrl": "", "liveVideoFilename": liveMovieName,
+                            "liveVideoUrl": liveMovieDataURL, "liveVideoFilename": liveMovieName,
                             "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
                             "width": asset.pixelWidth, "height": asset.pixelHeight, "size": data.count, "album": "全部相片"
                         ]
@@ -1532,7 +1535,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                         export.outputURL = movieURL
                         export.outputFileType = .mov
                         export.exportAsynchronously {
-                            if export.status != .completed { liveMovieName = "" }
+                            if export.status == .completed, let movieData = try? Data(contentsOf: movieURL) {
+                                liveMovieDataURL = "data:video/quicktime;base64,\(movieData.base64EncodedString())"
+                            } else { liveMovieName = "" }
                             deliver()
                         }
                     }
@@ -1557,7 +1562,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                         let record: [String: Any] = [
                             "id": "phasset-\(asset.localIdentifier)", "filename": filename,
                             "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
-                            "liveVideoUrl": "", "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
+                            "videoUrl": "data:video/quicktime;base64,\((try? Data(contentsOf: destination))?.base64EncodedString() ?? "")", "liveVideoUrl": "", "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
                             "width": asset.pixelWidth, "height": asset.pixelHeight, "size": (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0, "album": "全部相片"
                         ]
                         finish(record, nil)
@@ -2235,7 +2240,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 
 
 // MARK: - PhotoVault 原生相機：直接使用 AVFoundation，原始媒體寫入 App Group，不經過系統照片圖庫。
-private final class DashboardCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate {
+private final class DashboardCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate, QLPreviewControllerDataSource {
     private let destinationFolder: URL
     private let onCaptured: ([String: Any]?) -> Void
     private let session = AVCaptureSession()
@@ -2256,6 +2261,13 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     private var pendingPhotoExtension = "jpg"
     private var flashEnabled = false
     private var pinchStartZoom: CGFloat = 1.0
+    private var recordingStartedAt: Date?
+    private var recordingTimer: Timer?
+    private var latestPreviewURL: URL?
+    private let recordingTimeLabel = UILabel()
+    private let zoomSlider = UISlider()
+    private let zoomValueLabel = UILabel()
+    private var shutterInnerLayer: CAShapeLayer?
 
     private let closeButton = UIButton(type: .system)
     private let shutterButton = UIButton(type: .system)
@@ -2296,6 +2308,9 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
+        let inset = shutterButton.bounds.insetBy(dx: 9, dy: 9)
+        shutterInnerLayer?.frame = shutterButton.bounds
+        shutterInnerLayer?.path = UIBezierPath(ovalIn: inset).cgPath
     }
 
     private func configurePreview() {
@@ -2326,6 +2341,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         recentThumbnailButton.layer.borderColor = UIColor.white.withAlphaComponent(0.85).cgColor
         recentThumbnailButton.clipsToBounds = true
         recentThumbnailButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        recentThumbnailButton.addTarget(self, action: #selector(openRecentPreview), for: .touchUpInside)
         recentThumbnailButton.tintColor = .white
         recentThumbnailButton.imageView?.contentMode = .scaleAspectFill
         view.addSubview(recentThumbnailButton)
@@ -2337,7 +2353,17 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         shutterButton.backgroundColor = .white
         shutterButton.layer.cornerRadius = 37
         shutterButton.layer.borderWidth = 5
-        shutterButton.layer.borderColor = UIColor.white.withAlphaComponent(0.45).cgColor
+        shutterButton.layer.borderColor = UIColor.white.withAlphaComponent(0.95).cgColor
+        let innerRing = CAShapeLayer()
+        innerRing.fillColor = UIColor.clear.cgColor
+        innerRing.strokeColor = UIColor.white.withAlphaComponent(0.92).cgColor
+        innerRing.lineWidth = 2
+        shutterButton.layer.addSublayer(innerRing)
+        shutterInnerLayer = innerRing
+        shutterButton.layer.shadowColor = UIColor.black.cgColor
+        shutterButton.layer.shadowOpacity = 0.35
+        shutterButton.layer.shadowRadius = 8
+        shutterButton.layer.shadowOffset = CGSize(width: 0, height: 2)
         shutterButton.addTarget(self, action: #selector(shutterPressed), for: .touchUpInside)
         closeButton.addTarget(self, action: #selector(closePressed), for: .touchUpInside)
         flipButton.addTarget(self, action: #selector(flipCamera), for: .touchUpInside)
@@ -2352,6 +2378,29 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         modeControl.translatesAutoresizingMaskIntoConstraints = false
         modeControl.addTarget(self, action: #selector(modeChanged), for: .valueChanged)
         view.addSubview(modeControl)
+
+        recordingTimeLabel.text = "00:00"
+        recordingTimeLabel.textColor = .white
+        recordingTimeLabel.font = .monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+        recordingTimeLabel.textAlignment = .center
+        recordingTimeLabel.isHidden = true
+        recordingTimeLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(recordingTimeLabel)
+
+        zoomSlider.minimumValue = 0.5
+        zoomSlider.maximumValue = 5
+        zoomSlider.value = 1
+        zoomSlider.minimumTrackTintColor = .white
+        zoomSlider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.35)
+        zoomSlider.translatesAutoresizingMaskIntoConstraints = false
+        zoomSlider.addTarget(self, action: #selector(zoomSliderChanged), for: .valueChanged)
+        view.addSubview(zoomSlider)
+        zoomValueLabel.text = "1×"
+        zoomValueLabel.textColor = .white
+        zoomValueLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        zoomValueLabel.textAlignment = .center
+        zoomValueLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(zoomValueLabel)
 
         hintLabel.text = "原況照片已開啟"
         hintLabel.textColor = .white
@@ -2370,6 +2419,15 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             liveButton.leadingAnchor.constraint(equalTo: closeButton.trailingAnchor, constant: 12),
             liveButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
             liveButton.heightAnchor.constraint(equalToConstant: 32), liveButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 74),
+            recordingTimeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            recordingTimeLabel.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -12),
+            recordingTimeLabel.heightAnchor.constraint(equalToConstant: 20),
+            zoomSlider.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            zoomSlider.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -42),
+            zoomSlider.widthAnchor.constraint(equalToConstant: 190),
+            zoomValueLabel.trailingAnchor.constraint(equalTo: zoomSlider.leadingAnchor, constant: -8),
+            zoomValueLabel.centerYAnchor.constraint(equalTo: zoomSlider.centerYAnchor),
+            zoomValueLabel.widthAnchor.constraint(equalToConstant: 30),
             modeControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             modeControl.bottomAnchor.constraint(equalTo: shutterButton.topAnchor, constant: -28),
             modeControl.widthAnchor.constraint(equalToConstant: 160), modeControl.heightAnchor.constraint(equalToConstant: 34),
@@ -2408,7 +2466,10 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             self.session.beginConfiguration()
             self.session.sessionPreset = .photo
             if let input = self.currentInput { self.session.removeInput(input) }
-            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+            let device = AVCaptureDevice.default(.builtInTripleCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+            guard let device,
                   let input = try? AVCaptureDeviceInput(device: device), self.session.canAddInput(input) else {
                 self.session.commitConfiguration()
                 DispatchQueue.main.async { self.showCameraError("無法啟動相機") }
@@ -2416,6 +2477,12 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             }
             self.session.addInput(input)
             self.currentInput = input
+            DispatchQueue.main.async {
+                self.zoomSlider.minimumValue = 1
+                self.zoomSlider.maximumValue = Float(min(device.activeFormat.videoMaxZoomFactor, 8.0))
+                self.zoomSlider.value = 1
+                self.zoomValueLabel.text = "1×"
+            }
             if self.session.canAddOutput(self.photoOutput) && !self.session.outputs.contains(self.photoOutput) { self.session.addOutput(self.photoOutput) }
             if self.session.canAddOutput(self.movieOutput) && !self.session.outputs.contains(self.movieOutput) { self.session.addOutput(self.movieOutput) }
             self.session.commitConfiguration()
@@ -2424,7 +2491,8 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             if liveSupported { self.photoOutput.isLivePhotoCaptureEnabled = true }
             NSLog("[PhotoVaultCamera] livePhotoSupported=%@, enabled=%@, preset=%@", String(liveSupported), String(self.photoOutput.isLivePhotoCaptureEnabled), String(describing: self.session.sessionPreset))
             DispatchQueue.main.async {
-                self.isLiveEnabled = liveSupported
+                NSLog("[PhotoVaultCamera] photoOutput=%@ movieOutput=%@ multicam=%@", String(describing: self.photoOutput.connections.count), String(describing: self.movieOutput.connections.count), String(AVCaptureMultiCamSession.isMultiCamSupported))
+            self.isLiveEnabled = liveSupported
                 self.liveButton.isEnabled = liveSupported
                 self.liveButton.alpha = liveSupported ? 1 : 0.45
                 self.updateLiveButton()
@@ -2456,6 +2524,25 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             device.unlockForConfiguration()
         } catch { NSLog("[PhotoVaultCamera] focus adjustment failed: %@", error.localizedDescription) }
     }
+
+    @objc private func zoomSliderChanged() {
+        guard let device = currentInput?.device else { return }
+        let requested = CGFloat(zoomSlider.value)
+        let zoom = min(max(requested, 1.0), min(device.activeFormat.videoMaxZoomFactor, 8.0))
+        do { try device.lockForConfiguration(); device.videoZoomFactor = zoom; device.unlockForConfiguration() }
+        catch { NSLog("[PhotoVaultCamera] slider zoom failed: %@", error.localizedDescription) }
+        zoomValueLabel.text = String(format: "%.1f×", zoom)
+    }
+
+    @objc private func openRecentPreview() {
+        guard latestPreviewURL != nil else { showCameraError("尚未拍攝照片或影片"); return }
+        let preview = QLPreviewController()
+        preview.dataSource = self
+        present(preview, animated: true)
+    }
+
+    func numberOfPreviewItems(in controller: QLPreviewController) -> Int { latestPreviewURL == nil ? 0 : 1 }
+    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { latestPreviewURL! as NSURL }
 
     @objc private func zoomWithPinch(_ gesture: UIPinchGestureRecognizer) {
         guard let device = currentInput?.device else { return }
@@ -2550,7 +2637,19 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         if isVideoMode {
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("DashboardVideo-\(UUID().uuidString).mov")
             isRecording = true
+            recordingStartedAt = Date()
+            recordingTimeLabel.isHidden = false
+            recordingTimeLabel.text = "00:00"
             shutterButton.backgroundColor = .systemRed
+            shutterButton.layer.cornerRadius = 10
+            shutterButton.layer.borderWidth = 3
+            shutterInnerLayer?.isHidden = true
+            recordingTimer?.invalidate()
+            recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+                guard let self, let started = self.recordingStartedAt else { return }
+                let seconds = Int(Date().timeIntervalSince(started))
+                self.recordingTimeLabel.text = String(format: "%02d:%02d", seconds / 60, seconds % 60)
+            }
             movieOutput.startRecording(to: url, recordingDelegate: self)
             return
         }
@@ -2617,6 +2716,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         ]
         pendingPhotoData = nil; pendingLiveMovieURL = nil; pendingFilename = ""; pendingCaptureID = ""
         shutterButton.alpha = 1
+        latestPreviewURL = photoURL
         onCaptured(record)
         recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -2627,7 +2727,13 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         DispatchQueue.main.async {
             self.isRecording = false
-            self.shutterButton.backgroundColor = .systemRed
+            self.recordingTimer?.invalidate(); self.recordingTimer = nil
+            self.recordingStartedAt = nil
+            self.recordingTimeLabel.isHidden = true
+            self.shutterButton.backgroundColor = .white
+            self.shutterButton.layer.cornerRadius = 37
+            self.shutterButton.layer.borderWidth = 5
+            self.shutterInnerLayer?.isHidden = false
             guard error == nil else { self.showCameraError("影片拍攝失敗"); return }
             let filename = "VID_\(Int(Date().timeIntervalSince1970)).mov"
             let destination = self.destinationFolder.appendingPathComponent(filename)
@@ -2638,11 +2744,13 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
                 let frame = try? generator.copyCGImage(at: .zero, actualTime: nil)
                 let thumb = frame.flatMap { UIImage(cgImage: $0).jpegData(compressionQuality: 0.72) } ?? Data()
                 let size = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? NSNumber)?.intValue ?? 0
+                let movieData = try Data(contentsOf: destination)
                 let record: [String: Any] = [
                     "id": "camera-\(UUID().uuidString)", "filename": filename, "mediaType": "video", "source": "native-camera", "isLive": false,
-                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": size,
+                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "size": size,
                     "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
                 ]
+                self.latestPreviewURL = destination
                 self.onCaptured(record)
                 self.recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
                 self.hintLabel.text = "影片已儲存至儀表板相片庫"
