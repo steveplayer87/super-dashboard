@@ -2252,6 +2252,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     private var pendingCaptureID = ""
     private var pendingPhotoExtension = "jpg"
     private var flashEnabled = false
+    private var pinchStartZoom: CGFloat = 1.0
 
     private let closeButton = UIButton(type: .system)
     private let shutterButton = UIButton(type: .system)
@@ -2278,6 +2279,10 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         view.backgroundColor = .black
         configureControls()
         configurePreview()
+        let focusTap = UITapGestureRecognizer(target: self, action: #selector(focusAtPoint(_:)))
+        view.addGestureRecognizer(focusTap)
+        let zoomPinch = UIPinchGestureRecognizer(target: self, action: #selector(zoomWithPinch(_:)))
+        view.addGestureRecognizer(zoomPinch)
         requestCameraAccessAndStart()
     }
 
@@ -2404,6 +2409,35 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         if isRecording { movieOutput.stopRecording(); return }
         sessionQueue.async { self.session.stopRunning() }
         dismiss(animated: true)
+    }
+
+    @objc private func focusAtPoint(_ gesture: UITapGestureRecognizer) {
+        let point = gesture.location(in: view)
+        let devicePoint = previewLayer.captureDevicePointConverted(fromLayerPoint: point)
+        guard let device = currentInput?.device else { return }
+        do {
+            try device.lockForConfiguration()
+            if device.isFocusPointOfInterestSupported {
+                device.focusPointOfInterest = devicePoint
+                device.focusMode = .continuousAutoFocus
+            }
+            if device.isExposurePointOfInterestSupported {
+                device.exposurePointOfInterest = devicePoint
+                device.exposureMode = .continuousAutoExposure
+            }
+            device.unlockForConfiguration()
+        } catch { NSLog("[PhotoVaultCamera] focus adjustment failed: %@", error.localizedDescription) }
+    }
+
+    @objc private func zoomWithPinch(_ gesture: UIPinchGestureRecognizer) {
+        guard let device = currentInput?.device else { return }
+        if gesture.state == .began { pinchStartZoom = device.videoZoomFactor }
+        let desired = min(max(pinchStartZoom * gesture.scale, 1.0), min(device.activeFormat.videoMaxZoomFactor, 8.0))
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = desired
+            device.unlockForConfiguration()
+        } catch { NSLog("[PhotoVaultCamera] zoom adjustment failed: %@", error.localizedDescription) }
     }
 
     @objc private func flipCamera() {
