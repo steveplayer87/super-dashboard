@@ -1329,6 +1329,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 guard (photoStatus == .authorized || photoStatus == .limited), let assetID = result.assetIdentifier else { return nil }
                 return PHAsset.fetchAssets(withLocalIdentifiers: [assetID], options: nil).firstObject
             }()
+            NSLog("[PhotoVaultImport] selection=%d assetID=%@ status=%@ types=%@ resolved=%@ live=%@", index, result.assetIdentifier ?? "nil", String(describing: photoStatus), provider.registeredTypeIdentifiers.joined(separator: ","), selectedAsset == nil ? "false" : "true", selectedAsset?.mediaSubtypes.contains(.photoLive) == true ? "true" : "false")
             if let asset = selectedAsset, asset.mediaSubtypes.contains(.photoLive), let folder {
                 group.enter()
                 let imageOptions = PHImageRequestOptions()
@@ -1349,29 +1350,30 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     thumbOptions.isNetworkAccessAllowed = true
                     PHImageManager.default().requestImage(for: asset, targetSize: CGSize(width: 720, height: 720), contentMode: .aspectFit, options: thumbOptions) { image, _ in
                         let thumb = image?.jpegData(compressionQuality: 0.72) ?? data
-                        let videoOptions = PHVideoRequestOptions()
-                        videoOptions.version = .original
-                        videoOptions.deliveryMode = .highQualityFormat
-                        videoOptions.isNetworkAccessAllowed = true
-                        PHImageManager.default().requestAVAsset(forVideo: asset, options: videoOptions) { avAsset, _, _ in
-                            guard let avAsset, let export = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetPassthrough) else { group.leave(); return }
-                            let movieName = name.replacingOccurrences(of: ".\(ext)", with: "-paired.mov")
-                            let movieURL = folder.appendingPathComponent(movieName)
-                            export.outputURL = movieURL
-                            export.outputFileType = .mov
-                            export.exportAsynchronously {
-                                guard export.status == .completed, let movieData = try? Data(contentsOf: movieURL) else { group.leave(); return }
-                                let record: [String: Any] = [
-                                    "id": id, "filename": name, "mediaType": "image", "isLive": true,
-                                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
-                                    "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
-                                    "liveVideoFilename": movieName, "size": data.count,
-                                    "width": asset.pixelWidth, "height": asset.pixelHeight,
-                                    "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "album": "全部相片"
-                                ]
-                                lock.lock(); records.append(record); lock.unlock()
-                                group.leave()
+                        let resources = PHAssetResource.assetResources(for: asset)
+                        guard let pairedVideo = resources.first(where: { $0.type == .pairedVideo }) else {
+                            NSLog("[PhotoVaultImport] Live Photo has no pairedVideo resource: %@", asset.localIdentifier)
+                            group.leave(); return
+                        }
+                        let movieName = name.replacingOccurrences(of: ".\(ext)", with: "-paired.mov")
+                        let movieURL = folder.appendingPathComponent(movieName)
+                        let resourceOptions = PHAssetResourceRequestOptions()
+                        resourceOptions.isNetworkAccessAllowed = true
+                        PHAssetResourceManager.default().writeData(for: pairedVideo, toFile: movieURL, options: resourceOptions) { resourceError in
+                            guard resourceError == nil, let movieData = try? Data(contentsOf: movieURL) else {
+                                NSLog("[PhotoVaultImport] pairedVideo write failed: %@", resourceError?.localizedDescription ?? "unknown")
+                                group.leave(); return
                             }
+                            let record: [String: Any] = [
+                                "id": id, "filename": name, "mediaType": "image", "isLive": true,
+                                "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                                "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
+                                "liveVideoFilename": movieName, "size": data.count,
+                                "width": asset.pixelWidth, "height": asset.pixelHeight,
+                                "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "album": "全部相片"
+                            ]
+                            lock.lock(); records.append(record); lock.unlock()
+                            group.leave()
                         }
                     }
                 }
@@ -1424,7 +1426,8 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 Array(records[start..<min(start + 3, records.count)])
             }
             guard !chunks.isEmpty else {
-                self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({items:[]},false,0);", completionHandler: nil)
+                NSLog("[PhotoVaultImport] picker returned %d selections but produced zero importable records", results.count)
+                self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets({items:[],error:'no_importable_assets',selectedCount:\(results.count)},false,0,true);", completionHandler: nil)
                 return
             }
             func deliver(_ index: Int) {
@@ -2261,6 +2264,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     private let liveButton = UIButton(type: .system)
     private let modeControl = UISegmentedControl(items: ["照片", "影片"])
     private let hintLabel = UILabel()
+    private let recentThumbnailButton = UIButton(type: .custom)
 
     init(destinationFolder: URL, onCaptured: @escaping ([String: Any]?) -> Void) {
         self.destinationFolder = destinationFolder
@@ -2283,6 +2287,9 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         view.addGestureRecognizer(focusTap)
         let zoomPinch = UIPinchGestureRecognizer(target: self, action: #selector(zoomWithPinch(_:)))
         view.addGestureRecognizer(zoomPinch)
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swipeToVideo))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
         requestCameraAccessAndStart()
     }
 
@@ -2312,6 +2319,16 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         style(flipButton, symbol: "camera.rotate")
         style(flashButton, symbol: "bolt.slash")
         style(liveButton, title: "● LIVE")
+        recentThumbnailButton.translatesAutoresizingMaskIntoConstraints = false
+        recentThumbnailButton.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        recentThumbnailButton.layer.cornerRadius = 9
+        recentThumbnailButton.layer.borderWidth = 1.5
+        recentThumbnailButton.layer.borderColor = UIColor.white.withAlphaComponent(0.85).cgColor
+        recentThumbnailButton.clipsToBounds = true
+        recentThumbnailButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        recentThumbnailButton.tintColor = .white
+        recentThumbnailButton.imageView?.contentMode = .scaleAspectFill
+        view.addSubview(recentThumbnailButton)
         liveButton.titleLabel?.font = .systemFont(ofSize: 13, weight: .bold)
         liveButton.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.92)
         liveButton.setTitleColor(.black, for: .normal)
@@ -2363,7 +2380,10 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             flipButton.centerYAnchor.constraint(equalTo: shutterButton.centerYAnchor),
             flipButton.widthAnchor.constraint(equalToConstant: 48), flipButton.heightAnchor.constraint(equalToConstant: 48),
             hintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            hintLabel.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -14)
+            hintLabel.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -14),
+            recentThumbnailButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 22),
+            recentThumbnailButton.centerYAnchor.constraint(equalTo: shutterButton.centerYAnchor),
+            recentThumbnailButton.widthAnchor.constraint(equalToConstant: 54), recentThumbnailButton.heightAnchor.constraint(equalToConstant: 54)
         ])
         updateLiveButton()
     }
@@ -2398,10 +2418,18 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             self.currentInput = input
             if self.session.canAddOutput(self.photoOutput) && !self.session.outputs.contains(self.photoOutput) { self.session.addOutput(self.photoOutput) }
             if self.session.canAddOutput(self.movieOutput) && !self.session.outputs.contains(self.movieOutput) { self.session.addOutput(self.movieOutput) }
-            if self.photoOutput.isLivePhotoCaptureSupported { self.photoOutput.isLivePhotoCaptureEnabled = true }
             self.session.commitConfiguration()
             self.session.startRunning()
-            DispatchQueue.main.async { self.updateLiveButton() }
+            let liveSupported = self.photoOutput.isLivePhotoCaptureSupported
+            if liveSupported { self.photoOutput.isLivePhotoCaptureEnabled = true }
+            NSLog("[PhotoVaultCamera] livePhotoSupported=%@, enabled=%@, preset=%@", String(liveSupported), String(self.photoOutput.isLivePhotoCaptureEnabled), String(describing: self.session.sessionPreset))
+            DispatchQueue.main.async {
+                self.isLiveEnabled = liveSupported
+                self.liveButton.isEnabled = liveSupported
+                self.liveButton.alpha = liveSupported ? 1 : 0.45
+                self.updateLiveButton()
+                if !liveSupported { self.hintLabel.text = "此相機配置暫不支援原況拍攝" }
+            }
         }
     }
 
@@ -2475,6 +2503,12 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         liveButton.alpha = isLiveEnabled ? 1 : 0.55
         liveButton.setTitle(isLiveEnabled ? "● LIVE" : "LIVE 關閉", for: .normal)
         hintLabel.text = isVideoMode ? "影片將直接儲存至儀表板相片庫" : (isLiveEnabled ? "原況照片已開啟" : "原況照片已關閉")
+    }
+
+    @objc private func swipeToVideo() {
+        guard !isRecording else { return }
+        modeControl.selectedSegmentIndex = 1
+        modeChanged()
     }
 
     @objc private func modeChanged() {
@@ -2564,7 +2598,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         var liveFilename = ""
         var liveDataURL = ""
         if let movieURL = pendingLiveMovieURL {
-            liveFilename = filename.replacingOccurrences(of: ".heic", with: "-paired.mov")
+            liveFilename = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent + "-paired.mov"
             let movieDestination = destinationFolder.appendingPathComponent(liveFilename)
             do {
                 if FileManager.default.fileExists(atPath: movieDestination.path) { try FileManager.default.removeItem(at: movieDestination) }
@@ -2584,6 +2618,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         pendingPhotoData = nil; pendingLiveMovieURL = nil; pendingFilename = ""; pendingCaptureID = ""
         shutterButton.alpha = 1
         onCaptured(record)
+        recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         hintLabel.text = "已儲存至儀表板相片庫"
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { self.hintLabel.text = self.isLiveEnabled ? "原況照片已開啟" : "原況照片已關閉" }
@@ -2609,6 +2644,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
                     "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
                 ]
                 self.onCaptured(record)
+                self.recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
                 self.hintLabel.text = "影片已儲存至儀表板相片庫"
             } catch { self.showCameraError("無法儲存影片：\(error.localizedDescription)") }
         }

@@ -4715,7 +4715,18 @@
       <div id="photosSubViewAll">
         <div class="photos-meta-summary">
           <span id="photosItemsSummary">載入中...</span>
-          <span id="photosFilterLabel">全部相片與影片</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="photosFilterLabel">全部相片與影片</span>
+            <select id="photosSortSelect" aria-label="相片排序" onchange="window.PhotoVault.setSort(this.value)" style="max-width:116px;min-height:30px;border:1px solid var(--border-color);border-radius:8px;background:var(--card-bg);color:var(--text-primary);font-size:11px;padding:3px 5px;">
+              <option value="created_desc">拍攝時間（新到舊）</option>
+              <option value="created_asc">拍攝時間（舊到新）</option>
+              <option value="saved_desc">儲存時間（新到舊）</option>
+              <option value="saved_asc">儲存時間（舊到新）</option>
+              <option value="name_asc">檔名（A–Z）</option>
+              <option value="size_desc">檔案大小（大到小）</option>
+              <option value="size_asc">檔案大小（小到大）</option>
+            </select>
+          </div>
         </div>
         <div class="photos-grid" id="photosGrid"></div>
       </div>
@@ -13393,7 +13404,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     activePeekItem: null,
     activeLightboxItem: null,
     metaDrawerOpen: false,
-    forceLiveNextImport: false
+    forceLiveNextImport: false,
+    sortBy: localStorage.getItem('photo_vault_sort_by') || 'created_desc'
   };
 
   // 格式化日期時間 (包含星期幾)
@@ -13713,6 +13725,17 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function render() {
     var activeList = state.items.filter(function(x) { return !x.isDeleted; });
     var trashList = state.items.filter(function(x) { return x.isDeleted; });
+    function sortItems(list) {
+      var key = state.sortBy || 'created_desc';
+      return list.slice().sort(function(a,b) {
+        if (key === 'name_asc') return String(a.filename||'').localeCompare(String(b.filename||''));
+        if (key === 'size_desc' || key === 'size_asc') return (key === 'size_desc' ? -1 : 1) * ((a.size||0)-(b.size||0));
+        var field = key.indexOf('saved_') === 0 ? 'savedAt' : 'createdAt';
+        var delta = (a[field]||a.createdAt||0) - (b[field]||b.createdAt||0);
+        return key.endsWith('_asc') ? delta : -delta;
+      });
+    }
+    activeList = sortItems(activeList);
 
     var badge = document.getElementById('photosTrashCountBadge');
     if (badge) {
@@ -13750,6 +13773,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       }
     }
 
+    var sortSelect = document.getElementById('photosSortSelect');
+    if (sortSelect) sortSelect.value = state.sortBy || 'created_desc';
     var summaryEl = document.getElementById('photosItemsSummary');
     if (summaryEl) {
       var photoCount = activeList.filter(function(x){ return x.mediaType !== 'video'; }).length;
@@ -14823,6 +14848,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (overlay) overlay.classList.remove('show');
   }
 
+  function setSort(value) {
+    state.sortBy = value || 'created_desc';
+    try { localStorage.setItem('photo_vault_sort_by', state.sortBy); } catch(e) {}
+    render();
+  }
+
   function requestNativeCamera() {
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard) {
       window.callNative('present-native-camera');
@@ -14858,11 +14889,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   };
 
   window.onNativePhotoAssets = function(payload, hasMore, nextOffset, isFinal) {
-    if (!payload || payload.error) { if (typeof showToast === 'function') showToast('無法讀取系統照片，請確認相簿權限'); return; }
+    if (!payload || payload.error) { if (typeof showToast === 'function') showToast(payload && payload.error === 'no_importable_assets' ? '選取項目未能取得原始媒體，請確認照片權限後重試' : '無法讀取系統照片，請確認相簿權限'); return; }
     var imported = (payload.items || []).map(function(record) {
       return { id:record.id, filename:record.filename||'Photo', location:'', mediaType:record.mediaType||'image',
         isLive:!!record.isLive, dataUrl:record.dataUrl, liveVideoUrl:record.liveVideoUrl||'', liveVideoFilename:record.liveVideoFilename||'', size:record.size||0,
-        width:record.width||0, height:record.height||0, createdAt:record.createdAt||Date.now(), album:'全部相片',
+        width:record.width||0, height:record.height||0, createdAt:record.createdAt||Date.now(), savedAt:Date.now(), album:'全部相片',
         notes:'', isFavorite:false, isDeleted:false, deletedAt:null, source:record.source||'apple-photos' };
     }).filter(function(item){ return !!item.dataUrl; });
     if (imported.length) {
@@ -14870,8 +14901,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       state.items = imported.concat(state.items.filter(function(old){ return !seen.has(old.id); }));
       saveBatch(state.items); render();
     }
+    if (payload.items && payload.items.length && !imported.length && typeof showToast === 'function') showToast('選取的原況照片未能讀取，請確認原始照片與配對影片權限');
     if (hasMore) window.callNative('request-photo-library-assets', { offset:nextOffset });
-    else if (isFinal !== false && typeof showToast === 'function') showToast('系統照片與原況影片載入完成');
+    else if (isFinal !== false && typeof showToast === 'function') showToast(imported.length ? '匯入完成：新增 ' + imported.length + ' 個項目' : '沒有可匯入的媒體；請重新選取或檢查照片權限');
   };
 
   function requestImportFolder() {
@@ -14936,6 +14968,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             width: 1920,
             height: 1080,
             createdAt: primaryFile.lastModified || Date.now(),
+            savedAt: Date.now(),
             album: defaultAlbum || '工作紀錄',
             notes: '',
             isFavorite: false,
@@ -15041,6 +15074,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   window.PhotoVault = {
     render: render,
     requestNativeCamera: requestNativeCamera,
+    setSort: setSort,
     refreshVisibleView: function(){ /* IndexedDB 已在啟動時載入；切回頁面不重建整張相片網格。 */ },
     switchSubtab: switchSubtab,
     filterByAlbum: filterByAlbum,
