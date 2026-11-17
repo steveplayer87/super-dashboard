@@ -129,5 +129,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>用於在拍攝時記錄照片與影片的地點。</string>
 </dict>
 </plist>

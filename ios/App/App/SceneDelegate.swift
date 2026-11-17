@@ -7,6 +7,8 @@ import Photos
 import PhotosUI
 import UniformTypeIdentifiers
 import AVFoundation
+import CoreLocation
+import CoreImage
 import ImageIO
 import FileProvider
 import LocalAuthentication
@@ -881,7 +883,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         becomeFirstResponder()
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
-        NotificationManager.scheduleUpdateNotification(version: "v23")
+        NotificationManager.scheduleUpdateNotification(version: "v24")
     }
 
     private func setupDelegatesAndHandlers() {
@@ -1306,7 +1308,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             webView?.evaluateJavaScript("if(typeof showToast==='function')showToast('無法建立相片儲存資料夾');", completionHandler: nil)
             return
         }
-        let camera = DashboardCameraViewController(destinationFolder: folder) { [weak self] record in
+        let camera = DashboardCameraViewController(destinationFolder: folder, onOpenGallery: { [weak self] in
+            self?.webView?.evaluateJavaScript("if(window.PhotoVault&&window.PhotoVault.openLatestCapture)window.PhotoVault.openLatestCapture();")
+        }) { [weak self] record in
             guard let self, let record,
                   let data = try? JSONSerialization.data(withJSONObject: ["items": [record]]),
                   let json = String(data: data, encoding: .utf8) else { return }
@@ -1400,7 +1404,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                             }
                             let record: [String: Any] = [
                                 "id": id, "filename": name, "mediaType": "image", "isLive": true,
-                                "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                                "dataUrl": "data:image/jpeg;base64,\((UIImage(data:data)?.jpegData(compressionQuality:0.92) ?? data).base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
                                 "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
                                 "liveVideoFilename": movieName, "size": data.count,
                                 "width": asset.pixelWidth, "height": asset.pixelHeight,
@@ -1440,7 +1444,9 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     let gpsLonRef = gps?[kCGImagePropertyGPSLongitudeRef] as? String
                     let exifLocation = (gpsLat != nil && gpsLon != nil) ? String(format: "%.5f, %.5f", gpsLat! * (gpsLatRef == "S" ? -1 : 1), gpsLon! * (gpsLonRef == "W" ? -1 : 1)) : ""
                     let location = selectedAsset?.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? exifLocation
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": fileSize, "width": width, "height": height, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": location, "album": "全部相片"]
+                    let fullImage = CGImageSourceCreateImageAtIndex(source, 0, nil)
+                    let fullJPEG = fullImage.flatMap { UIImage(cgImage: $0).jpegData(compressionQuality: 0.92) } ?? thumb
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(fullJPEG.base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": fileSize, "width": width, "height": height, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": location, "album": "全部相片"]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             } else if let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .movie) == true }) {
@@ -1453,10 +1459,16 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     let destination = folder?.appendingPathComponent(name)
                     if let destination { try? FileManager.default.copyItem(at: url, to: destination) }
                     let asset = AVURLAsset(url: url)
+                    let seconds=CMTimeGetSeconds(asset.duration)
+                    let durationText=seconds.isFinite ? String(format:"%02d:%02d",Int(seconds)/60,Int(seconds)%60) : ""
+                    let isoLocation=asset.metadata.compactMap{$0.stringValue}.first(where:{$0.range(of:"[+-]\\d{2,3}\\.\\d+[+-]\\d{2,3}\\.\\d+",options:.regularExpression) != nil})
+                    var quickTimeLocation=""
+                    if let isoLocation, let regex=try? NSRegularExpression(pattern:"([+-]\\d{2,3}\\.\\d+)([+-]\\d{2,3}\\.\\d+)"), let match=regex.firstMatch(in:isoLocation,range:NSRange(isoLocation.startIndex...,in:isoLocation)), let latRange=Range(match.range(at:1),in:isoLocation), let lonRange=Range(match.range(at:2),in:isoLocation), let lat=Double(isoLocation[latRange]), let lon=Double(isoLocation[lonRange]) { quickTimeLocation=String(format:"%.5f, %.5f",lat,lon) }
+                    let importLocation=selectedAsset?.location.map{String(format:"%.5f, %.5f",$0.coordinate.latitude,$0.coordinate.longitude)} ?? quickTimeLocation
                     let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
                     if let cg = try? generator.copyCGImage(at: .zero, actualTime: nil) { preview = UIImage(cgImage: cg).jpegData(compressionQuality: 0.72) ?? Data() }
                     let movieData = destination.flatMap { try? Data(contentsOf: $0) } ?? Data()
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": selectedAsset?.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"]
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "duration": durationText, "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": importLocation, "album": "全部相片"]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             }
@@ -2279,93 +2291,266 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
 }
 
 
-private final class CameraRecentPreviewController: UIViewController {
-    private let url: URL
-    private let isVideo: Bool
-    private var player: AVPlayer?
-    private var playerLayer: AVPlayerLayer?
-    private let playButton = UIButton(type: .system)
-    init(url: URL, isVideo: Bool) { self.url=url; self.isVideo=isVideo; super.init(nibName:nil,bundle:nil); modalPresentationStyle = .fullScreen }
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    override var prefersStatusBarHidden: Bool { true }
-    override func viewDidLoad() {
-        super.viewDidLoad(); view.backgroundColor = .black
-        if isVideo {
-            let p=AVPlayer(url:url); player=p
-            let layer=AVPlayerLayer(player:p); layer.videoGravity = .resizeAspect; layer.frame=view.bounds; view.layer.addSublayer(layer); playerLayer=layer
-            p.play()
-            playButton.setImage(UIImage(systemName:"pause.fill"),for:.normal)
-            playButton.addTarget(self,action:#selector(togglePlayback),for:.touchUpInside)
-            playButton.tintColor = .white; playButton.backgroundColor=UIColor.black.withAlphaComponent(0.45); playButton.layer.cornerRadius=26
-            playButton.frame=CGRect(x:view.bounds.midX-26,y:view.bounds.midY-26,width:52,height:52); view.addSubview(playButton)
-        } else if let image=UIImage(contentsOfFile:url.path) {
-            let imageView=UIImageView(image:image); imageView.frame=view.bounds; imageView.autoresizingMask=[.flexibleWidth,.flexibleHeight]; imageView.contentMode = .scaleAspectFit; view.addSubview(imageView)
+private final class CameraLocationProvider: NSObject, CLLocationManagerDelegate {
+    static let shared=CameraLocationProvider()
+    private let manager=CLLocationManager()
+    private var pending=[(CLLocation?)->Void]()
+    private var requestInFlight=false
+    private override init(){super.init();manager.delegate=self;manager.desiredAccuracy=kCLLocationAccuracyNearestTenMeters}
+    func request(_ completion:@escaping(CLLocation?)->Void){
+        pending.append(completion)
+        switch manager.authorizationStatus {
+        case .authorizedAlways,.authorizedWhenInUse: requestLocationIfNeeded()
+        case .notDetermined: manager.requestWhenInUseAuthorization()
+        default: flush(nil)
         }
-        let close=UIButton(type:.system); close.setImage(UIImage(systemName:"xmark"),for:.normal); close.tintColor = .white; close.backgroundColor=UIColor.black.withAlphaComponent(0.5); close.layer.cornerRadius=22; close.frame=CGRect(x:18,y:view.safeAreaInsets.top+12,width:44,height:44); close.autoresizingMask=[.flexibleBottomMargin,.flexibleRightMargin]; close.addTarget(self,action:#selector(closePreview),for:.touchUpInside); view.addSubview(close)
-        let swipe=UISwipeGestureRecognizer(target:self,action:#selector(closePreview)); swipe.direction = .down; view.addGestureRecognizer(swipe)
     }
-    override func viewDidLayoutSubviews() { super.viewDidLayoutSubviews(); playerLayer?.frame=view.bounds; if playButton.superview != nil { playButton.center=CGPoint(x:view.bounds.midX,y:view.bounds.midY) } }
-    @objc private func togglePlayback(){ guard let player else{return}; if player.timeControlStatus == .playing {player.pause();playButton.setImage(UIImage(systemName:"play.fill"),for:.normal)} else {player.play();playButton.setImage(UIImage(systemName:"pause.fill"),for:.normal)} }
-    @objc private func closePreview(){ player?.pause(); dismiss(animated:true) }
-}
-
-private final class DualCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
-    let completion: (Data?) -> Void
-    init(completion: @escaping (Data?) -> Void) { self.completion=completion }
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) { completion(error == nil ? photo.fileDataRepresentation() : nil) }
-}
-
-private final class DualCameraCaptureViewController: UIViewController {
-    private let folder: URL
-    private let onCaptured: ([String: Any]?) -> Void
-    private let session=AVCaptureMultiCamSession()
-    private let backOutput=AVCapturePhotoOutput(), frontOutput=AVCapturePhotoOutput()
-    private var backLayer: AVCaptureVideoPreviewLayer!, frontLayer: AVCaptureVideoPreviewLayer!
-    private let shutter=UIButton(type:.system), close=UIButton(type:.system), hint=UILabel()
-    private var delegates:[DualCaptureDelegate]=[]
-    private let lock=NSLock(); private var finished=0; private var records=[[String:Any]]()
-    init(folder:URL,onCaptured:@escaping ([String:Any]?)->Void){self.folder=folder;self.onCaptured=onCaptured;super.init(nibName:nil,bundle:nil);modalPresentationStyle = .fullScreen}
-    required init?(coder:NSCoder){fatalError("init(coder:) has not been implemented")}
-    override var prefersStatusBarHidden:Bool{true}
-    override func viewDidLoad(){super.viewDidLoad();view.backgroundColor = .black
-        backLayer=AVCaptureVideoPreviewLayer(session:session);backLayer.videoGravity = .resizeAspectFill;view.layer.addSublayer(backLayer)
-        frontLayer=AVCaptureVideoPreviewLayer(session:session);frontLayer.videoGravity = .resizeAspectFill;frontLayer.cornerRadius=16;frontLayer.masksToBounds=true;view.layer.addSublayer(frontLayer)
-        close.setImage(UIImage(systemName:"xmark"),for:.normal);close.tintColor = .white;close.backgroundColor=UIColor.black.withAlphaComponent(0.5);close.layer.cornerRadius=22;close.addTarget(self,action:#selector(closeView),for:.touchUpInside);view.addSubview(close)
-        shutter.setTitle("雙鏡同拍",for:.normal);shutter.setTitleColor(.black,for:.normal);shutter.backgroundColor = .white;shutter.layer.cornerRadius=34;shutter.titleLabel?.font = .boldSystemFont(ofSize:15);shutter.addTarget(self,action:#selector(captureBoth),for:.touchUpInside);view.addSubview(shutter)
-        hint.text="前後鏡頭同步拍攝";hint.textColor = .white;hint.textAlignment = .center;hint.font = .systemFont(ofSize:13,weight:.medium);view.addSubview(hint)
-        configureMultiCam()
-    }
-    override func viewDidLayoutSubviews(){super.viewDidLayoutSubviews();backLayer.frame=view.bounds;frontLayer.frame=CGRect(x:view.bounds.width-126,y:view.safeAreaInsets.top+72,width:110,height:156);close.frame=CGRect(x:18,y:view.safeAreaInsets.top+12,width:44,height:44);shutter.frame=CGRect(x:view.bounds.midX-74,y:view.bounds.height-view.safeAreaInsets.bottom-104,width:148,height:68);hint.frame=CGRect(x:24,y:shutter.frame.minY-36,width:view.bounds.width-48,height:24)}
-    private func configureMultiCam(){
-        guard AVCaptureMultiCamSession.isMultiCamSupported else{hint.text="此裝置不支援前後雙鏡同拍";shutter.isEnabled=false;return}
-        session.beginConfiguration();session.sessionPreset = .inputPriority
-        guard let back=AVCaptureDevice.default(.builtInWideAngleCamera,for:.video,position:.back),let front=AVCaptureDevice.default(.builtInWideAngleCamera,for:.video,position:.front),let bi=try? AVCaptureDeviceInput(device:back),let fi=try? AVCaptureDeviceInput(device:front),session.canAddInput(bi),session.canAddInput(fi) else{session.commitConfiguration();hint.text="無法建立前後鏡頭輸入";shutter.isEnabled=false;return}
-        session.addInputWithNoConnections(bi);session.addInputWithNoConnections(fi)
-        guard session.canAddOutput(backOutput),session.canAddOutput(frontOutput) else{session.commitConfiguration();hint.text="雙鏡頭輸出配置失敗";shutter.isEnabled=false;return}
-        session.addOutputWithNoConnections(backOutput);session.addOutputWithNoConnections(frontOutput)
-        guard let bp=bi.ports.first(where:{$0.mediaType == .video}),let fp=fi.ports.first(where:{$0.mediaType == .video}) else{session.commitConfiguration();shutter.isEnabled=false;return}
-        let bc=AVCaptureConnection(inputPorts:[bp],output:backOutput),fc=AVCaptureConnection(inputPorts:[fp],output:frontOutput)
-        let bpc=AVCaptureConnection(inputPort:bp,videoPreviewLayer:backLayer),fpc=AVCaptureConnection(inputPort:fp,videoPreviewLayer:frontLayer)
-        guard session.canAddConnection(bc),session.canAddConnection(fc),session.canAddConnection(bpc),session.canAddConnection(fpc) else{session.commitConfiguration();hint.text="此裝置無法同時連接前後鏡頭";shutter.isEnabled=false;return}
-        session.addConnection(bc);session.addConnection(fc);session.addConnection(bpc);session.addConnection(fpc);session.commitConfiguration()
-        DispatchQueue.global(qos:.userInitiated).async{self.session.startRunning()}
-    }
-    @objc private func captureBoth(){guard session.isRunning,shutter.isEnabled else{return};shutter.isEnabled=false;hint.text="正在同步拍攝…";lock.lock();finished=0;records=[];lock.unlock()
-        let back=DualCaptureDelegate{[weak self] data in self?.accept(data,tag:"後鏡")};let front=DualCaptureDelegate{[weak self] data in self?.accept(data,tag:"前鏡")};delegates=[back,front]
-        backOutput.capturePhoto(with:AVCapturePhotoSettings(),delegate:back);frontOutput.capturePhoto(with:AVCapturePhotoSettings(),delegate:front)
-    }
-    private func accept(_ data:Data?,tag:String){
-        if let data,let image=UIImage(data:data){let name="DUAL_\(tag)_\(Int(Date().timeIntervalSince1970))_\(UUID().uuidString.prefix(5)).jpg";let url=folder.appendingPathComponent(name);try? data.write(to:url,options:.atomic);let thumb=image.jpegData(compressionQuality:0.78) ?? data;let record:[String:Any] = ["id":"dual-\(UUID().uuidString)","filename":name,"mediaType":"image","isLive":false,"source":"dual-camera","dataUrl":"data:image/jpeg;base64,\(thumb.base64EncodedString())","size":data.count,"width":image.cgImage?.width ?? 0,"height":image.cgImage?.height ?? 0,"createdAt":Date().timeIntervalSince1970*1000,"album":"全部相片"];lock.lock();records.append(record);lock.unlock()}
-        lock.lock();finished += 1;let done=finished==2;let saved=records;lock.unlock()
-        if done{DispatchQueue.main.async{self.session.stopRunning();saved.forEach{self.onCaptured($0)};self.hint.text=saved.count==2 ? "前後照片已儲存" : "部分鏡頭拍攝失敗";self.shutter.isEnabled=true;self.delegates=[]}}
-    }
-    @objc private func closeView(){session.stopRunning();dismiss(animated:true)}
+    private func requestLocationIfNeeded(){guard !requestInFlight,!pending.isEmpty else{return};requestInFlight=true;manager.requestLocation()}
+    private func flush(_ location:CLLocation?){let callbacks=pending;pending.removeAll();requestInFlight=false;callbacks.forEach{$0(location)}}
+    func locationManagerDidChangeAuthorization(_ manager:CLLocationManager){if manager.authorizationStatus == .authorizedAlways || manager.authorizationStatus == .authorizedWhenInUse {requestLocationIfNeeded()}else if manager.authorizationStatus != .notDetermined {flush(nil)}}
+    func locationManager(_ manager:CLLocationManager,didUpdateLocations locations:[CLLocation]){flush(locations.last)}
+    func locationManager(_ manager:CLLocationManager,didFailWithError error:Error){NSLog("[PhotoVaultCamera] location failed: %@",error.localizedDescription);flush(nil)}
 }
 
 // MARK: - PhotoVault 原生相機：直接使用 AVFoundation，原始媒體寫入 App Group，不經過系統照片圖庫。
+private final class DualCameraCaptureEngine: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
+    let session = AVCaptureMultiCamSession()
+    let backPreviewLayer: AVCaptureVideoPreviewLayer
+    let frontPreviewLayer: AVCaptureVideoPreviewLayer
+    private let backOutput = AVCaptureVideoDataOutput()
+    private let frontOutput = AVCaptureVideoDataOutput()
+    private let audioOutput = AVCaptureAudioDataOutput()
+    private var microphoneInput: AVCaptureDeviceInput?
+    private let queue = DispatchQueue(label: "com.superdashboard.dual-camera.capture", qos: .userInitiated)
+    private let lock = NSLock()
+    private var latestBack: CVPixelBuffer?
+    private var latestFront: CVPixelBuffer?
+    private var writer: AVAssetWriter?
+    private var videoInput: AVAssetWriterInput?
+    private var audioInput: AVAssetWriterInput?
+    private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
+    private var recordingURL: URL?
+    private var isRecording = false
+    private var writerStarted = false
+    private var recordingCompletion: ((URL?) -> Void)?
+    private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+    private var backInput: AVCaptureDeviceInput?
+    private var frontInput: AVCaptureDeviceInput?
+    var backInputDevice: AVCaptureDevice? { backInput?.device }
+
+    override init() {
+        backPreviewLayer = AVCaptureVideoPreviewLayer(sessionWithNoConnection: session)
+        frontPreviewLayer = AVCaptureVideoPreviewLayer(sessionWithNoConnection: session)
+        super.init()
+        backPreviewLayer.videoGravity = .resizeAspectFill
+        frontPreviewLayer.videoGravity = .resizeAspectFill
+    }
+
+    func start(completion: @escaping (Bool, String?) -> Void) {
+        queue.async {
+            guard AVCaptureMultiCamSession.isMultiCamSupported else { DispatchQueue.main.async { completion(false, "此裝置不支援前後雙鏡頭") }; return }
+            self.session.beginConfiguration()
+            self.session.sessionPreset = .inputPriority
+            guard let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                  let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
+                  self.configureMultiCamFormat(back, maxLongEdge: 1920),
+                  self.configureMultiCamFormat(front, maxLongEdge: 1280),
+                  let backInput = try? AVCaptureDeviceInput(device: back),
+                  let frontInput = try? AVCaptureDeviceInput(device: front),
+                  self.session.canAddInput(backInput), self.session.canAddInput(frontInput) else {
+                self.session.commitConfiguration(); DispatchQueue.main.async { completion(false, "無法建立前後鏡頭輸入") }; return
+            }
+            self.backInput = backInput; self.frontInput = frontInput
+            self.session.addInputWithNoConnections(backInput); self.session.addInputWithNoConnections(frontInput)
+            guard let backPort = backInput.ports(for: .video, sourceDeviceType: back.deviceType, sourceDevicePosition: .back).first,
+                  let frontPort = frontInput.ports(for: .video, sourceDeviceType: front.deviceType, sourceDevicePosition: .front).first else {
+                self.session.commitConfiguration(); DispatchQueue.main.async { completion(false, "無法取得前後鏡頭影像連接埠") }; return
+            }
+            self.backOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+            self.frontOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+            self.backOutput.alwaysDiscardsLateVideoFrames = true; self.frontOutput.alwaysDiscardsLateVideoFrames = true
+            guard self.session.canAddOutput(self.backOutput), self.session.canAddOutput(self.frontOutput) else {
+                self.session.commitConfiguration(); DispatchQueue.main.async { completion(false, "雙鏡頭影像輸出配置失敗") }; return
+            }
+            self.session.addOutputWithNoConnections(self.backOutput); self.session.addOutputWithNoConnections(self.frontOutput)
+            self.backOutput.setSampleBufferDelegate(self, queue: self.queue); self.frontOutput.setSampleBufferDelegate(self, queue: self.queue)
+            let backDataConnection = AVCaptureConnection(inputPorts: [backPort], output: self.backOutput)
+            let frontDataConnection = AVCaptureConnection(inputPorts: [frontPort], output: self.frontOutput)
+            let backPreviewConnection = AVCaptureConnection(inputPort: backPort, videoPreviewLayer: self.backPreviewLayer)
+            let frontPreviewConnection = AVCaptureConnection(inputPort: frontPort, videoPreviewLayer: self.frontPreviewLayer)
+            guard [backDataConnection, frontDataConnection, backPreviewConnection, frontPreviewConnection].allSatisfy({ self.session.canAddConnection($0) }) else {
+                self.session.commitConfiguration(); DispatchQueue.main.async { completion(false, "雙鏡頭預覽連接失敗") }; return
+            }
+            [backDataConnection, frontDataConnection, backPreviewConnection, frontPreviewConnection].forEach { self.session.addConnection($0) }
+            [backDataConnection, backPreviewConnection].forEach { if $0.isVideoOrientationSupported { $0.videoOrientation = .portrait } }
+            [frontDataConnection, frontPreviewConnection].forEach { if $0.isVideoOrientationSupported { $0.videoOrientation = .portrait }; $0.automaticallyAdjustsVideoMirroring = false; $0.isVideoMirrored = true }
+            self.session.commitConfiguration()
+            if AVCaptureDevice.authorizationStatus(for: .audio) == .authorized { _ = self.configureAudioOnQueue() }
+            NSLog("[DualCamera] hardwareCost=%.2f systemPressureCost=%.2f", self.session.hardwareCost, self.session.systemPressureCost)
+            if self.session.hardwareCost > 1.0 || self.session.systemPressureCost > 1.0 {
+                DispatchQueue.main.async { completion(false, "目前裝置負載過高，請稍後再啟用雙鏡頭") }; return
+            }
+            self.session.startRunning()
+            DispatchQueue.main.async { completion(self.session.isRunning, self.session.isRunning ? nil : "雙鏡頭啟動失敗") }
+        }
+    }
+
+    private func configureMultiCamFormat(_ device: AVCaptureDevice, maxLongEdge: Int32) -> Bool {
+        let candidates=device.formats.filter { format in
+            guard format.isMultiCamSupported else { return false }
+            let d=CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+            return max(d.width,d.height) <= maxLongEdge && format.videoSupportedFrameRateRanges.contains { $0.minFrameRate <= 30 && $0.maxFrameRate >= 30 }
+        }
+        guard let chosen=candidates.max(by:{
+            let a=CMVideoFormatDescriptionGetDimensions($0.formatDescription), b=CMVideoFormatDescriptionGetDimensions($1.formatDescription)
+            return Int64(a.width)*Int64(a.height) < Int64(b.width)*Int64(b.height)
+        }) else { NSLog("[DualCamera] no MultiCam format for %@",device.localizedName); return false }
+        do {
+            try device.lockForConfiguration(); device.activeFormat=chosen
+            device.activeVideoMinFrameDuration=CMTime(value:1,timescale:30); device.activeVideoMaxFrameDuration=CMTime(value:1,timescale:30)
+            device.unlockForConfiguration(); return true
+        } catch { NSLog("[DualCamera] format setup failed %@: %@",device.localizedName,error.localizedDescription); return false }
+    }
+
+    func enableAudio(completion: @escaping (Bool) -> Void) {
+        queue.async { let success=self.configureAudioOnQueue(); DispatchQueue.main.async { completion(success) } }
+    }
+
+    private func configureAudioOnQueue() -> Bool {
+        if microphoneInput != nil { return true }
+        guard AVCaptureDevice.authorizationStatus(for:.audio) == .authorized,
+              let mic=AVCaptureDevice.default(for:.audio),
+              let input=try? AVCaptureDeviceInput(device:mic), session.canAddInput(input) else { return false }
+        session.beginConfiguration(); defer { session.commitConfiguration() }
+        session.addInputWithNoConnections(input)
+        guard let port=input.ports(for:.audio,sourceDeviceType:mic.deviceType,sourceDevicePosition:.unspecified).first,
+              session.canAddOutput(audioOutput) else { session.removeInput(input); return false }
+        session.addOutputWithNoConnections(audioOutput)
+        let connection=AVCaptureConnection(inputPorts:[port],output:audioOutput)
+        guard session.canAddConnection(connection) else { session.removeOutput(audioOutput);session.removeInput(input);return false }
+        session.addConnection(connection);audioOutput.setSampleBufferDelegate(self,queue:queue);microphoneInput=input;return true
+    }
+
+    func updatePreviewFrames(bounds: CGRect) {
+        backPreviewLayer.frame = bounds
+        let pipWidth = bounds.width * 0.27
+        let pipHeight = pipWidth * 4.0 / 3.0
+        frontPreviewLayer.frame = CGRect(x: bounds.width - pipWidth - 18, y: 90, width: pipWidth, height: pipHeight)
+        frontPreviewLayer.cornerRadius = 12; frontPreviewLayer.masksToBounds = true
+        frontPreviewLayer.borderWidth = 2; frontPreviewLayer.borderColor = UIColor.white.withAlphaComponent(0.9).cgColor
+    }
+
+    func focus(at layerPoint: CGPoint) {
+        guard let device=backInput?.device else{return}
+        let point=backPreviewLayer.captureDevicePointConverted(fromLayerPoint:layerPoint)
+        do{try device.lockForConfiguration();if device.isFocusPointOfInterestSupported{device.focusPointOfInterest=point;device.focusMode = .continuousAutoFocus};if device.isExposurePointOfInterestSupported{device.exposurePointOfInterest=point;device.exposureMode = .continuousAutoExposure};device.unlockForConfiguration()}catch{NSLog("[DualCamera] focus: %@",error.localizedDescription)}
+    }
+
+    func setZoom(_ factor: CGFloat) {
+        guard let device = backInput?.device else { return }
+        let value = min(max(factor, device.minAvailableVideoZoomFactor), min(device.activeFormat.videoMaxZoomFactor, 8))
+        queue.async { do { try device.lockForConfiguration(); device.ramp(toVideoZoomFactor: value, withRate: 10); device.unlockForConfiguration() } catch { NSLog("[DualCamera] zoom: %@", error.localizedDescription) } }
+    }
+
+    func capturePhoto() -> Data? {
+        lock.lock(); let back = latestBack; let front = latestFront; lock.unlock()
+        guard let back, let front, let composed = composite(back: back, front: front), let cg = ciContext.createCGImage(composed, from: composed.extent) else { return nil }
+        return UIImage(cgImage: cg).jpegData(compressionQuality: 0.94)
+    }
+
+    func startRecording(to url: URL, completion: @escaping (Bool) -> Void) {
+        queue.async {
+            guard !self.isRecording else { DispatchQueue.main.async { completion(false) }; return }
+            do {
+                let writer = try AVAssetWriter(outputURL: url, fileType: .mov)
+                self.writer = writer; self.recordingURL = url; self.writerStarted = false
+                self.videoInput = nil; self.audioInput = nil; self.adaptor = nil
+                self.isRecording = true
+                DispatchQueue.main.async { completion(true) }
+            } catch { NSLog("[DualCamera] writer init: %@", error.localizedDescription); DispatchQueue.main.async { completion(false) } }
+        }
+    }
+
+    func stopRecording(completion: @escaping (URL?) -> Void) {
+        queue.async {
+            self.isRecording = false
+            guard let writer = self.writer, self.writerStarted else { self.writer?.cancelWriting(); self.writer = nil; DispatchQueue.main.async { completion(nil) }; return }
+            self.videoInput?.markAsFinished(); self.audioInput?.markAsFinished()
+            self.recordingCompletion = completion
+            writer.finishWriting { [weak self] in
+                guard let self else { return }
+                let url = writer.status == .completed ? self.recordingURL : nil
+                if writer.status != .completed { NSLog("[DualCamera] writer finish failed: %@", writer.error?.localizedDescription ?? "unknown") }
+                self.writer = nil; self.videoInput = nil; self.audioInput = nil; self.adaptor = nil; self.recordingURL = nil; self.writerStarted = false
+                let done = self.recordingCompletion; self.recordingCompletion = nil
+                DispatchQueue.main.async { done?(url) }
+            }
+        }
+    }
+
+    func stop(completion: (() -> Void)? = nil) {
+        queue.async { if self.session.isRunning { self.session.stopRunning() }; self.backOutput.setSampleBufferDelegate(nil, queue: nil); self.frontOutput.setSampleBufferDelegate(nil, queue: nil); self.audioOutput.setSampleBufferDelegate(nil, queue: nil); DispatchQueue.main.async { completion?() } }
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        if output === backOutput, let pixel = CMSampleBufferGetImageBuffer(sampleBuffer) {
+            lock.lock(); latestBack = pixel; let front = latestFront; lock.unlock()
+            guard let front, let composed = composite(back: pixel, front: front) else { return }
+            appendVideo(composed, presentationTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+        } else if output === frontOutput, let pixel = CMSampleBufferGetImageBuffer(sampleBuffer) {
+            lock.lock(); latestFront = pixel; lock.unlock()
+        } else if output === audioOutput {
+            appendAudio(sampleBuffer)
+        }
+    }
+
+    private func composite(back: CVPixelBuffer, front: CVPixelBuffer) -> CIImage? {
+        let base = CIImage(cvPixelBuffer: back)
+        let overlay = CIImage(cvPixelBuffer: front)
+        let extent = base.extent
+        let targetWidth = extent.width * 0.27
+        let targetHeight = targetWidth * 4.0 / 3.0
+        let scale = max(targetWidth / overlay.extent.width, targetHeight / overlay.extent.height)
+        let scaled = overlay.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let crop = CGRect(x: scaled.extent.midX - targetWidth/2, y: scaled.extent.midY - targetHeight/2, width: targetWidth, height: targetHeight)
+        let pip = scaled.cropped(to: crop).transformed(by: CGAffineTransform(translationX: extent.maxX - targetWidth - 18 - crop.minX, y: extent.maxY - targetHeight - 90 - crop.minY))
+        return pip.composited(over: base).cropped(to: extent)
+    }
+
+    private func appendVideo(_ image: CIImage, presentationTime: CMTime) {
+        guard isRecording, let writer, recordingURL != nil else { return }
+        if !writerStarted {
+            let width = Int(image.extent.width), height = Int(image.extent.height)
+            let settings: [String: Any] = [AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: width, AVVideoHeightKey: height]
+            let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings); input.expectsMediaDataInRealTime = true
+            let attrs: [String: Any] = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA), kCVPixelBufferWidthKey as String: width, kCVPixelBufferHeightKey as String: height, kCVPixelBufferIOSurfacePropertiesKey as String: [:]]
+            let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: attrs)
+            guard writer.canAdd(input) else { isRecording = false; return }
+            writer.add(input); self.videoInput = input; self.adaptor = adaptor
+            if let audioSettings = audioOutput.recommendedAudioSettingsForAssetWriter(writingTo: .mov) as? [String: Any] {
+                let audio = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings); audio.expectsMediaDataInRealTime = true
+                if writer.canAdd(audio) { writer.add(audio); audioInput = audio }
+            }
+            guard writer.startWriting() else { isRecording = false; NSLog("[DualCamera] writer start: %@", writer.error?.localizedDescription ?? "unknown"); return }
+            writer.startSession(atSourceTime: presentationTime); writerStarted = true
+        }
+        guard let input = videoInput, input.isReadyForMoreMediaData, let adaptor, let pool = adaptor.pixelBufferPool else { return }
+        var buffer: CVPixelBuffer?
+        guard CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &buffer) == kCVReturnSuccess, let buffer else { return }
+        ciContext.render(image, to: buffer, bounds: image.extent, colorSpace: CGColorSpaceCreateDeviceRGB())
+        if !adaptor.append(buffer, withPresentationTime: presentationTime) { NSLog("[DualCamera] append video failed: %@", writer.error?.localizedDescription ?? "unknown") }
+    }
+
+    private func appendAudio(_ sampleBuffer: CMSampleBuffer) {
+        guard isRecording, writerStarted, let writer, writer.status == .writing, let audioInput, audioInput.isReadyForMoreMediaData else { return }
+        _ = audioInput.append(sampleBuffer)
+    }
+}
+
 private final class DashboardCameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate {
     private let destinationFolder: URL
     private let onCaptured: ([String: Any]?) -> Void
+    private let onOpenGallery: () -> Void
     private let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
     private let movieOutput = AVCaptureMovieFileOutput()
@@ -2388,6 +2573,9 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     private var recordingTimer: Timer?
     private var latestPreviewURL: URL?
     private var latestPreviewIsVideo = false
+    private var dualEngine: DualCameraCaptureEngine?
+    private var isDualMode = false
+    private var isDualTransitioning = false
     private let recordingTimeLabel = UILabel()
     private let zoomSlider = UISlider()
     private let zoomValueLabel = UILabel()
@@ -2404,8 +2592,9 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     private let hintLabel = UILabel()
     private let recentThumbnailButton = UIButton(type: .custom)
 
-    init(destinationFolder: URL, onCaptured: @escaping ([String: Any]?) -> Void) {
+    init(destinationFolder: URL, onOpenGallery: @escaping () -> Void, onCaptured: @escaping ([String: Any]?) -> Void) {
         self.destinationFolder = destinationFolder
+        self.onOpenGallery = onOpenGallery
         self.onCaptured = onCaptured
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .fullScreen
@@ -2443,9 +2632,16 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer.frame = view.bounds
+        dualEngine?.updatePreviewFrames(bounds: view.bounds)
         let inset = shutterButton.bounds.insetBy(dx: 9, dy: 9)
         shutterInnerLayer?.frame = shutterButton.bounds
-        shutterInnerLayer?.path = UIBezierPath(ovalIn: inset).cgPath
+        if isRecording {
+            shutterInnerLayer?.fillColor = UIColor.systemRed.cgColor
+            shutterInnerLayer?.path = UIBezierPath(roundedRect: shutterButton.bounds.insetBy(dx: 23, dy: 23), cornerRadius: 5).cgPath
+        } else {
+            shutterInnerLayer?.fillColor = UIColor.white.cgColor
+            shutterInnerLayer?.path = UIBezierPath(ovalIn: inset).cgPath
+        }
     }
 
     private func configurePreview() {
@@ -2469,7 +2665,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         style(flipButton, symbol: "camera.rotate")
         style(flashButton, symbol: "bolt.slash")
         style(liveButton, title: "● LIVE")
-        style(dualButton, title: "前後雙拍")
+        style(dualButton, title: "雙鏡 OFF")
         dualButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .semibold)
         dualButton.layer.cornerRadius = 14
         dualButton.addTarget(self, action: #selector(openDualCapture), for: .touchUpInside)
@@ -2489,14 +2685,14 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         liveButton.setTitleColor(.black, for: .normal)
         liveButton.layer.cornerRadius = 16
         style(shutterButton)
-        shutterButton.backgroundColor = .white
+        shutterButton.backgroundColor = .clear
         shutterButton.layer.cornerRadius = 37
         shutterButton.layer.borderWidth = 5
         shutterButton.layer.borderColor = UIColor.white.withAlphaComponent(0.95).cgColor
         let innerRing = CAShapeLayer()
-        innerRing.fillColor = UIColor.clear.cgColor
-        innerRing.strokeColor = UIColor.white.withAlphaComponent(0.92).cgColor
-        innerRing.lineWidth = 2
+        innerRing.fillColor = UIColor.white.cgColor
+        innerRing.strokeColor = UIColor.clear.cgColor
+        innerRing.lineWidth = 0
         shutterButton.layer.addSublayer(innerRing)
         shutterInnerLayer = innerRing
         shutterButton.layer.shadowColor = UIColor.black.cgColor
@@ -2533,11 +2729,11 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         zoomSlider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.35)
         zoomSlider.translatesAutoresizingMaskIntoConstraints = false
         zoomSlider.addTarget(self, action: #selector(zoomSliderChanged), for: .valueChanged)
-        zoomSlider.isHidden = true
+        zoomSlider.isHidden = false
         view.addSubview(zoomSlider)
-        focalLengthStack.axis = .horizontal; focalLengthStack.alignment = .center; focalLengthStack.distribution = .equalSpacing; focalLengthStack.spacing = 18; focalLengthStack.translatesAutoresizingMaskIntoConstraints = false
-        [1,2,4,8].forEach { factor in
-            let b=UIButton(type:.system); b.setTitle("\(factor)×",for:.normal); b.setTitleColor(.white,for:.normal); b.titleLabel?.font = .systemFont(ofSize:13,weight:.semibold); b.tag=factor; b.addTarget(self,action:#selector(selectFocalLength(_:)),for:.touchUpInside); focalLengthStack.addArrangedSubview(b)
+        focalLengthStack.axis = .horizontal; focalLengthStack.alignment = .center; focalLengthStack.distribution = .equalSpacing; focalLengthStack.spacing = 10; focalLengthStack.translatesAutoresizingMaskIntoConstraints = false
+        [(50,"0.5×"),(100,"1×"),(200,"2×"),(400,"4×"),(800,"8×")].forEach { factor,title in
+            let b=UIButton(type:.system); b.setTitle(title,for:.normal); b.setTitleColor(.white,for:.normal); b.titleLabel?.font = .systemFont(ofSize:12,weight:.semibold); b.tag=factor; b.addTarget(self,action:#selector(selectFocalLength(_:)),for:.touchUpInside); focalLengthStack.addArrangedSubview(b)
         }
         view.addSubview(focalLengthStack)
         zoomValueLabel.text = "1×"
@@ -2566,12 +2762,12 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             liveButton.heightAnchor.constraint(equalToConstant: 32), liveButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 74),
             dualButton.trailingAnchor.constraint(equalTo: flashButton.leadingAnchor, constant: -10), dualButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor), dualButton.heightAnchor.constraint(equalToConstant: 30), dualButton.widthAnchor.constraint(equalToConstant: 66),
             recordingTimeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            recordingTimeLabel.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -12),
+            recordingTimeLabel.bottomAnchor.constraint(equalTo: shutterButton.topAnchor, constant: -10),
             recordingTimeLabel.heightAnchor.constraint(equalToConstant: 20),
             zoomSlider.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            zoomSlider.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -42),
-            zoomSlider.widthAnchor.constraint(equalToConstant: 1),
-            focalLengthStack.centerXAnchor.constraint(equalTo: view.centerXAnchor), focalLengthStack.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -42), focalLengthStack.widthAnchor.constraint(equalToConstant: 190), focalLengthStack.heightAnchor.constraint(equalToConstant: 28),
+            zoomSlider.bottomAnchor.constraint(equalTo: focalLengthStack.topAnchor, constant: -5),
+            zoomSlider.widthAnchor.constraint(equalToConstant: 220),
+            focalLengthStack.centerXAnchor.constraint(equalTo: view.centerXAnchor), focalLengthStack.bottomAnchor.constraint(equalTo: modeControl.topAnchor, constant: -42), focalLengthStack.widthAnchor.constraint(equalToConstant: 224), focalLengthStack.heightAnchor.constraint(equalToConstant: 28),
             zoomValueLabel.trailingAnchor.constraint(equalTo: focalLengthStack.leadingAnchor, constant: -8),
             zoomValueLabel.centerYAnchor.constraint(equalTo: focalLengthStack.centerYAnchor),
             zoomValueLabel.widthAnchor.constraint(equalToConstant: 30),
@@ -2613,7 +2809,9 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             self.session.beginConfiguration()
             self.session.sessionPreset = .photo
             if let input = self.currentInput { self.session.removeInput(input) }
-            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+            let device = AVCaptureDevice.default(.builtInTripleCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
             guard let device,
                   let input = try? AVCaptureDeviceInput(device: device), self.session.canAddInput(input) else {
                 self.session.commitConfiguration()
@@ -2648,13 +2846,15 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     }
 
     @objc private func closePressed() {
-        if isRecording { movieOutput.stopRecording(); return }
+        if isRecording { shutterPressed(); return }
+        dualEngine?.stop(); dualEngine=nil; isDualMode=false
         sessionQueue.async { self.session.stopRunning() }
         dismiss(animated: true)
     }
 
     @objc private func focusAtPoint(_ gesture: UITapGestureRecognizer) {
         let point = gesture.location(in: view)
+        if isDualMode { dualEngine?.focus(at: point); return }
         let devicePoint = previewLayer.captureDevicePointConverted(fromLayerPoint: point)
         guard let device = currentInput?.device else { return }
         do {
@@ -2672,48 +2872,77 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     }
 
     @objc private func selectFocalLength(_ sender: UIButton) {
-        guard let device=currentInput?.device else{return}
-        let requested=CGFloat(sender.tag)
+        guard let device=(isDualMode ? dualEngine?.backInputDevice : currentInput?.device) else{return}
+        let requested=CGFloat(sender.tag)/100
         let zoom=min(max(requested,device.minAvailableVideoZoomFactor),min(device.activeFormat.videoMaxZoomFactor,8.0))
-        do{try device.lockForConfiguration();device.videoZoomFactor=zoom;device.unlockForConfiguration()}catch{NSLog("[PhotoVaultCamera] focal selection failed: %@",error.localizedDescription)}
-        zoomSlider.value=Float(zoom);zoomValueLabel.text=String(format:"%.0f×",zoom)
+        do{try device.lockForConfiguration();device.ramp(toVideoZoomFactor:zoom,withRate:8);device.unlockForConfiguration()}catch{NSLog("[PhotoVaultCamera] focal selection failed: %@",error.localizedDescription)}
+        zoomSlider.value=Float(zoom);zoomValueLabel.text=String(format:"%.1f×",zoom)
         focalLengthStack.arrangedSubviews.compactMap{$0 as? UIButton}.forEach{$0.backgroundColor=$0.tag==sender.tag ? UIColor.white.withAlphaComponent(0.22) : .clear;$0.layer.cornerRadius=10}
     }
 
     @objc private func zoomSliderChanged() {
-        guard let device = currentInput?.device else { return }
+        guard let device = isDualMode ? dualEngine?.backInputDevice : currentInput?.device else { return }
         let requested = CGFloat(zoomSlider.value)
-        let zoom = min(max(requested, 1.0), min(device.activeFormat.videoMaxZoomFactor, 8.0))
-        do { try device.lockForConfiguration(); device.videoZoomFactor = zoom; device.unlockForConfiguration() }
+        let zoom = min(max(requested, device.minAvailableVideoZoomFactor), min(device.activeFormat.videoMaxZoomFactor, 8.0))
+        do { try device.lockForConfiguration(); device.ramp(toVideoZoomFactor: zoom, withRate: 10); device.unlockForConfiguration() }
         catch { NSLog("[PhotoVaultCamera] slider zoom failed: %@", error.localizedDescription) }
         zoomValueLabel.text = String(format: "%.1f×", zoom)
     }
 
     @objc private func openDualCapture() {
-        guard !isVideoMode, !isRecording else { showCameraError("請先切換至照片模式並停止錄影"); return }
-        guard AVCaptureMultiCamSession.isMultiCamSupported else { showCameraError("此裝置不支援前後雙鏡頭同時拍攝"); return }
+        if isRecording { showCameraError("請先停止錄影，再切換雙鏡頭"); return }
+        guard !isDualTransitioning else { return }
+        isDualTransitioning = true
+        if isDualMode {
+            let oldEngine=dualEngine; dualEngine=nil; isDualMode=false
+            oldEngine?.stop { [weak self] in
+                guard let self else{return}
+                oldEngine?.backPreviewLayer.removeFromSuperlayer(); oldEngine?.frontPreviewLayer.removeFromSuperlayer()
+                self.previewLayer.isHidden=false; self.dualButton.setTitle("雙鏡 OFF",for:.normal); self.isDualTransitioning=false
+                self.sessionQueue.async { [weak self] in guard let self else{return}; if !self.session.isRunning { self.session.startRunning() } }
+                self.liveButton.isEnabled=true; self.flashButton.isEnabled=true; self.flipButton.isEnabled=true; self.updateLiveButton()
+                if let device=self.currentInput?.device { self.zoomSlider.minimumValue=Float(device.minAvailableVideoZoomFactor);self.zoomSlider.maximumValue=Float(min(device.activeFormat.videoMaxZoomFactor,8));self.zoomSlider.value=Float(device.videoZoomFactor);if let ultra=self.focalLengthStack.arrangedSubviews.first as? UIButton { ultra.isEnabled=device.minAvailableVideoZoomFactor < 0.75;ultra.alpha=ultra.isEnabled ? 1 : 0.35 } }
+            }
+            return
+        }
+        guard AVCaptureMultiCamSession.isMultiCamSupported else { isDualTransitioning=false; showCameraError("此裝置不支援前後雙鏡頭同時拍攝"); return }
         sessionQueue.async { [weak self] in
-            guard let self else { return }
-            if self.session.isRunning { self.session.stopRunning() }
-            DispatchQueue.main.async {
-                let dual=DualCameraCaptureViewController(folder:self.destinationFolder){[weak self] record in if let record { self?.onCaptured(record) } }
-                self.present(dual,animated:true)
+            guard let self else{return}; if self.session.isRunning { self.session.stopRunning() }
+            let engine=DualCameraCaptureEngine()
+            engine.start { [weak self] success,message in
+                guard let self else { engine.stop(); return }
+                guard success else { self.isDualTransitioning=false; self.sessionQueue.async { if !self.session.isRunning { self.session.startRunning() } }; self.showCameraError(message ?? "雙鏡頭啟動失敗"); return }
+                self.isDualTransitioning=false; self.dualEngine=engine; self.isDualMode=true; self.previewLayer.isHidden=true
+                self.view.layer.insertSublayer(engine.backPreviewLayer, above:self.previewLayer)
+                self.view.layer.insertSublayer(engine.frontPreviewLayer, above:engine.backPreviewLayer)
+                engine.updatePreviewFrames(bounds:self.view.bounds)
+                self.dualButton.setTitle("雙鏡 ON",for:.normal); self.liveButton.isEnabled=false; self.flashButton.isEnabled=false; self.flipButton.isEnabled=false
+                let minZoom=engine.backInputDevice?.minAvailableVideoZoomFactor ?? 1
+                self.zoomSlider.minimumValue=Float(minZoom);self.zoomSlider.maximumValue=Float(min(engine.backInputDevice?.activeFormat.videoMaxZoomFactor ?? 8,8));self.zoomSlider.value=1
+                if let ultra=self.focalLengthStack.arrangedSubviews.first as? UIButton { ultra.isEnabled=minZoom < 0.75; ultra.alpha=ultra.isEnabled ? 1 : 0.35 }
+                self.hintLabel.text="後鏡頭主畫面・前鏡頭子母畫面"
             }
         }
     }
 
     @objc private func openRecentPreview() {
-        guard let url=latestPreviewURL else { showCameraError("尚未拍攝照片或影片"); return }
-        present(CameraRecentPreviewController(url:url,isVideo:latestPreviewIsVideo),animated:true)
+        if isRecording { shutterPressed(); return }
+        guard latestPreviewURL != nil else { showCameraError("尚未拍攝照片或影片"); return }
+        if isDualMode { let old=dualEngine; dualEngine=nil; isDualMode=false; old?.stop { old?.backPreviewLayer.removeFromSuperlayer(); old?.frontPreviewLayer.removeFromSuperlayer(); self.dismiss(animated:true){self.onOpenGallery()} }; return }
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            if self.session.isRunning { self.session.stopRunning() }
+            DispatchQueue.main.async { self.dismiss(animated:true) { self.onOpenGallery() } }
+        }
     }
 
     @objc private func zoomWithPinch(_ gesture: UIPinchGestureRecognizer) {
-        guard let device = currentInput?.device else { return }
+        guard let device = isDualMode ? dualEngine?.backInputDevice : currentInput?.device else { return }
         if gesture.state == .began { pinchStartZoom = device.videoZoomFactor }
-        let desired = min(max(pinchStartZoom * gesture.scale, 1.0), min(device.activeFormat.videoMaxZoomFactor, 8.0))
+        let desired = min(max(pinchStartZoom * gesture.scale, device.minAvailableVideoZoomFactor), min(device.activeFormat.videoMaxZoomFactor, 8.0))
         do {
             try device.lockForConfiguration()
-            device.videoZoomFactor = desired
+            device.ramp(toVideoZoomFactor: desired, withRate: 10)
             device.unlockForConfiguration()
         } catch { NSLog("[PhotoVaultCamera] zoom adjustment failed: %@", error.localizedDescription) }
     }
@@ -2763,6 +2992,26 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
 
     @objc private func modeChanged() {
         isVideoMode = modeControl.selectedSegmentIndex == 1
+        if isDualMode {
+            if isVideoMode {
+                switch AVCaptureDevice.authorizationStatus(for:.audio) {
+                case .authorized:
+                    shutterButton.isEnabled=false
+                    dualEngine?.enableAudio { [weak self] ok in guard let self else{return};self.shutterButton.isEnabled=true;if !ok { self.showCameraError("無法啟用雙鏡頭錄音") } }
+                case .notDetermined:
+                    shutterButton.isEnabled=false
+                    AVCaptureDevice.requestAccess(for:.audio) { [weak self] granted in
+                        guard let self else{return}
+                        if granted { self.dualEngine?.enableAudio { ok in self.shutterButton.isEnabled=true;if !ok { self.showCameraError("無法啟用雙鏡頭錄音") } } }
+                        else { DispatchQueue.main.async { self.shutterButton.isEnabled=true;self.modeControl.selectedSegmentIndex=0;self.isVideoMode=false;self.showCameraError("未允許麥克風，無法錄製有聲雙鏡影片") } }
+                    }
+                default: shutterButton.isEnabled=true;modeControl.selectedSegmentIndex=0;isVideoMode=false;showCameraError("請允許麥克風，才能錄製有聲雙鏡影片")
+                }
+            }
+            updateLiveButton(); shutterButton.backgroundColor = .clear; shutterInnerLayer?.fillColor = UIColor.white.cgColor
+            hintLabel.text = isVideoMode ? "雙鏡子母畫面錄影" : "雙鏡子母畫面拍照"
+            return
+        }
         if isVideoMode {
             switch AVCaptureDevice.authorizationStatus(for: .audio) {
             case .authorized: addMicrophoneInput()
@@ -2793,7 +3042,8 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             }
         }
         updateLiveButton()
-        shutterButton.backgroundColor = isVideoMode ? .systemRed : .white
+        shutterButton.backgroundColor = .clear
+        shutterInnerLayer?.fillColor = UIColor.white.cgColor
     }
 
     private func addMicrophoneInput() {
@@ -2806,17 +3056,24 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     }
 
     @objc private func shutterPressed() {
+        if isDualMode { handleDualShutter(); return }
         guard !isRecording else { movieOutput.stopRecording(); return }
         if isVideoMode {
             let url = FileManager.default.temporaryDirectory.appendingPathComponent("DashboardVideo-\(UUID().uuidString).mov")
             isRecording = true
+            modeControl.isEnabled = false
             recordingStartedAt = Date()
             recordingTimeLabel.isHidden = false
+            recordingTimeLabel.textColor = .systemRed
             recordingTimeLabel.text = "00:00"
-            shutterButton.backgroundColor = .systemRed
-            shutterButton.layer.cornerRadius = 10
-            shutterButton.layer.borderWidth = 3
-            shutterInnerLayer?.isHidden = true
+            shutterButton.backgroundColor = .clear
+            shutterButton.layer.cornerRadius = 37
+            shutterButton.layer.borderWidth = 5
+            recordingTimeLabel.textColor = .systemRed
+            recordingTimeLabel.font = .monospacedDigitSystemFont(ofSize: 16, weight: .bold)
+            shutterInnerLayer?.isHidden = false
+            shutterInnerLayer?.fillColor = UIColor.systemRed.cgColor
+            shutterInnerLayer?.path = UIBezierPath(roundedRect: shutterButton.bounds.insetBy(dx: 23, dy: 23), cornerRadius: 5).cgPath
             recordingTimer?.invalidate()
             recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
                 guard let self, let started = self.recordingStartedAt else { return }
@@ -2833,7 +3090,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         pendingFilename = "IMG_\(Int(Date().timeIntervalSince1970))_\(id.prefix(6)).\(pendingPhotoExtension)"
         pendingPhotoData = nil
         pendingLiveMovieURL = nil
-        waitingForLiveMovie = isLiveEnabled && photoOutput.isLivePhotoCaptureSupported
+        waitingForLiveMovie = isLiveEnabled && photoOutput.isLivePhotoCaptureSupported && photoOutput.isLivePhotoCaptureEnabled
         let settings: AVCapturePhotoSettings
         if supportsHEVC { settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc]) }
         else { settings = AVCapturePhotoSettings() }
@@ -2842,7 +3099,49 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             settings.livePhotoMovieFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("Live-\(id).mov")
         }
         shutterButton.alpha = 0.55
+        guard photoOutput.connections.contains(where:{$0.isEnabled}) else { waitingForLiveMovie=false; shutterButton.alpha=1; showCameraError("相機輸出尚未就緒，請稍後再拍"); return }
         photoOutput.capturePhoto(with: settings, delegate: self)
+    }
+
+    private func publishCapturedRecord(_ record: [String: Any]) {
+        onCaptured(record)
+        CameraLocationProvider.shared.request { [weak self] location in
+            guard let self, let coordinate=location?.coordinate else { return }
+            var updated=record; updated["location"]=String(format:"%.5f, %.5f",coordinate.latitude,coordinate.longitude)
+            DispatchQueue.main.async { self.onCaptured(updated) }
+        }
+    }
+
+    private func handleDualShutter() {
+        guard let engine=dualEngine else { showCameraError("雙鏡頭尚未就緒"); return }
+        if isVideoMode {
+            if !isRecording {
+                let url=destinationFolder.appendingPathComponent("DUAL_\(Int(Date().timeIntervalSince1970)).mov")
+                engine.startRecording(to:url){[weak self] success in
+                    guard let self else{return}; guard success else{self.showCameraError("無法開始雙鏡錄影");return}
+                    self.isRecording=true;self.modeControl.isEnabled=false;self.recordingStartedAt=Date();self.recordingTimeLabel.isHidden=false;self.recordingTimeLabel.textColor = .systemRed;self.recordingTimeLabel.text="00:00";self.shutterButton.layer.cornerRadius=37;self.shutterButton.layer.borderWidth=5;self.shutterInnerLayer?.fillColor=UIColor.systemRed.cgColor;self.shutterInnerLayer?.path=UIBezierPath(roundedRect:self.shutterButton.bounds.insetBy(dx:23,dy:23),cornerRadius:5).cgPath
+                    self.recordingTimer?.invalidate();self.recordingTimer=Timer.scheduledTimer(withTimeInterval:0.2,repeats:true){[weak self]_ in guard let self,let start=self.recordingStartedAt else{return};let t=Int(Date().timeIntervalSince(start));self.recordingTimeLabel.text=String(format:"%02d:%02d",t/60,t%60)}
+                }
+            } else {
+                engine.stopRecording{[weak self] url in
+                    guard let self else{return};self.isRecording=false;self.modeControl.isEnabled=true;self.recordingTimer?.invalidate();self.recordingTimer=nil;self.recordingStartedAt=nil;self.recordingTimeLabel.isHidden=true;self.recordingTimeLabel.textColor = .white;self.shutterInnerLayer?.fillColor=UIColor.white.cgColor;self.shutterInnerLayer?.path=UIBezierPath(ovalIn:self.shutterButton.bounds.insetBy(dx:9,dy:9)).cgPath
+                    guard let url else{self.showCameraError("雙鏡影片儲存失敗");return}
+                    let filename=url.lastPathComponent;let destination=self.destinationFolder.appendingPathComponent(filename)
+                    do{if url != destination { if FileManager.default.fileExists(atPath:destination.path){try FileManager.default.removeItem(at:destination)};try FileManager.default.copyItem(at:url,to:destination) }
+                        let asset=AVURLAsset(url:destination);let seconds=CMTimeGetSeconds(asset.duration);let duration=seconds.isFinite ? String(format:"%02d:%02d",Int(seconds)/60,Int(seconds)%60):""
+                        let gen=AVAssetImageGenerator(asset:asset);gen.appliesPreferredTrackTransform=true;let frame=try? gen.copyCGImage(at:.zero,actualTime:nil);let thumb=frame.flatMap{UIImage(cgImage:$0).jpegData(compressionQuality:0.75)} ?? Data();let movie=try Data(contentsOf:destination)
+                        let record:[String:Any] = ["id":"dual-\(UUID().uuidString)","filename":filename,"mediaType":"video","source":"native-camera","isLive":false,"dataUrl":"data:image/jpeg;base64,\(thumb.base64EncodedString())","videoUrl":"data:video/quicktime;base64,\(movie.base64EncodedString())","duration":duration,"size":movie.count,"createdAt":Date().timeIntervalSince1970*1000,"album":"全部相片"]
+                        self.latestPreviewURL=destination;self.latestPreviewIsVideo=true;self.publishCapturedRecord(record);self.recentThumbnailButton.setImage(UIImage(data:thumb),for:.normal);self.hintLabel.text="雙鏡子母影片已儲存"
+                    }catch{self.showCameraError("無法儲存雙鏡影片：\(error.localizedDescription)")}
+                }
+            }
+            return
+        }
+        guard let data=engine.capturePhoto(),let image=UIImage(data:data) else{showCameraError("雙鏡頭畫面尚未就緒");return}
+        let filename="DUAL_IMG_\(Int(Date().timeIntervalSince1970)).jpg";let url=destinationFolder.appendingPathComponent(filename)
+        do{try data.write(to:url,options:.atomic);let thumb=image.jpegData(compressionQuality:0.78) ?? data;let record:[String:Any] = ["id":"dual-\(UUID().uuidString)","filename":filename,"mediaType":"image","source":"native-camera","isLive":false,"dataUrl":"data:image/jpeg;base64,\(data.base64EncodedString())","thumbnailUrl":"data:image/jpeg;base64,\(thumb.base64EncodedString())","size":data.count,"width":image.cgImage?.width ?? 0,"height":image.cgImage?.height ?? 0,"createdAt":Date().timeIntervalSince1970*1000,"album":"全部相片"]
+            latestPreviewURL=url;latestPreviewIsVideo=false;publishCapturedRecord(record);recentThumbnailButton.setImage(UIImage(data:thumb),for:.normal);UIImpactFeedbackGenerator(style:.medium).impactOccurred()
+        }catch{showCameraError("無法儲存雙鏡照片：\(error.localizedDescription)")}
     }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
@@ -2858,6 +3157,17 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             if error == nil { self.pendingLiveMovieURL = outputFileURL }
             self.waitingForLiveMovie = false
             self.finishPhotoCapture()
+        }
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+        guard let error else { return }
+        DispatchQueue.main.async {
+            NSLog("[PhotoVaultCamera] capture pipeline failed: %@", error.localizedDescription)
+            self.waitingForLiveMovie = false
+            self.pendingLiveMovieURL = nil
+            if self.pendingPhotoData != nil { self.finishPhotoCapture() }
+            else { self.pendingCaptureID = ""; self.pendingFilename = ""; self.shutterButton.alpha = 1; self.showCameraError("原況照片拍攝失敗：\(error.localizedDescription)") }
         }
     }
 
@@ -2879,10 +3189,11 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
             } catch { NSLog("[PhotoVaultCamera] Live Photo paired movie save failed: %@", error.localizedDescription); liveFilename = "" }
         }
         let image = UIImage(data: data)
+        let fullViewData = image?.jpegData(compressionQuality: 0.92) ?? data
         let thumb = image?.jpegData(compressionQuality: 0.76) ?? data
         let record: [String: Any] = [
             "id": "camera-\(pendingCaptureID)", "filename": filename, "mediaType": "image", "source": "native-camera",
-            "isLive": !liveFilename.isEmpty, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+            "isLive": !liveFilename.isEmpty, "dataUrl": "data:image/jpeg;base64,\(fullViewData.base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
             "liveVideoUrl": liveDataURL, "liveVideoFilename": liveFilename,
             "size": data.count, "width": image?.cgImage?.width ?? 0, "height": image?.cgImage?.height ?? 0,
             "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
@@ -2891,7 +3202,7 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         shutterButton.alpha = 1
         latestPreviewURL = photoURL
         latestPreviewIsVideo = false
-        onCaptured(record)
+        publishCapturedRecord(record)
         recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         hintLabel.text = "已儲存至儀表板相片庫"
@@ -2901,19 +3212,27 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         DispatchQueue.main.async {
             self.isRecording = false
+            self.modeControl.isEnabled = true
             self.recordingTimer?.invalidate(); self.recordingTimer = nil
             self.recordingStartedAt = nil
             self.recordingTimeLabel.isHidden = true
-            self.shutterButton.backgroundColor = .white
+            self.modeControl.isEnabled = true
+            self.recordingTimeLabel.textColor = .white
+            self.shutterButton.backgroundColor = .clear
             self.shutterButton.layer.cornerRadius = 37
             self.shutterButton.layer.borderWidth = 5
+            self.recordingTimeLabel.font = .monospacedDigitSystemFont(ofSize: 16, weight: .bold)
             self.shutterInnerLayer?.isHidden = false
+            self.shutterInnerLayer?.fillColor = UIColor.white.cgColor
+            self.shutterInnerLayer?.path = UIBezierPath(ovalIn: self.shutterButton.bounds.insetBy(dx: 9, dy: 9)).cgPath
             guard error == nil else { self.showCameraError("影片拍攝失敗"); return }
             let filename = "VID_\(Int(Date().timeIntervalSince1970)).mov"
             let destination = self.destinationFolder.appendingPathComponent(filename)
             do {
                 try FileManager.default.copyItem(at: outputFileURL, to: destination)
                 let asset = AVURLAsset(url: destination)
+                let durationSeconds = CMTimeGetSeconds(asset.duration)
+                let durationText = durationSeconds.isFinite ? String(format:"%02d:%02d",Int(durationSeconds)/60,Int(durationSeconds)%60) : ""
                 let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
                 let frame = try? generator.copyCGImage(at: .zero, actualTime: nil)
                 let thumb = frame.flatMap { UIImage(cgImage: $0).jpegData(compressionQuality: 0.72) } ?? Data()
@@ -2921,12 +3240,12 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
                 let movieData = try Data(contentsOf: destination)
                 let record: [String: Any] = [
                     "id": "camera-\(UUID().uuidString)", "filename": filename, "mediaType": "video", "source": "native-camera", "isLive": false,
-                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "size": size,
+                    "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "size": size, "duration": durationText,
                     "createdAt": Date().timeIntervalSince1970 * 1000, "album": "全部相片"
                 ]
                 self.latestPreviewURL = destination
                 self.latestPreviewIsVideo = true
-                self.onCaptured(record)
+                self.publishCapturedRecord(record)
                 self.recentThumbnailButton.setImage(UIImage(data: thumb), for: .normal)
                 self.hintLabel.text = "影片已儲存至儀表板相片庫"
             } catch { self.showCameraError("無法儲存影片：\(error.localizedDescription)") }
