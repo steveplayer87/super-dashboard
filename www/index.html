@@ -6582,9 +6582,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v24</h2>
+    <h2 id="updateNotesTitle">已更新至 v25</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>修正</strong><ul><li>相片庫檢視改用高解析度原圖，縮圖只用於網格</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
+      <div class="update-notes-group"><strong>修正</strong><ul><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
     </div>
@@ -8632,7 +8632,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v24';
+  var APP_VERSION = 'v25';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');

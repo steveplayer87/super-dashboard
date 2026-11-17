@@ -1566,9 +1566,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     var liveMovieName = ""
                     var liveMovieDataURL = ""
                     let deliver: () -> Void = {
+                        // 檢視器資料必須是完整原圖；720px thumb 僅供相簿列表使用。
+                        let fullImageData = UIImage(data: data)?.jpegData(compressionQuality: 0.94) ?? data
                         let record: [String: Any] = [
                             "id": "phasset-\(asset.localIdentifier)", "filename": filename,
-                            "mediaType": "image", "isLive": isLive, "dataUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
+                            "mediaType": "image", "isLive": isLive, "dataUrl": "data:image/jpeg;base64,\(fullImageData.base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())",
                             "liveVideoUrl": liveMovieDataURL, "liveVideoFilename": liveMovieName,
                             "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000,
                             "width": asset.pixelWidth, "height": asset.pixelHeight, "size": data.count, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"
@@ -2435,8 +2437,8 @@ private final class DualCameraCaptureEngine: NSObject, AVCaptureVideoDataOutputS
         backPreviewLayer.frame = bounds
         let pipWidth = bounds.width * 0.27
         let pipHeight = pipWidth * 4.0 / 3.0
-        frontPreviewLayer.frame = CGRect(x: bounds.width - pipWidth - 18, y: 90, width: pipWidth, height: pipHeight)
-        frontPreviewLayer.cornerRadius = 12; frontPreviewLayer.masksToBounds = true
+        frontPreviewLayer.frame = CGRect(x: bounds.width - pipWidth - 32, y: 90, width: pipWidth, height: pipHeight)
+        frontPreviewLayer.cornerRadius = 18; frontPreviewLayer.masksToBounds = true
         frontPreviewLayer.borderWidth = 2; frontPreviewLayer.borderColor = UIColor.white.withAlphaComponent(0.9).cgColor
     }
 
@@ -3085,15 +3087,16 @@ private final class DashboardCameraViewController: UIViewController, AVCapturePh
         }
         let id = UUID().uuidString
         pendingCaptureID = id
-        let supportsHEVC = photoOutput.availablePhotoCodecTypes.contains(.hevc)
-        pendingPhotoExtension = supportsHEVC ? "heic" : "jpg"
-        pendingFilename = "IMG_\(Int(Date().timeIntervalSince1970))_\(id.prefix(6)).\(pendingPhotoExtension)"
         pendingPhotoData = nil
         pendingLiveMovieURL = nil
         waitingForLiveMovie = isLiveEnabled && photoOutput.isLivePhotoCaptureSupported && photoOutput.isLivePhotoCaptureEnabled
+        // Live Photo 使用 JPEG still；避免 HEVC 靜態影像編碼與配對 MOV 的擷取組合造成裝置端失敗。
+        let supportsHEVC = !waitingForLiveMovie && photoOutput.availablePhotoCodecTypes.contains(.hevc)
+        pendingPhotoExtension = supportsHEVC ? "heic" : "jpg"
+        pendingFilename = "IMG_\(Int(Date().timeIntervalSince1970))_\(id.prefix(6)).\(pendingPhotoExtension)"
         let settings: AVCapturePhotoSettings
         if supportsHEVC { settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc]) }
-        else { settings = AVCapturePhotoSettings() }
+        else { settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg]) }
         if let device = currentInput?.device, device.hasFlash { settings.flashMode = flashEnabled ? .on : .off }
         if waitingForLiveMovie {
             settings.livePhotoMovieFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("Live-\(id).mov")
