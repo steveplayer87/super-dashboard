@@ -13,6 +13,7 @@ import ImageIO
 import FileProvider
 import LocalAuthentication
 import AudioToolbox
+import CoreMotion
 
 // MARK: - Taoyuan Metro Live Activity Data Model
 public struct TaoyuanMetroAttributes: ActivityAttributes {
@@ -808,9 +809,35 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
     override var prefersStatusBarHidden: Bool { false }
     override var canBecomeFirstResponder: Bool { true }
+    private let shakeMotionManager = CMMotionManager()
+    private var lastSensitiveShakeAt: TimeInterval = 0
+    private var shakeAboveThreshold = false
+
+    private func startSensitiveShakeDetection() {
+        guard shakeMotionManager.isAccelerometerAvailable, !shakeMotionManager.isAccelerometerActive else { return }
+        shakeMotionManager.accelerometerUpdateInterval = 0.05
+        shakeMotionManager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
+            guard let self, let a = data?.acceleration,
+                  UserDefaults.standard.bool(forKey: "shakeReturnsToMore") else { return }
+            let magnitude = sqrt(a.x * a.x + a.y * a.y + a.z * a.z)
+            let now = ProcessInfo.processInfo.systemUptime
+            // 比 UIKit 預設搖晃辨識更靈敏；一次連續晃動只觸發一次，避免連續跳頁。
+            if magnitude > 1.8 && !self.shakeAboveThreshold && now - self.lastSensitiveShakeAt > 1.2 {
+                self.shakeAboveThreshold = true
+                self.lastSensitiveShakeAt = now
+                self.webView?.evaluateJavaScript("if(typeof window.switchPage==='function'){window.switchPage('more');if(typeof window.showMoreSubView==='function')window.showMoreSubView('hub');}", completionHandler: nil)
+            } else if magnitude < 1.3 {
+                self.shakeAboveThreshold = false
+            }
+        }
+    }
+
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         guard motion == .motionShake,
               UserDefaults.standard.bool(forKey: "shakeReturnsToMore") else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        guard now - lastSensitiveShakeAt > 1.2 else { return }
+        lastSensitiveShakeAt = now
         webView?.evaluateJavaScript("if(typeof window.switchPage==='function'){window.switchPage('more');if(typeof window.showMoreSubView==='function')window.showMoreSubView('hub');}", completionHandler: nil)
     }
     override func capacitorDidLoad() {
@@ -883,7 +910,8 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         becomeFirstResponder()
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
-        NotificationManager.scheduleUpdateNotification(version: "v24")
+        startSensitiveShakeDetection()
+        NotificationManager.scheduleUpdateNotification(version: "v27")
     }
 
     private func setupDelegatesAndHandlers() {

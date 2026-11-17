@@ -3220,6 +3220,10 @@
     font-weight: 700 !important;
     padding: 3px 8px !important;
   }
+  #gooseSubView { background:var(--bg) !important; }
+  #gooseSubView .odyssey-action-card { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:100px;border-radius:14px;padding:12px 8px;box-shadow:none; }
+  #gooseActionModal, #gooseActionDetailModal { position:fixed !important; inset:0 !important; }
+  #gooseActionModal > div { max-height:86vh; overflow-y:auto; overscroll-behavior:contain; }
   /* 萬聖節主題專屬阿鵝色系調配 */
   body.theme-halloween #gooseSubView .goose-card {
     background: #1A1630 !important;
@@ -4603,6 +4607,7 @@
   }
 
 </style>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 </head>
 <body>
 <!-- Card Kit 向量圖示庫 (Mastercard, Visa, NFC, Info, Centurion) -->
@@ -5631,7 +5636,7 @@
       </div>
 
       <!-- 阿鵝管家 專屬子頁面 -->
-      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:#000000; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
                 <!-- 系統級手勢返回左側感應條 -->
         <div id="gooseLeftEdgeHandle" style="position:fixed; top:0; left:0; width:35px; height:100%; z-index:100; pointer-events:auto;"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
@@ -5838,69 +5843,35 @@
           </div>
         </div>
 
-        <!-- ==================== 瑪利歐奧德塞風格 阿鵝動作技能指南 ==================== -->
+        <!-- 阿鵝 3D 模型與動作圖鑑 -->
         <div class="goose-card" style="padding:16px; margin-bottom:14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div>
-              <div style="font-size:15px; font-weight:800; color:#2F261D; display:flex; align-items:center; gap:6px;">
-                <span></span> 阿鵝動作技能指南
-              </div>
-              <div style="font-size:11px; color:#8C7862; margin-top:2px;">Mario Odyssey 動作指令排版 · 支援擴充自訂 GIF</div>
-            </div>
-            <button type="button" class="goose-btn-primary" onclick="window.openAddGooseActionModal()" style="padding:6px 14px; font-size:11px; font-weight:800;">
-              + 新增動作 GIF
-            </button>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+            <div style="font-size:15px;font-weight:800;color:var(--text);">🦆 阿鵝 3D 模型</div>
+            <label for="gooseModelInput" class="goose-btn-sub" style="padding:7px 11px;font-size:11px;cursor:pointer;">匯入 3D 模型</label>
+            <input id="gooseModelInput" type="file" accept=".glb,model/gltf-binary" style="display:none;">
           </div>
+          <div id="gooseModelStage" style="height:250px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,rgba(63,169,164,.16),transparent 68%),var(--panel-raised-2);display:flex;align-items:center;justify-content:center;position:relative;">
+            <div id="gooseModelPlaceholder" style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">匯入 GLB 模型後，可用單指旋轉、雙指縮放</div>
+            <model-viewer id="gooseModelViewer" style="display:none;width:100%;height:100%;--poster-color:transparent;background:transparent;" camera-controls auto-rotate auto-rotate-delay="1200" rotation-per-second="18deg" interaction-prompt="none" shadow-intensity="1" exposure="1"></model-viewer>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:8px;">模型儲存在本機，重新開啟仍會保留</div>
+        </div>
 
-          <!-- 動作清單容器 -->
-          <div id="gooseActionListContainer">
-            <!-- 動作 1: 拍翅狂奔 -->
-            <div class="odyssey-action-card">
-              <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; animation:bounce 1.4s infinite ease-in-out;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 5a3 3 0 0 1-3 3H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-2a3 3 0 0 1-3-3c0-2 2-3 2-5a4 4 0 0 0-4-4z"/><circle cx="10" cy="5" r="1" fill="currentColor"/></svg></div>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="font-size:14px; font-weight:800; color:#2F261D;">展翅狂奔 (Dash Flap)</div>
-                <div style="margin:4px 0;">
-                  <span class="odyssey-btn-badge gold">Y 衝刺</span>
-                  <span style="font-size:11px; font-weight:800; color:#8C7862;">+</span>
-                  <span class="odyssey-btn-badge">搖桿 前推</span>
-                </div>
-                <div style="font-size:11px; color:#7A6856;">壓低重心雙足飛馳，維持最高速奔向水窪！</div>
-              </div>
-            </div>
-
-            <!-- 動作 2: 翹臀歪頭 -->
-            <div class="odyssey-action-card">
-              <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="font-size:24px; font-weight:800; color:var(--text-muted);">?</div>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="font-size:14px; font-weight:800; color:#2F261D;">歪頭凝視 (Curious Tilt)</div>
-                <div style="margin:4px 0;">
-                  <span class="odyssey-btn-badge">ZL 蹲伏</span>
-                  <span style="font-size:11px; font-weight:800; color:#8C7862;">+</span>
-                  <span class="odyssey-btn-badge gold">A 探頭</span>
-                </div>
-                <div style="font-size:11px; color:#7A6856;">以 45 度角精準鎖定人類手中的零食罐。</div>
-              </div>
-            </div>
-
-            <!-- 動作 3: 潛水探頭 -->
-            <div class="odyssey-action-card">
-              <div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <div style="width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="font-size:14px; font-weight:800; color:#2F261D;">水下倒立 (Duck Diving)</div>
-                <div style="margin:4px 0;">
-                  <span class="odyssey-btn-badge">X 攻擊</span>
-                  <span style="font-size:11px; font-weight:800; color:#8C7862;">+</span>
-                  <span class="odyssey-btn-badge">搖桿 下壓</span>
-                </div>
-                <div style="font-size:11px; color:#7A6856;">尾羽朝天倒立水底，搜尋水草與沉底飼料。</div>
-              </div>
-            </div>
+        <div class="goose-card" style="padding:16px; margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-size:15px;font-weight:800;color:var(--text);">🪶 阿鵝動作圖鑑</div>
+            <button type="button" class="goose-btn-primary" onclick="window.openAddGooseActionModal()" style="padding:7px 13px;font-size:11px;">＋ 新增動作</button>
+          </div>
+          <div id="gooseActionListContainer" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;">
+            <button type="button" class="odyssey-action-card" data-goose-builtin="dash" style="border:1px solid var(--border);background:var(--panel-raised-2);color:var(--text);text-align:left;cursor:pointer;min-width:0;">
+              <span style="font-size:25px;">🪽</span><span style="font-size:13px;font-weight:800;">展翅狂奔</span>
+            </button>
+            <button type="button" class="odyssey-action-card" data-goose-builtin="tilt" style="border:1px solid var(--border);background:var(--panel-raised-2);color:var(--text);text-align:left;cursor:pointer;min-width:0;">
+              <span style="font-size:25px;">🤨</span><span style="font-size:13px;font-weight:800;">歪頭凝視</span>
+            </button>
+            <button type="button" class="odyssey-action-card" data-goose-builtin="dive" style="border:1px solid var(--border);background:var(--panel-raised-2);color:var(--text);text-align:left;cursor:pointer;min-width:0;">
+              <span style="font-size:25px;">💦</span><span style="font-size:13px;font-weight:800;">水下倒立</span>
+            </button>
           </div>
         </div>
 
@@ -5908,26 +5879,17 @@
         <div class="modal-overlay" id="gooseActionModal" style="display:none; position:fixed; inset:0; z-index:110; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:18px;">
           <div style="background:#FFFFFF; border-radius:20px; padding:20px; max-width:360px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.4); border:2px solid #F4E5D0;">
             <div style="font-size:16px; font-weight:800; color:#2F261D; margin-bottom:4px;">新增阿鵝動作模式</div>
-            <div style="font-size:11.5px; color:#8C7862; margin-bottom:14px;">設定 Mario Odyssey 風格按鍵組合與動作動圖</div>
+            <div style="font-size:11.5px; color:#8C7862; margin-bottom:14px;">為阿鵝新增一張動作卡片</div>
 
             <div style="margin-bottom:10px;">
               <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">動作名稱</span>
-              <input id="actionInputName" placeholder="例如: 展翅高歌、激動拍打" maxlength="40" style="width:100%; border:1.5px solid #EAD8C2; border-radius:10px; padding:8px 10px; font-size:13.5px; box-sizing:border-box; background:#FFFDF8;">
-            </div>
-
-            <div style="margin-bottom:10px;">
-              <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">按鈕組合 (例如: [ Y 衝刺 ] + [ B 跳躍 ])</span>
-              <input id="actionInputCombo" placeholder="例如: Y 衝刺 + B 跳躍" maxlength="40" style="width:100%; border:1.5px solid #EAD8C2; border-radius:10px; padding:8px 10px; font-size:13.5px; box-sizing:border-box; background:#FFFDF8;">
-            </div>
-
-            <div style="margin-bottom:10px;">
-              <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">動作描述</span>
-              <input id="actionInputDesc" placeholder="例如: 快速振翅並發出響亮叫聲" maxlength="60" style="width:100%; border:1.5px solid #EAD8C2; border-radius:10px; padding:8px 10px; font-size:13.5px; box-sizing:border-box; background:#FFFDF8;">
+              <input id="actionInputName" placeholder="輸入動作名稱" maxlength="40" style="width:100%; border:1.5px solid #EAD8C2; border-radius:10px; padding:8px 10px; font-size:13.5px; box-sizing:border-box; background:#FFFDF8;">
+              <input id="actionInputIcon" placeholder="Icon／Emoji，例如 🪽" maxlength="8" value="🦆" style="width:100%;margin-top:7px;border:1.5px solid #EAD8C2;border-radius:10px;padding:8px 10px;font-size:13.5px;box-sizing:border-box;background:#FFFDF8;">
             </div>
 
             <div style="margin-bottom:14px;">
-              <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">動作 GIF / 圖片 (可從手機選取)</span>
-              <input type="file" id="actionInputFile" accept="image/*" style="display:none;">
+              <span class="field-label" style="font-size:11.5px; font-weight:700; color:#2F261D; margin-bottom:4px; display:block;">動作 GIF／圖片</span>
+              <input type="file" id="actionInputFile" accept="image/gif,image/*" style="display:none;">
               <button type="button" onclick="document.getElementById('actionInputFile').click()" style="width:100%; padding:9px 12px; background:#FFF4E6; border:1.5px dashed #FF9E4A; border-radius:10px; color:#C46112; font-weight:700; font-size:12.5px; cursor:pointer;" id="btnActionFileSelect">
                 選擇動作 GIF / 照片
               </button>
@@ -5937,6 +5899,13 @@
               <button type="button" onclick="document.getElementById('gooseActionModal').style.display='none'" style="flex:1; padding:10px 0; border:1px solid #D6C2A9; background:#F4EDE3; border-radius:12px; font-weight:700; color:#5D4E3E; cursor:pointer;">取消</button>
               <button type="button" onclick="window.saveNewGooseAction()" style="flex:1; padding:10px 0; border:none; background:linear-gradient(135deg, #FF9E4A, #FF771C); color:#FFF; border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(255,119,28,0.3);">新增動作</button>
             </div>
+          </div>
+        </div>
+        <div class="modal-overlay" id="gooseActionDetailModal" style="display:none;position:fixed;inset:0;z-index:20001;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px;">
+          <div style="width:100%;max-width:390px;max-height:86vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:18px;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><strong id="gooseDetailTitle" style="font-size:17px;">動作詳情</strong><button type="button" class="goose-btn-sub" onclick="window.closeGooseActionDetail()" style="padding:5px 11px;">關閉</button></div>
+            <div id="gooseDetailMedia" style="width:100%;min-height:160px;max-height:55vh;border-radius:14px;overflow:hidden;background:var(--panel-raised-2);display:flex;align-items:center;justify-content:center;"></div>
+            <div id="gooseDetailDescription" style="font-size:13px;line-height:1.6;color:var(--text-muted);margin-top:12px;"></div>
           </div>
         </div>
 </div>
@@ -6582,9 +6551,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v26</h2>
+    <h2 id="updateNotesTitle">已更新至 v27</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>修正</strong><ul><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
+      <div class="update-notes-group"><strong>修正</strong><ul><li>阿鵝動作圖鑑新增持久化照片／GIF 儲存、詳情播放視窗與圖示</li><li>阿鵝新增動作視窗改為固定置中顯示，修正捲動頁面中視窗跑出可視範圍</li><li>阿鵝頁面背景改為跟隨主題，返回手勢統一使用設定頁的轉場機制</li><li>新增可旋轉的 GLB 3D 模型匯入區</li><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
     </div>
@@ -8632,7 +8601,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v26';
+  var APP_VERSION = 'v27';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -12634,114 +12603,23 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   initDinoFloatingBall();
   initMiniAppSwipeBack();
-  initGooseGalleryUploader();
 
-  // ==================== Mini App 系統級指尖騰空滑動返回手勢 ====================
-  function initMiniAppSwipeBack() {
-    var subView = document.getElementById('gooseSubView');
-    var hubView = document.getElementById('moreHubView');
-    if (!subView || !hubView) return;
-
-    var startX = 0, startY = 0, currentX = 0, isDragging = false;
-
-    subView.addEventListener('touchstart', function(e) {
-      if (e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      // 支援自左側邊緣滑動，或在頁面上方捏住往右拖曳
-      if (touch.clientX < 80 || touch.clientY < 180) {
-        startX = touch.clientX;
-        startY = touch.clientY;
-        currentX = startX;
-        isDragging = true;
-        subView.style.transition = 'none';
-        subView.style.transformOrigin = 'left center';
-      }
-    }, { passive: true });
-
-    subView.addEventListener('touchmove', function(e) {
-      if (!isDragging || e.touches.length !== 1) return;
-      var touch = e.touches[0];
-      var dx = touch.clientX - startX;
-      var dy = touch.clientY - startY;
-
-      // 如果主要是水平向右滑動
-      if (dx > 0 && Math.abs(dx) > Math.abs(dy) * 0.8) {
-        currentX = touch.clientX;
-        var progress = Math.min(1, dx / 280);
-        // 系統級別指尖掌握騰空縮小動畫：隨著手指拖曳縮小為 0.88、圓角放大、陰影騰空
-        var scale = 1 - (progress * 0.12);
-        var radius = 16 + (progress * 24);
-        var translateY = dy * 0.25;
-
-        subView.style.transform = 'translate3d(' + (dx * 0.85) + 'px, ' + translateY + 'px, 0) scale(' + scale + ')';
-        subView.style.borderRadius = radius + 'px';
-        subView.style.boxShadow = '0 ' + (12 + progress * 24) + 'px ' + (24 + progress * 36) + 'px rgba(0,0,0,' + (0.4 + progress * 0.35) + ')';
-
-        // 底層 moreHubView 呈現反向縮放進場
-        hubView.style.display = 'block';
-        hubView.style.opacity = '' + (0.5 + progress * 0.5);
-        hubView.style.transform = 'scale(' + (0.94 + progress * 0.06) + ')';
-      }
-    }, { passive: true });
-
-    subView.addEventListener('touchend', function(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      var dx = currentX - startX;
-
-      if (dx > 90) {
-        // 超過門檻：流暢滑出並回到更多首頁
-        subView.style.transition = 'transform 0.28s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.24s ease';
-        subView.style.transform = 'translate3d(100vw, 0, 0) scale(0.85)';
-        subView.style.opacity = '0';
-        setTimeout(function() {
-          subView.style.display = 'none';
-          subView.style.transform = '';
-          subView.style.opacity = '';
-          subView.style.borderRadius = '';
-          subView.style.boxShadow = '';
-          hubView.style.display = 'block';
-          hubView.style.opacity = '1';
-          hubView.style.transform = 'scale(1)';
-        }, 260);
-      } else {
-        // 未過門檻：彈性回彈復原
-        subView.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.15), border-radius 0.28s ease, box-shadow 0.28s ease';
-        subView.style.transform = 'translate3d(0, 0, 0) scale(1)';
-        subView.style.borderRadius = '';
-        subView.style.boxShadow = '';
-        setTimeout(function() {
-          subView.style.transition = '';
-          hubView.style.display = 'none';
-        }, 300);
-      }
-    });
+  // 阿鵝返回手勢沿用「設定」頁的方式：只判斷邊緣滑動，動畫統一交給 showMoreSubView。
+  function initMiniAppSwipeBack(){
+    var subView=document.getElementById('gooseSubView');if(!subView)return;
+    var startX=0,startY=0;
+    subView.addEventListener('touchstart',function(e){if(e.touches.length!==1)return;var t=e.touches[0];startX=t.clientX;startY=t.clientY;},{passive:true});
+    subView.addEventListener('touchend',function(e){if(!startX)return;var t=e.changedTouches[0],dx=t.clientX-startX,dy=t.clientY-startY;var valid=startX<28&&dx>75&&Math.abs(dy)<90;startX=0;startY=0;if(valid)window.showMoreSubView('hub');},{passive:true});
+    subView.addEventListener('touchcancel',function(){startX=0;startY=0;},{passive:true});
   }
 
-  // 阿鵝寫真集照片上傳動態持久化邏輯
-  function initGooseGalleryUploader() {
-    var uploader = document.getElementById('goosePhotoUpload');
-    var track = document.getElementById('gooseGalleryTrack');
-    if (!uploader || !track) return;
-
-    uploader.addEventListener('change', function(e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        var base64 = evt.target.result;
-        var newCard = document.createElement('div');
-        newCard.style.cssText = 'flex:0 0 130px; width:130px; height:130px; aspect-ratio:1/1; border-radius:14px; overflow:hidden; border:1px solid var(--border); box-shadow:0 4px 14px rgba(0,0,0,0.4); scroll-snap-align:start; position:relative; background:#121518;';
-        newCard.innerHTML = '<img src="' + base64 + '" style="width:100%; height:100%; object-fit:cover; display:block;" />' +
-          '<span style="position:absolute; bottom:5px; left:6px; font-size:9.5px; padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.65); color:#fff; backdrop-filter:blur(4px);">新增珍藏</span>';
-        track.insertBefore(newCard, track.firstChild);
-        showToast('已新增珍藏照片至阿鵝寫真集！');
-      };
-      reader.readAsDataURL(file);
-    });
+  // 阿鵝寫真集：上傳照片同步寫入 IndexedDB，重開後還原。
+  function initGooseGalleryUploader(){
+    var uploader=document.getElementById('goosePhotoUpload'),track=document.getElementById('gooseGalleryTrack');if(!uploader||!track)return;
+    function renderGallery(items){items.sort(function(a,b){return b.createdAt-a.createdAt;});items.forEach(function(item){if(track.querySelector('[data-goose-photo="'+item.id+'"]'))return;var card=document.createElement('div');card.setAttribute('data-goose-photo',item.id);card.style.cssText='flex:0 0 130px;width:130px;height:130px;aspect-ratio:1/1;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.25);scroll-snap-align:start;position:relative;background:var(--panel-raised-2);';var img=document.createElement('img');img.src=item.data;img.alt='阿鵝珍藏';img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';card.appendChild(img);var tag=document.createElement('span');tag.textContent='新增珍藏';tag.style.cssText='position:absolute;bottom:5px;left:6px;font-size:9.5px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,.65);color:#fff;';card.appendChild(tag);track.insertBefore(card,track.firstChild);});}
+    gooseDBAll('gallery').then(renderGallery).catch(function(e){console.warn('Goose gallery restore',e);});
+    uploader.addEventListener('change',function(e){var file=e.target.files&&e.target.files[0];if(!file)return;if(file.size>35*1024*1024){showToast('照片請小於 35 MB');return;}var reader=new FileReader();reader.onload=function(evt){var item={id:'photo_'+Date.now(),data:evt.target.result,createdAt:Date.now()};gooseDBRequest('gallery','readwrite','put',item).then(function(){renderGallery([item]);showToast('照片已上傳並永久保存在本機');}).catch(function(err){showToast('照片儲存失敗：'+(err.message||''));});};reader.readAsDataURL(file);uploader.value='';});
   }
-
 
 
   // ==================== 更多中樞與阿鵝管家互動邏輯 ====================
@@ -13013,101 +12891,114 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
   setTimeout(updateFeederDisplay, 120);
 
-  // ==================== 瑪利歐奧德塞風格 阿鵝動作指南邏輯 ====================
-  var GOOSE_ACTIONS_KEY = 'super-dashboard-goose-actions';
-  var customGooseActions = (function(){
-    try {
-      var raw = localStorage.getItem(GOOSE_ACTIONS_KEY);
-      if(raw) return JSON.parse(raw);
-    } catch(e){}
-    return [];
-  })();
-
-  var selectedActionImage = '';
-
-  window.openAddGooseActionModal = function(){
-    selectedActionImage = '';
-    var m = document.getElementById('gooseActionModal');
-    if(m) m.style.display = 'flex';
-    var inName = document.getElementById('actionInputName');
-    var inCombo = document.getElementById('actionInputCombo');
-    var inDesc = document.getElementById('actionInputDesc');
-    var btnFile = document.getElementById('btnActionFileSelect');
-    if(inName) inName.value = '';
-    if(inCombo) inCombo.value = '';
-    if(inDesc) inDesc.value = '';
-    if(btnFile) btnFile.textContent = '選擇動作 GIF / 照片';
-  };
-
-  var actionFileInput = document.getElementById('actionInputFile');
-  if(actionFileInput){
-    actionFileInput.addEventListener('change', function(e){
-      var f = e.target.files[0];
-      if(!f) return;
-      var reader = new FileReader();
-      reader.onload = function(evt){
-        selectedActionImage = evt.target.result;
-        var btnFile = document.getElementById('btnActionFileSelect');
-        if(btnFile) btnFile.textContent = '✓ 已選擇圖檔 (' + f.name.substring(0, 15) + ')';
+  // ==================== 阿鵝動作圖鑑：IndexedDB 持久儲存 ====================
+  var GOOSE_DB_NAME = 'super-dashboard-goose-media';
+  var GOOSE_DB_VERSION = 1;
+  var gooseDBPromise = null;
+  function openGooseDB(){
+    if(gooseDBPromise) return gooseDBPromise;
+    gooseDBPromise = new Promise(function(resolve,reject){
+      if(!window.indexedDB){reject(new Error('此裝置不支援本機媒體儲存'));return;}
+      var req=indexedDB.open(GOOSE_DB_NAME,GOOSE_DB_VERSION);
+      req.onupgradeneeded=function(){
+        var db=req.result;
+        if(!db.objectStoreNames.contains('actions')) db.createObjectStore('actions',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('gallery')) db.createObjectStore('gallery',{keyPath:'id'});
+        if(!db.objectStoreNames.contains('model')) db.createObjectStore('model',{keyPath:'id'});
       };
-      reader.readAsDataURL(f);
+      req.onsuccess=function(){resolve(req.result);};
+      req.onerror=function(){reject(req.error||new Error('資料庫開啟失敗'));};
     });
+    return gooseDBPromise;
   }
-
-  window.saveNewGooseAction = function(){
-    var inName = document.getElementById('actionInputName');
-    var inCombo = document.getElementById('actionInputCombo');
-    var inDesc = document.getElementById('actionInputDesc');
-    var name = inName ? inName.value.trim() : '';
-    var combo = inCombo ? inCombo.value.trim() : '';
-    var desc = inDesc ? inDesc.value.trim() : '';
-    if(!name){
-      if(typeof showToast === 'function') showToast('請輸入動作名稱');
-      return;
-    }
-    if(!combo) combo = 'Y 衝刺 + B 跳躍';
-
-    customGooseActions.push({
-      id: 'act_' + Date.now(),
-      name: name,
-      combo: combo,
-      desc: desc || '阿鵝全新習得的獨特動作技能！',
-      image: selectedActionImage || ''
-    });
-    try { localStorage.setItem(GOOSE_ACTIONS_KEY, JSON.stringify(customGooseActions)); } catch(e){}
-    renderCustomGooseActions();
-    var m = document.getElementById('gooseActionModal');
-    if(m) m.style.display = 'none';
-    if(typeof showToast === 'function') showToast('已新增阿鵝動作指南！');
+  function gooseDBRequest(store,mode,method,value){
+    return openGooseDB().then(function(db){return new Promise(function(resolve,reject){
+      var tx=db.transaction(store,mode), os=tx.objectStore(store), req=os[method](value);
+      req.onsuccess=function(){resolve(req.result);}; req.onerror=function(){reject(req.error);};
+    });});
+  }
+  function gooseDBAll(store){return openGooseDB().then(function(db){return new Promise(function(resolve,reject){var tx=db.transaction(store,'readonly'),req=tx.objectStore(store).getAll();req.onsuccess=function(){resolve(req.result||[]);};req.onerror=function(){reject(req.error);};});});}
+  var customGooseActions=[];
+  var selectedActionImage='';
+  var builtinGooseActions={
+    dash:{name:'展翅狂奔',icon:'🪽',desc:'快速拍動翅膀、加速奔跑。'},
+    tilt:{name:'歪頭凝視',icon:'🤨',desc:'歪頭觀察周遭，專注看著感興趣的事物。'},
+    dive:{name:'水下倒立',icon:'💦',desc:'尾羽朝上、頭部潛入水中覓食。'}
   };
-
+  function moveGooseModalToBody(id){var el=document.getElementById(id);if(el&&el.parentNode!==document.body)document.body.appendChild(el);return el;}
+  window.openAddGooseActionModal=function(){
+    selectedActionImage='';
+    var m=moveGooseModalToBody('gooseActionModal');
+    if(m){m.style.display='flex';m.style.position='fixed';m.style.inset='0';m.style.zIndex='20000';m.style.alignItems='center';m.style.justifyContent='center';m.style.overflowY='auto';}
+    var panel=m&&m.firstElementChild;if(panel){panel.style.maxHeight='86vh';panel.style.overflowY='auto';panel.style.margin='auto';}
+    ['actionInputName','actionInputIcon'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=id==='actionInputIcon'?'🦆':'';});
+    var file=document.getElementById('actionInputFile');if(file)file.value='';
+    var btn=document.getElementById('btnActionFileSelect');if(btn)btn.textContent='選擇動作 GIF／照片';
+  };
+  window.closeGooseActionDetail=function(){var m=document.getElementById('gooseActionDetailModal');if(m)m.style.display='none';};
+  function openGooseActionDetail(item){
+    var m=moveGooseModalToBody('gooseActionDetailModal');if(!m)return;
+    document.getElementById('gooseDetailTitle').textContent=(item.icon||'🦆')+' '+item.name;
+    var media=document.getElementById('gooseDetailMedia');media.innerHTML='';
+    if(item.image){var img=document.createElement('img');img.src=item.image;img.alt=item.name;img.style.cssText='display:block;max-width:100%;max-height:52vh;object-fit:contain;';media.appendChild(img);}
+    else {var icon=document.createElement('div');icon.textContent=item.icon||'🦆';icon.style.fontSize='76px';media.appendChild(icon);}
+    document.getElementById('gooseDetailDescription').textContent=item.desc||'阿鵝的日常動作';
+    m.style.display='flex';
+  }
+  var actionFileInput=document.getElementById('actionInputFile');
+  if(actionFileInput) actionFileInput.addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0];if(!f)return;
+    if(f.size>35*1024*1024){showToast('單張動作圖檔請小於 35 MB');e.target.value='';return;}
+    var reader=new FileReader();reader.onload=function(evt){selectedActionImage=evt.target.result;var btn=document.getElementById('btnActionFileSelect');if(btn)btn.textContent='✓ '+f.name.substring(0,20);};reader.readAsDataURL(f);
+  });
+  window.saveNewGooseAction=function(){
+    var nameEl=document.getElementById('actionInputName'),iconEl=document.getElementById('actionInputIcon');
+    var name=nameEl?nameEl.value.trim():'';if(!name){showToast('請輸入動作名稱');return;}
+    var item={id:'act_'+Date.now(),name:name,icon:(iconEl&&iconEl.value.trim())||'🦆',desc:'',image:selectedActionImage||'',createdAt:Date.now()};
+    gooseDBRequest('actions','readwrite','put',item).then(function(){
+      customGooseActions.push(item);renderCustomGooseActions();
+      var m=document.getElementById('gooseActionModal');if(m)m.style.display='none';
+      showToast('動作已儲存至本機');
+    }).catch(function(err){showToast('儲存失敗：'+(err.message||'儲存空間不足'));});
+  };
   function renderCustomGooseActions(){
-    var container = document.getElementById('gooseActionListContainer');
-    if(!container) return;
-    var customEls = container.querySelectorAll('.custom-odyssey-card');
-    customEls.forEach(function(el){ el.remove(); });
-
+    var container=document.getElementById('gooseActionListContainer');if(!container)return;
+    container.querySelectorAll('.custom-odyssey-card').forEach(function(el){el.remove();});
     customGooseActions.forEach(function(item){
-      var card = document.createElement('div');
-      card.className = 'odyssey-action-card custom-odyssey-card';
-      var imgHtml = item.image ?
-        ('<img src="' + item.image + '" style="width:100%; height:100%; object-fit:cover;">') :
-        ('<div style="font-size:30px;"></div>');
-      card.innerHTML =
-        '<div style="width:64px; height:64px; border-radius:12px; background:#F8EEE2; border:1px solid #EEDBC5; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">' +
-          imgHtml +
-        '</div>' +
-        '<div style="flex:1; min-width:0;">' +
-          '<div style="font-size:14px; font-weight:800; color:#2F261D;">' + escapeHtml(item.name) + '</div>' +
-          '<div style="margin:4px 0;">' +
-            '<span class="odyssey-btn-badge gold">' + escapeHtml(item.combo) + '</span>' +
-          '</div>' +
-          '<div style="font-size:11px; color:#7A6856;">' + escapeHtml(item.desc) + '</div>' +
-        '</div>';
-      container.appendChild(card);
+      var card=document.createElement('button');card.type='button';card.className='odyssey-action-card custom-odyssey-card';
+      card.style.cssText='border:1px solid var(--border);background:var(--panel-raised-2);color:var(--text);text-align:left;cursor:pointer;min-width:0;';
+      var icon=document.createElement('span');icon.style.fontSize='25px';
+      if(item.image){var img=document.createElement('img');img.src=item.image;img.alt='';img.style.cssText='width:42px;height:42px;object-fit:cover;border-radius:9px;';icon.appendChild(img);}else icon.textContent=item.icon||'🦆';
+      var title=document.createElement('span');title.style.cssText='font-size:13px;font-weight:800;';title.textContent=item.name;
+      card.appendChild(icon);card.appendChild(title);card.addEventListener('click',function(){openGooseActionDetail(item);});container.appendChild(card);
     });
   }
-  setTimeout(renderCustomGooseActions, 120);
+  function loadGooseActions(){
+    gooseDBAll('actions').then(function(items){
+      customGooseActions=items||[];
+      // 舊版 localStorage 資料只遷移一次，避免舊資料消失。
+      try{var old=JSON.parse(localStorage.getItem('super-dashboard-goose-actions')||'[]');if(old.length){var known=new Set(customGooseActions.map(function(x){return x.id;}));Promise.all(old.filter(function(x){return !known.has(x.id);}).map(function(x){return gooseDBRequest('actions','readwrite','put',Object.assign({icon:'🦆'},x));})).then(function(){localStorage.removeItem('super-dashboard-goose-actions');loadGooseActions();});}}catch(e){}
+      renderCustomGooseActions();
+    }).catch(function(e){console.error('Goose action storage',e);showToast('動作圖鑑讀取失敗');});
+  }
+  document.querySelectorAll('[data-goose-builtin]').forEach(function(card){card.addEventListener('click',function(){var item=builtinGooseActions[card.getAttribute('data-goose-builtin')];if(item)openGooseActionDetail(item);});});
+  setTimeout(loadGooseActions,150);
+
+  // GLB 模型檔案以 Blob 存在 IndexedDB，模型檢視器支援手勢旋轉及縮放。
+  var gooseModelObjectURL=null;
+  function showGooseModel(blob,name){
+    var viewer=document.getElementById('gooseModelViewer'),placeholder=document.getElementById('gooseModelPlaceholder');if(!viewer)return;
+    if(gooseModelObjectURL)URL.revokeObjectURL(gooseModelObjectURL);
+    gooseModelObjectURL=URL.createObjectURL(blob);viewer.src=gooseModelObjectURL;viewer.style.display='block';if(placeholder)placeholder.style.display='none';
+    viewer.setAttribute('alt',name||'阿鵝 3D 模型');
+  }
+  var gooseModelInput=document.getElementById('gooseModelInput');
+  if(gooseModelInput)gooseModelInput.addEventListener('change',function(e){var file=e.target.files&&e.target.files[0];if(!file)return;
+    if(file.size>100*1024*1024){showToast('GLB 模型請小於 100 MB');return;}
+    gooseDBRequest('model','readwrite','put',{id:'current',name:file.name,blob:file}).then(function(){showGooseModel(file,file.name);showToast('3D 阿鵝模型已儲存');}).catch(function(err){showToast('模型儲存失敗：'+(err.message||''));});
+  });
+  gooseDBRequest('model','readonly','get','current').then(function(item){if(item&&item.blob)showGooseModel(item.blob,item.name);}).catch(function(e){console.warn('3D model restore',e);});
+  initGooseGalleryUploader();
 
   window.petGooseInteraction = function(){
     gooseNotionData.petCount = (gooseNotionData.petCount || 87) + 1;
@@ -13119,112 +13010,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function initMorePageAndGooseButler() {
     updateGooseDisplay();
 
-  // 支援 iOS 系統級手勢右滑返回 (Interactive Swipe-Back Gesture)
-  (function initGooseSwipeBack() {
-    var gooseView = document.getElementById('gooseSubView');
-    var moreHub = document.getElementById('moreHubView');
-    if (!gooseView) return;
+  // 返回手勢已統一由 initMiniAppSwipeBack 管理。
 
-    var startX = 0, startY = 0, currentDiff = 0, isDragging = false;
-
-    function handleStart(e) {
-      if (e.touches.length !== 1) return;
-      var t = e.touches[0];
-      // 支援左邊緣 80px 內觸發手勢返回
-      if (t.clientX <= 80) {
-        startX = t.clientX;
-        startY = t.clientY;
-        isDragging = false;
-        currentDiff = 0;
-      }
-    }
-
-    function handleMove(e) {
-      if (!startX) return;
-      var t = e.touches[0];
-      var diffX = t.clientX - startX;
-      var diffY = t.clientY - startY;
-
-      if (!isDragging) {
-        if (diffX > 10 && Math.abs(diffX) > Math.abs(diffY)) {
-          isDragging = true;
-          if (moreHub) {
-            moreHub.style.display = 'block';
-            moreHub.style.opacity = '0.7';
-            moreHub.style.transform = 'scale(0.96)';
-          }
-        } else if (Math.abs(diffY) > 10) {
-          startX = 0;
-          return;
-        }
-      }
-
-      if (isDragging && diffX > 0) {
-        currentDiff = diffX;
-        var screenW = window.innerWidth || 375;
-        var progress = Math.min(diffX / screenW, 1);
-
-        // 阿鵝頁面右移並帶有輕微縮小騰空感 (Pinch / Floating Effect)
-        var scale = 1 - progress * 0.06;
-        gooseView.style.transition = 'none';
-        gooseView.style.transform = 'translateX(' + diffX + 'px) scale(' + scale + ')';
-        gooseView.style.boxShadow = '-12px 0 32px rgba(0,0,0,0.6)';
-
-        // 底層「更多中樞」同步放大回彈 (iOS 系統級平行位移視差)
-        if (moreHub) {
-          moreHub.style.transition = 'none';
-          moreHub.style.transform = 'scale(' + (0.96 + progress * 0.04) + ')';
-          moreHub.style.opacity = (0.7 + progress * 0.3);
-        }
-      }
-    }
-
-    function handleEnd(e) {
-      if (!isDragging) { startX = 0; return; }
-      isDragging = false;
-      var screenW = window.innerWidth || 375;
-      var shouldPop = currentDiff > (screenW * 0.28);
-
-      if (shouldPop) {
-        // 完成滑出動畫
-        gooseView.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-        gooseView.style.transform = 'translateX(100%) scale(0.94)';
-        if (moreHub) {
-          moreHub.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.22s ease';
-          moreHub.style.transform = 'scale(1)';
-          moreHub.style.opacity = '1';
-        }
-        setTimeout(function() {
-          window.showMoreSubView('hub');
-        }, 220);
-      } else {
-        // 取消並回彈原位
-        gooseView.style.transition = 'transform 0.2s ease-out';
-        gooseView.style.transform = 'translateX(0) scale(1)';
-        gooseView.style.boxShadow = 'none';
-        if (moreHub) {
-          moreHub.style.transition = 'opacity 0.2s ease-out';
-          moreHub.style.opacity = '0';
-          setTimeout(function() {
-            if (gooseView.style.display !== 'none') moreHub.style.display = 'none';
-          }, 200);
-        }
-      }
-      startX = 0;
-      currentDiff = 0;
-    }
-
-    gooseView.addEventListener('touchstart', handleStart, { passive: true });
-    gooseView.addEventListener('touchmove', handleMove, { passive: true });
-    gooseView.addEventListener('touchend', handleEnd, { passive: true });
-
-    var edge = document.getElementById('gooseLeftEdgeHandle');
-    if (edge) {
-      edge.addEventListener('touchstart', handleStart, { passive: true });
-      edge.addEventListener('touchmove', handleMove, { passive: true });
-      edge.addEventListener('touchend', handleEnd, { passive: true });
-    }
-  })();
 
     var moreHubView = document.getElementById('moreHubView');
     var gooseSubView = document.getElementById('gooseSubView');
