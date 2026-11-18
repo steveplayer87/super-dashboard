@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "超級儀表板｜iCHEF 單人點餐",
+  "version": "1.0.0",
+  "description": "提供 iCHEF 單人點餐流程，並可在目前 Safari 網頁顯示恐龍浮動標誌。",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://shop.ichefpos.com/*",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://shop.ichefpos.com/store/*/ordering*"
+      ],
+      "js": [
+        "ichef-solo.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "dinosaur-overlay.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "恐龍浮動標誌",
+    "default_popup": "popup.html"
+  }
+}

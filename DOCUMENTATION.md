@@ -368,3 +368,15 @@ iOS App：WebView + Swift 原生層
 - JavaScript inline script 語法檢查及 `git diff --check` 通過；Xcode iOS Debug build 成功。建置使用 `CODE_SIGNING_ALLOWED=NO`，因此沒有安裝至 iPhone。
 - 已透過 CoreDevice 讀取指定 iPhone 17 Pro 的進程清單並擷取當下螢幕；App 進程仍執行，取樣畫面在儀錶板。該畫面不是問題重現時的畫面，無法證明白屏已排除；本次進程查詢也不包含記憶體用量。主機 `security find-identity` 回報 0 個有效簽署身分，暫不能安裝驗證。
 - 待使用者在手機確認：相片庫 tab 是否立即切入並顯示載入狀態；大量照片是否逐批顯示；切往「更多」再返回是否不再白屏。真機互動尚未驗收。
+
+## 9. v28 功能更新與待完成驗收（2026-11-18）
+
+- Web 公告版本調整為 v28；主 App 與 Xcode extensions 的 Marketing Version 統一為 28，Build Number 統一為 22。
+- 新增第二個「資料庫」tab，資料以 JSON 在本機持久保存，支援 HTTPS endpoint 手動／回到前景時／每 15 分鐘同步。
+- Cloudflare Worker `super-dashboard-weather` 已部署：CWA 天氣代理、Cloudflare SVG 圖示路徑及 KV JSON database endpoint。Worker source 位於 `cloudflare/weather-worker/`。
+- CWA API key 尚未寫入 Cloudflare Secret；要啟用天氣回應，於互動終端執行 `cloudflare/weather-worker/set-cwa-secret.sh` 並在隱藏提示輸入 key。API key 不在專案檔案。
+- 新增展示小工具標語／圖片設定、日期與天氣鎖定畫面小工具、秒鐘與 2×5 快捷項目的 Quick Copy Live Activity；iOS 主 App 與 Watch app target 已成功建置，Live Activity 邊界及裝置呈現仍需真機驗收。
+- Safari 擴充功能新增目前網頁恐龍浮動徽章；Safari 會要求使用者自行啟用網站存取權。
+- Wallet 入口改由 Finance 浮動按鈕進入，新增返回按鈕與右側邊緣返回手勢；咖啡券及卡片外觀已調整。
+- 新增 Watch app target：錢包票卡同步至手錶並傳送可掃描的 QR／Code 128 圖像，另有可點擊互動寵物頁；需配對 Apple Watch 實機驗收同步與掃描。
+- 實機安裝與點選驗收仍待本輪全部功能收斂後執行一次；Live Photo 拍攝／相簿刪除確認、卡片持久性與裝置手勢需真機驗收。

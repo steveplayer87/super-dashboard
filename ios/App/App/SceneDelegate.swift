@@ -9,11 +9,14 @@ import UniformTypeIdentifiers
 import AVFoundation
 import CoreLocation
 import CoreImage
+import CoreImage.CIFilterBuiltins
 import ImageIO
 import FileProvider
 import LocalAuthentication
 import AudioToolbox
 import CoreMotion
+import WidgetKit
+import WatchConnectivity
 
 // MARK: - Taoyuan Metro Live Activity Data Model
 public struct TaoyuanMetroAttributes: ActivityAttributes {
@@ -276,7 +279,7 @@ class QuickCopyManager {
         }
         let attributes = QuickCopyAttributes(title: "常用速貼庫")
         let contentState = QuickCopyAttributes.ContentState(
-            items: Array(activeItems.prefix(6)),
+            items: Array(activeItems.prefix(10)),
             lastCopiedText: nil,
             updateTimestamp: Date().timeIntervalSince1970
         )
@@ -911,7 +914,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
         startSensitiveShakeDetection()
-        NotificationManager.scheduleUpdateNotification(version: "v27")
+        NotificationManager.scheduleUpdateNotification(version: "v28")
     }
 
     private func setupDelegatesAndHandlers() {
@@ -933,6 +936,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             "syncDynamicShortcuts",
             "syncSuperShortcutOptions",
             "saveImageToPhotos",
+            "performHaptic",
             "openExternalUrl",
             "superdashboard",
             "keyboardSettings"
@@ -1027,6 +1031,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "performHaptic" {
+            DispatchQueue.main.async {
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            }
+            return
+        }
         if message.name == "keyboardSettings" {
             let groupID = "group.com.steveplayer87.superdashboard"
             let shared = UserDefaults(suiteName: groupID)
@@ -1133,6 +1144,29 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
 
     private func handleUnifiedAction(action: String, params: Any?) {
         let act = action.lowercased()
+        if act == "save-cwa-weather", let dict = params as? [String: Any] {
+            let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard")
+            shared?.set(String(describing: dict["temperature"] ?? "--"), forKey: "cwaTemperature")
+            shared?.set(dict["weather"] as? String ?? "多雲", forKey: "cwaWeather")
+            shared?.set(dict["rainProbability"] as? Int ?? 0, forKey: "cwaRainProbability")
+            shared?.set(dict["updatedAt"] as? Double ?? Date().timeIntervalSince1970, forKey: "cwaUpdatedAt")
+            shared?.synchronize()
+            WidgetCenter.shared.reloadTimelines(ofKind: "WeatherLockScreenWidget")
+            return
+        }
+        if act == "sync-wallet-watch", let dict = params as? [String: Any] {
+            let cards = dict["cards"] as? [[String: String]] ?? []
+            WatchSyncManager.shared.send(cards: cards)
+            return
+        }
+        if act == "save-home-widget", let dict = params as? [String: Any] {
+            let shared = UserDefaults(suiteName: "group.com.steveplayer87.superdashboard")
+            shared?.set(dict["slogan"] as? String ?? "", forKey: "homeWidgetSlogan")
+            shared?.set(dict["image"] as? String ?? "", forKey: "homeWidgetImage")
+            shared?.synchronize()
+            WidgetCenter.shared.reloadTimelines(ofKind: "SuperDashboardShowcaseWidget")
+            return
+        }
         if act == "open-wardrobe" || act == "openwardrobe" {
             DispatchQueue.main.async { [weak self] in
                 self?.presentWardrobeMiniApp()
@@ -1436,7 +1470,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                                 "liveVideoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())",
                                 "liveVideoFilename": movieName, "size": data.count,
                                 "width": asset.pixelWidth, "height": asset.pixelHeight,
-                                "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片"
+                                "createdAt": (asset.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": asset.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? "", "album": "全部相片", "originalAssetIdentifier": asset.localIdentifier
                             ]
                             lock.lock(); records.append(record); lock.unlock()
                             group.leave()
@@ -1474,7 +1508,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     let location = selectedAsset?.location.map { String(format: "%.5f, %.5f", $0.coordinate.latitude, $0.coordinate.longitude) } ?? exifLocation
                     let fullImage = CGImageSourceCreateImageAtIndex(source, 0, nil)
                     let fullJPEG = fullImage.flatMap { UIImage(cgImage: $0).jpegData(compressionQuality: 0.92) } ?? thumb
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(fullJPEG.base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": fileSize, "width": width, "height": height, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": location, "album": "全部相片"]
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "image", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(fullJPEG.base64EncodedString())", "thumbnailUrl": "data:image/jpeg;base64,\(thumb.base64EncodedString())", "size": fileSize, "width": width, "height": height, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": location, "album": "全部相片", "originalAssetIdentifier": selectedAsset?.localIdentifier ?? ""]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             } else if let type = provider.registeredTypeIdentifiers.first(where: { UTType($0)?.conforms(to: .movie) == true }) {
@@ -1496,7 +1530,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                     let generator = AVAssetImageGenerator(asset: asset); generator.appliesPreferredTrackTransform = true
                     if let cg = try? generator.copyCGImage(at: .zero, actualTime: nil) { preview = UIImage(cgImage: cg).jpegData(compressionQuality: 0.72) ?? Data() }
                     let movieData = destination.flatMap { try? Data(contentsOf: $0) } ?? Data()
-                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "duration": durationText, "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": importLocation, "album": "全部相片"]
+                    let record: [String: Any] = ["id": id, "filename": name, "mediaType": "video", "isLive": false, "dataUrl": "data:image/jpeg;base64,\(preview.base64EncodedString())", "videoUrl": "data:video/quicktime;base64,\(movieData.base64EncodedString())", "duration": durationText, "size": (try? FileManager.default.attributesOfItem(atPath: destination?.path ?? "")[.size] as? NSNumber)?.intValue ?? 0, "createdAt": (selectedAsset?.creationDate ?? Date()).timeIntervalSince1970 * 1000, "location": importLocation, "album": "全部相片", "originalAssetIdentifier": selectedAsset?.localIdentifier ?? ""]
                     lock.lock(); records.append(record); lock.unlock()
                 }
             }
@@ -1513,7 +1547,10 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
                 return
             }
             func deliver(_ index: Int) {
-                guard index < chunks.count else { return }
+                guard index < chunks.count else {
+                    self?.offerOriginalPhotoDeletion(for: results.compactMap(\.assetIdentifier))
+                    return
+                }
                 guard let data = try? JSONSerialization.data(withJSONObject: ["items": chunks[index]]),
                       let json = String(data: data, encoding: .utf8) else { return }
                 self?.webView?.evaluateJavaScript("if(typeof window.onNativePhotoAssets==='function')window.onNativePhotoAssets(\(json),false,0,\(index == chunks.count - 1));") { _, _ in
@@ -1522,6 +1559,23 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
             }
             deliver(0)
         }
+    }
+
+    private func offerOriginalPhotoDeletion(for identifiers: [String]) {
+        guard !identifiers.isEmpty, let presenter = presentedViewController == nil ? self : presentedViewController else { return }
+        let alert = UIAlertController(title: "刪除原始照片？", message: "剛匯入的 \(identifiers.count) 個原始項目仍保留在 Apple「照片」中。要一併刪除嗎？刪除時 iOS 會再次確認。", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "保留原照片", style: .cancel))
+        alert.addAction(UIAlertAction(title: "刪除原照片", style: .destructive) { [weak self] _ in
+            let assets = PHAsset.fetchAssets(withLocalIdentifiers: identifiers, options: nil)
+            guard assets.count > 0 else { return }
+            PHPhotoLibrary.shared().performChanges({ PHAssetChangeRequest.deleteAssets(assets) }) { success, error in
+                DispatchQueue.main.async {
+                    let message = success ? "已從 Apple「照片」刪除原始項目" : "刪除未完成：\(error?.localizedDescription ?? "未知錯誤")"
+                    self?.webView?.evaluateJavaScript("if(typeof showToast==='function')showToast('\\(message.replacingOccurrences(of: \"'\", with: \"\\\\'\"))');", completionHandler: nil)
+                }
+            }
+        })
+        presenter.present(alert, animated: true)
     }
 
     /// 從 Photos 讀取圖庫：原始檔直接寫入 File Provider 儲存區，僅將縮圖送到 WebView，避免大量 Base64 導致記憶體暴增。
@@ -1769,6 +1823,60 @@ final class WardrobeMiniAppViewController: UIViewController, WKNavigationDelegat
         }
         return nil
     }
+}
+
+private final class WatchSyncManager: NSObject, WCSessionDelegate {
+    static let shared = WatchSyncManager()
+    private var pendingCards: [[String: String]]?
+
+    private override init() { super.init() }
+
+    func send(cards: [[String: String]]) {
+        guard WCSession.isSupported() else { return }
+        pendingCards = cards.map { card in
+            var card = card
+            guard let value = card["code"], !value.isEmpty else { return card }
+            let filter: CIFilter
+            if card["format"] == "qr" {
+                let qr = CIFilter.qrCodeGenerator()
+                qr.message = Data(value.utf8)
+                qr.correctionLevel = "M"
+                filter = qr
+            } else {
+                let barcode = CIFilter.code128BarcodeGenerator()
+                barcode.message = Data(value.utf8)
+                barcode.quietSpace = 8
+                filter = barcode
+            }
+            if let output = filter.outputImage,
+               let png = CIContext().pngRepresentation(of: output.transformed(by: CGAffineTransform(scaleX: 3, y: 3)), format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB()) {
+                card["image"] = png.base64EncodedString()
+            }
+            return card
+        }
+        let session = WCSession.default
+        session.delegate = self
+        if session.activationState == .activated {
+            sendPendingCards(using: session)
+        } else {
+            session.activate()
+        }
+    }
+
+    private func sendPendingCards(using session: WCSession) {
+        guard let cards = pendingCards,
+              let data = try? JSONEncoder().encode(cards) else { return }
+        session.transferUserInfo(["cards": data])
+        pendingCards = nil
+    }
+
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        guard activationState == .activated else { return }
+        DispatchQueue.main.async { [weak self] in self?.sendPendingCards(using: session) }
+    }
+
+    func sessionDidBecomeInactive(_ session: WCSession) {}
+    func sessionDidDeactivate(_ session: WCSession) { session.activate() }
 }
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCenterDelegate {
@@ -2058,28 +2166,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             if let shared = UserDefaults(suiteName: SceneDelegate.sharedGroupID) {
                 shared.set(items.map { ["id": $0.id, "label": $0.label, "text": $0.text, "isLink": $0.isLink ? "1" : "0"] }, forKey: "dynamicQuickCopyItems")
             }
-            var shortcuts: [UIApplicationShortcutItem] = []
-            for (idx, item) in items.prefix(3).enumerated() {
-                let title = cleanedString(item.label, max: 40, fallback: "項目 \(idx + 1)")
-                let subtitle = cleanedString(item.text, max: 60)
-                let shortcut = UIApplicationShortcutItem(
+            var shortcuts: [UIApplicationShortcutItem] = [
+                UIApplicationShortcutItem(type: "open_goose", localizedTitle: "阿鵝管家", localizedSubtitle: "開啟阿鵝輕應用", icon: UIApplicationShortcutIcon(type: .home), userInfo: nil),
+                UIApplicationShortcutItem(type: "tab_wallet", localizedTitle: "錢包", localizedSubtitle: "出示票卡與條碼", icon: UIApplicationShortcutIcon(type: .love), userInfo: nil)
+            ]
+            for (idx, item) in items.filter({ !$0.text.isEmpty }).prefix(3).enumerated() {
+                let title = cleanedString(item.label, max: 40, fallback: "剪貼簿 \(idx + 1)")
+                let text = cleanedString(item.text, max: 60)
+                shortcuts.append(UIApplicationShortcutItem(
                     type: "copy_dynamic_\(cleanedString(item.id, max: 80, fallback: "\(idx)"))",
                     localizedTitle: title,
-                    localizedSubtitle: subtitle.isEmpty ? nil : subtitle,
-                    icon: UIApplicationShortcutIcon(type: .favorite),
+                    localizedSubtitle: text.isEmpty ? nil : text,
+                    icon: UIApplicationShortcutIcon(type: .compose),
                     userInfo: ["text": cleanedString(item.text, max: 2000) as NSString]
-                )
-                shortcuts.append(shortcut)
+                ))
             }
-            shortcuts.append(
-                UIApplicationShortcutItem(
-                    type: "tab_wallet",
-                    localizedTitle: "超級錢包",
-                    localizedSubtitle: "出示票卡與感應乘車",
-                    icon: UIApplicationShortcutIcon(type: .love),
-                    userInfo: nil
-                )
-            )
             flags.set(true, forKey: "qa_sync_inflight")
             flags.synchronize()
             UIApplication.shared.shortcutItems = shortcuts
@@ -2110,6 +2211,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UNUserNotificationCente
             showCopiedToast("9879-2456")
         case "tab_wallet":
             evaluateJS("window.switchPage && window.switchPage('wallet')")
+        case "open_goose":
+            evaluateJS("if(window.switchPage)window.switchPage('more');if(window.showMoreSubView)window.showMoreSubView('goose')")
         default:
             break
         }

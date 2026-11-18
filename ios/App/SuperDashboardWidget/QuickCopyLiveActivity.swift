@@ -39,11 +39,24 @@ private enum QuickCopyStyle {
     static let teal = Color(red: 0.25, green: 0.66, blue: 0.64)
     static let gold = Color(red: 0.94, green: 0.77, blue: 0.38)
     static let cardBg = Color(red: 0.08, green: 0.09, blue: 0.11)
-    static let maxItems = 6
-    static let columns = 3
+    static let maxItems = 10
+    static let columns = 5
 }
 
-// 兩排、每排三格的可複製項目（最多 6 個）
+private struct IslandSecondsClock: View {
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            Text(context.date, format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits))
+                .font(.system(size: 15, weight: .bold, design: .monospaced))
+                .monospacedDigit()
+                .foregroundColor(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+    }
+}
+
+// 兩排、每排五格的可複製項目（最多 10 個）
 private struct QuickCopyGrid: View {
     let items: [QuickCopyItemData]
     let chipHeight: CGFloat
@@ -56,9 +69,9 @@ private struct QuickCopyGrid: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             ForEach(rows.indices, id: \.self) { r in
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     ForEach(rows[r], id: \.id) { item in
                         Button(intent: CopyQuickItemIntent(text: item.text, label: item.label)) {
                             HStack(spacing: 4) {
@@ -72,13 +85,13 @@ private struct QuickCopyGrid: View {
                                     .foregroundColor(.white)
                             }
                             .frame(maxWidth: .infinity, minHeight: chipHeight)
-                            .padding(.horizontal, 6)
+                            .padding(.horizontal, 3)
                             .background(Color.white.opacity(0.12))
-                            .cornerRadius(9)
+                            .cornerRadius(7)
                         }
                         .buttonStyle(.plain)
                     }
-                    // 不足三格時補空位，讓每格寬度一致
+                    // 不足五格時補空位，讓每格寬度一致
                     ForEach(0..<(QuickCopyStyle.columns - rows[r].count), id: \.self) { _ in
                         Color.clear.frame(maxWidth: .infinity, minHeight: 1, maxHeight: 1)
                     }
@@ -116,41 +129,27 @@ struct QuickCopyLiveActivity: Widget {
             DynamicIsland {
                 // 展開態 Expanded
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 5) {
-                        Image(systemName: "doc.on.doc.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(QuickCopyStyle.teal)
-                        Text("常用速貼")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.leading, 6)
-                    .padding(.top, 4)
+                    IslandSecondsClock()
+                        .padding(.leading, 7)
+                        .padding(.top, 2)
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
-                    if let copied = context.state.lastCopiedText {
-                        Text("已複製「\(copied.prefix(6))」")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(QuickCopyStyle.gold)
-                            .padding(.trailing, 6)
-                            .padding(.top, 4)
-                    } else {
-                        Text("點擊即複製")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(Color.white.opacity(0.6))
-                            .padding(.trailing, 6)
-                            .padding(.top, 4)
-                    }
+                    Image("DinosaurMark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 25, height: 25)
+                        .clipShape(Circle())
+                        .padding(.trailing, 7)
+                        .padding(.top, 1)
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    // 兩排格子；明確給最小高度，讓動態島展開到足夠高並避開底部圓角
-                    QuickCopyGrid(items: context.state.items, chipHeight: 32)
-                        .padding(.horizontal, 4)
-                        .padding(.top, 6)
-                        .padding(.bottom, 12)
-                        .frame(minHeight: 88)
+                    QuickCopyGrid(items: context.state.items, chipHeight: 29)
+                        .padding(.horizontal, 5)
+                        .padding(.top, 3)
+                        .padding(.bottom, 4)
+                        .frame(maxWidth: .infinity)
                 }
             } compactLeading: {
                 HStack(spacing: 3) {

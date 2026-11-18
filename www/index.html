@@ -89,7 +89,9 @@
   .btn.done{ background:var(--amber); border-color:var(--amber); color:#241705; font-weight:700; }
   .edit-actions{ display:none; gap:8px; }
   .edit-actions.show{ display:flex; position:absolute; right:0; top:0; z-index:5; width:176px; height:40px; align-items:center; justify-content:flex-end; gap:8px; }
-  #editBtn,.content-header .btn.cancel,.content-header .btn.done{height:40px;min-height:40px;min-width:84px;width:84px;padding:0 14px;box-sizing:border-box;border-radius:18px;line-height:1;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
+  #editBtn,.content-header .btn.cancel,.content-header .btn.done,.content-header .btn.add-card-header-btn{height:40px;min-height:40px;min-width:104px;width:104px;padding:0 14px;box-sizing:border-box;border-radius:18px;line-height:1;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
+  .content-header .btn.add-card-header-btn{gap:6px;background:var(--panel-raised);border:1px solid var(--border);color:var(--text);}
+  .content-header #editBtn{background:var(--panel-raised);border:1px solid var(--border);color:var(--text);}
   .content-header:has(.edit-actions.show) #editBtn{visibility:hidden;}
 
   .section{ margin-bottom:14px; }
@@ -1456,6 +1458,26 @@
   /* 標頭「新增卡片」按鈕 */
   .btn.add-card-header-btn{ display:none; align-items:center; gap:5px; cursor:pointer; }
   .btn.add-card-header-btn .icon{ font-size:13px; }
+  .header-settings-icon{width:18px;height:18px;display:block;}
+  #aboutVersionRow{height:82px;min-height:82px;align-items:center!important;}
+  #installExpiryCountdown{white-space:pre-line!important;line-height:1.45;min-height:30px;font-variant-numeric:tabular-nums;}
+
+  #page-database{gap:12px;}
+  .database-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .database-title{font-size:22px;font-weight:800;color:var(--text);margin:0;}
+  .database-subtitle{font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:4px;}
+  .database-config,.database-record{background:var(--panel-raised);border:1px solid var(--border);border-radius:14px;padding:12px;}
+  .database-record{margin-top:8px;}
+  .database-record-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .database-record-title{font-size:14px;font-weight:750;color:var(--text);overflow-wrap:anywhere;}
+  .database-record-meta{font-size:10px;color:var(--text-muted);margin-top:3px;}
+  .database-record-payload{font:11px/1.5 ui-monospace,monospace;color:var(--text-muted);white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;margin-top:9px;}
+  .database-actions{display:flex;gap:6px;flex-shrink:0;}
+  .database-actions button{min-height:32px;padding:0 9px;font-size:11px;}
+  .database-input{width:100%;box-sizing:border-box;background:var(--panel-raised-2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font-family:inherit;font-size:12px;line-height:1.45;margin-top:7px;}
+  .database-textarea{min-height:120px;resize:vertical;font-family:ui-monospace,monospace;}
+  .wallet-finance-entry{position:fixed!important;right:18px;bottom:calc(env(safe-area-inset-bottom, 0px) + 88px);z-index:80;width:58px!important;height:58px;min-height:58px!important;padding:0!important;border-radius:18px!important;display:none;align-items:center;justify-content:center!important;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .wallet-finance-entry .wallet-finance-icon{font-size:24px;line-height:1;}
 
   /* ---- 浮動球與恐龍互動 ---- */
   #floatingDinoBall {
@@ -2546,6 +2568,15 @@
                 linear-gradient(155deg, #0A2417 0%, #05130C 75%, #020A06 100%);
     border-color: rgba(0,112,74,.45);
   }
+  .ticket-card-inner.theme-seven,.ticket-card-inner.theme-starbucks{padding:12px 14px!important;}
+  .coffee-coupon-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;width:100%;height:100%;box-sizing:border-box;overflow:hidden;border-radius:15px;padding:14px 16px;color:#fff;}
+  .coffee-coupon-card.seven{background:radial-gradient(circle at 88% 18%,rgba(255,255,255,.18),transparent 27%),linear-gradient(135deg,#0b5636,#123824 68%,#0a281c);}
+  .coffee-coupon-card.starbucks{background:radial-gradient(circle at 88% 18%,rgba(255,255,255,.16),transparent 27%),linear-gradient(135deg,#0b3a2b,#12362b 68%,#071d17);}
+  .coffee-coupon-head,.coffee-coupon-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;z-index:1;}
+  .coffee-coupon-brand{font-size:10px;font-weight:850;letter-spacing:1px;}
+  .coffee-coupon-product{font-size:18px;font-weight:850;line-height:1.1;position:relative;z-index:1;}
+  .coffee-coupon-detail{font-size:10px;color:rgba(255,255,255,.76);margin-top:4px;position:relative;z-index:1;}
+  .coffee-coupon-code{font:10px ui-monospace,monospace;letter-spacing:.6px;color:rgba(255,255,255,.8);}
 
   /* 票券動態功能面板 */
   .ticket-detail-box {
@@ -3680,15 +3711,15 @@
   .content:has(#page-wallet:not([style*="display: none"])){ overscroll-behavior: none; }
 
   /* Wallet: card stays inside arrow bounds; no animated scaling or expensive glow during swipe. */
-  #cardViewport{padding-left:44px!important;padding-right:44px!important;scroll-padding-left:44px!important;scroll-padding-right:44px!important;scroll-behavior:auto!important;}
+  #cardViewport{padding-left:36px!important;padding-right:36px!important;scroll-padding-left:36px!important;scroll-padding-right:36px!important;scroll-behavior:auto!important;}
   #cardTrack{gap:10px!important;}
-  html body .wallet-card-slide{flex:0 0 min(76vw, 286px)!important;width:min(76vw, 286px)!important;max-width:calc(100vw - 112px)!important;transform:none!important;will-change:scroll-position!important;transition:opacity .1s linear!important;opacity:.76!important;}
+  html body .wallet-card-slide{flex:0 0 min(84vw, 320px)!important;width:min(84vw, 320px)!important;max-width:calc(100vw - 72px)!important;transform:none!important;will-change:scroll-position!important;transition:opacity .1s linear!important;opacity:.76!important;}
   html body .wallet-card-slide.active{transform:none!important;opacity:1!important;}
   html body .wallet-card-slide::after{content:'';position:absolute;inset:-2px;border-radius:20px;pointer-events:none;z-index:6;border:2px solid rgba(255,255,255,.96);box-shadow:none;opacity:0;transition:opacity .1s linear;}
   html body .wallet-card-slide.active::after{opacity:1;}
   .wallet-card-slide>.v-card{border-radius:20px!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important;} .wallet-card-slide>.v-card[class*=theme-kit-]{border-radius:20px!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important;} .wallet-card-slide .v-card .card,.wallet-card-slide .v-card .face,.wallet-card-slide .v-card .boarding-card-horizontal,.wallet-card-slide .v-card .metro-pass-card-wrap{border-radius:20px!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important;}
-  .wallet-card-slide .v-card .face,.wallet-card-slide .boarding-card-horizontal,.wallet-card-slide .metro-pass-card-wrap{border-radius:16px!important;overflow:hidden!important;clip-path:inset(0 round 16px)!important;}
-  @media(max-width:390px){html body .wallet-card-slide{flex-basis:calc(100vw - 104px)!important;width:calc(100vw - 104px)!important;max-width:calc(100vw - 104px)!important;}#cardViewport{padding-left:40px!important;padding-right:40px!important;}}
+  .wallet-card-slide .v-card .face,.wallet-card-slide .boarding-card-horizontal,.wallet-card-slide .metro-pass-card-wrap{border-radius:20px!important;overflow:hidden!important;clip-path:inset(0 round 20px)!important;}
+  @media(max-width:390px){html body .wallet-card-slide{flex-basis:calc(100vw - 72px)!important;width:calc(100vw - 72px)!important;max-width:calc(100vw - 72px)!important;}#cardViewport{padding-left:36px!important;padding-right:36px!important;}}
 
   /* ====== 新增卡片／取得票卡：兩頁固定同樣大小，空白均勻分配，底部留白縮小 ====== */
   #modalOverlay .modal.modal-fixed{ height:min(700px, 88dvh) !important; max-height:88dvh !important; display:flex!important;flex-direction:column!important;overflow:hidden!important; }
@@ -4642,7 +4673,7 @@
 </svg>
 <div id="app">
   <div class="topbar">
-    <div class="brand" title="點擊可復原浮動球"><span class="brand-icon" id="brandIcon"></span>超級儀錶板</div>
+    <div class="brand" title="點擊可復原浮動球"><span class="brand-icon" id="brandIcon"></span><span id="brandTitle">超級儀錶板</span></div>
     <div class="date-chip" id="dateChip">--/--（-）</div>
   </div>
 
@@ -4687,10 +4718,37 @@
           </div>
         </div>
       </div>
+      <div class="database-config home-widget-editor">
+        <strong>桌面小工具展示</strong>
+        <div class="database-subtitle">設定標語與圖片，儲存後加入「超級儀表板展示」小工具即可顯示。</div>
+        <input class="database-input" id="homeWidgetSlogan" maxlength="48" placeholder="輸入自訂標語">
+        <input class="database-input" id="homeWidgetImage" type="file" accept="image/*" aria-label="選擇小工具圖片">
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;"><img id="homeWidgetPreview" alt="展示圖片預覽" style="display:none;width:52px;height:52px;object-fit:cover;border-radius:12px;"><button class="btn" id="homeWidgetSave">儲存展示內容</button><span id="homeWidgetStatus" class="database-subtitle"></span></div>
+      </div>
     </div>
 
 
-    <!-- ===== 頁面二: 照片庫 (第二相片庫) ===== -->
+    <!-- ===== 頁面二：資料庫 ===== -->
+    <div class="page" id="page-database" style="display:none;">
+      <div class="database-toolbar">
+        <div><h1 class="database-title">資料庫</h1><div class="database-subtitle">資料以通用 JSON 格式保存在本機；可匯入 webhook 回應，不會將 HTML 當網頁執行。</div></div>
+        <button type="button" class="btn done" id="databaseAddBtn" style="min-height:40px;">新增</button>
+      </div>
+      <div class="database-config">
+        <div style="font-size:12px;font-weight:750;color:var(--text);">外部資料來源</div>
+        <div style="font-size:10.5px;color:var(--text-muted);margin:4px 0 8px;line-height:1.45;">填入回傳 JSON 陣列或 { "items": [...] } 的 HTTPS webhook。同步內容會先寫入本機。</div>
+        <input class="database-input" id="databaseEndpoint" type="url" placeholder="https://your-worker.example/api/database/items">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <button type="button" class="btn" id="databaseSaveEndpoint">儲存來源</button>
+          <button type="button" class="btn" id="databaseSyncNow">立即同步</button>
+          <span id="databaseSyncStatus" style="font-size:10px;color:var(--text-muted);"></span>
+        </div>
+      </div>
+      <div id="databaseRecords" aria-live="polite"></div>
+      <div id="databaseEmpty" class="database-config" style="text-align:center;color:var(--text-muted);font-size:12px;">尚無資料。可新增 JSON 紀錄，或設定 webhook 後同步。</div>
+    </div>
+
+    <!-- ===== 頁面三：相片庫 ===== -->
     <div class="page" id="page-photos" style="display:none;">
       <!-- 頂部資訊與操作列 -->
       <div class="photos-header">
@@ -4845,6 +4903,7 @@
 
     <!-- ===== 頁面二:財務 ===== -->
     <div class="page" id="page-finance" style="display:none;">
+      <button type="button" class="btn wallet-finance-entry" onclick="window.switchPage('wallet')" aria-label="開啟超級錢包" title="超級錢包"><span class="wallet-finance-icon">▣</span></button>
       <div class="fin-card">
         <div class="fin-card-head">
           <span class="gauge-icon" id="iconGauge"></span>
@@ -4874,6 +4933,9 @@
 
     <!-- ===== 頁面三:錢包(虛擬卡)===== -->
     <div class="page" id="page-wallet" style="display:none;">
+      <button type="button" class="btn wallet-back-finance" onclick="window.switchPage('finance')" style="display:inline-flex;align-items:center;gap:7px;min-height:38px;margin:0 0 12px;padding:0 12px;">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>返回財務
+      </button>
 
       <!-- 視圖一：卡片主視圖容器 -->
       <div id="walletSubViewCards">
@@ -5572,7 +5634,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v19 · 編輯按鈕統一、原生照片選取與相片庫捲動修正</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v28 · 資料庫、快捷動態島與小工具更新</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -5914,11 +5976,11 @@
   </div>
 
 
-    <nav class="tabbar">
+  <nav class="tabbar">
     <button type="button" class="tab active" data-tab="dashboard" id="tabBtnDashboard" onclick="window.switchPage('dashboard')"><span class="icon" id="tabIconDashboard"></span><span class="txt">儀錶板</span></button>
+    <button type="button" class="tab" data-tab="database" id="tabBtnDatabase" onclick="window.switchPage('database')"><span class="icon" id="tabIconDatabase"></span><span class="txt">資料庫</span></button>
     <button type="button" class="tab" data-tab="photos" id="tabBtnPhotos" onclick="window.switchPage('photos')"><span class="icon" id="tabIconPhotos"></span><span class="txt">相片庫</span></button>
     <button type="button" class="tab" data-tab="finance" id="tabBtnFinance" onclick="window.switchPage('finance')"><span class="icon" id="tabIconFinance"></span><span class="txt">財務</span></button>
-    <button type="button" class="tab" data-tab="wallet" id="tabBtnWallet" onclick="window.switchPage('wallet')"><span class="icon" id="tabIconWallet"></span><span class="txt">錢包</span></button>
     <button type="button" class="tab" data-tab="more" id="tabBtnMore" onclick="window.switchPage('more')"><span class="icon" id="tabIconP1"></span><span class="txt">更多</span></button>
   </nav>
 </div>
@@ -6377,8 +6439,8 @@
                   <div style="font-size:15px; font-weight:800; color:#fff; letter-spacing:0.5px;">CITY CAFE · 特大熱拿鐵提貨卡</div>
                   <div style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:3px;">全台 7-ELEVEN 門市皆可兌換 · 冰熱不限 (1 杯)</div>
                 </div>
-                <div class="ticket-meta-row">
-                  <span style="font-family:ui-monospace,monospace; font-weight:700;">VOUCHER #711-CITY-8924</span>
+            <div class="ticket-meta-row">
+              <span style="font-family:ui-monospace,monospace; font-weight:700;">入袋後產生兌換碼</span>
                   <span class="ticket-time" style="background:rgba(255,255,255,0.15); padding:2px 7px; border-radius:6px;">30天有效</span>
                 </div>
               </div>
@@ -6399,7 +6461,7 @@
                   <div style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:3px;">信義微風門市 · 吧台取餐區專用</div>
                 </div>
                 <div class="ticket-meta-row">
-                  <span style="font-family:ui-monospace,monospace; font-weight:700;">ORDER #SB-8924</span>
+                  <span style="font-family:ui-monospace,monospace; font-weight:700;">加入後建立取餐單</span>
                   <span class="ticket-time" style="background:rgba(255,255,255,0.15); padding:2px 7px; border-radius:6px;">製作完成</span>
                 </div>
               </div>
@@ -6551,8 +6613,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v27</h2>
+    <h2 id="updateNotesTitle">已更新至 v28</h2>
     <div class="update-notes-list">
+      <div class="update-notes-group"><strong>新增與修正（v28）</strong><ul><li>新增資料庫第二分頁：本機 JSON 紀錄、HTTPS webhook 手動與定時同步</li><li>修正設定齒輪尺寸與圖示，與新增卡片按鈕一致</li><li>阿鵝與設定子頁改用不透明主題底色並顯示各自標題</li><li>錢包併入財務頁，新增浮動入口、返回按鈕與右側返回手勢</li><li>改善錢包卡片滑動露出比例與卡面圓角</li><li>咖啡券改用商品兌換卡面；模擬感應加入觸覺回饋</li><li>常用速貼動態島新增秒鐘、恐龍標誌與 2×5 快捷格</li><li>桌面展示小工具支援自訂標語與圖片</li><li>新增鎖定畫面日期／農曆／天氣小工具與 Cloudflare CWA 代理服務</li><li>Safari 擴充功能新增目前頁面的恐龍浮動標誌開關</li><li>系統資訊倒數分行顯示並固定版面高度</li></ul></div>
       <div class="update-notes-group"><strong>修正</strong><ul><li>阿鵝動作圖鑑新增持久化照片／GIF 儲存、詳情播放視窗與圖示</li><li>阿鵝新增動作視窗改為固定置中顯示，修正捲動頁面中視窗跑出可視範圍</li><li>阿鵝頁面背景改為跟隨主題，返回手勢統一使用設定頁的轉場機制</li><li>新增可旋轉的 GLB 3D 模型匯入區</li><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
@@ -7056,12 +7119,17 @@ window.showMoreSubView = function(view) {
     if (view === 'hub') {
       if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
       document.body.classList.remove('goose-view-active');
+      var hubTitle = document.getElementById('brandTitle');
+      if (hubTitle) hubTitle.textContent = '超級儀錶板';
       return;
     }
     if (!target) return;
     if (hub) { hub.style.display='block'; hub.style.transform='none'; hub.style.opacity='1'; }
     document.body.classList.add('goose-view-active');
-    target.style.backgroundColor = getComputedStyle(document.body).backgroundColor || '#0E0C09';
+    target.style.backgroundColor = 'var(--bg)';
+    target.style.isolation = 'isolate';
+    var title = document.getElementById('brandTitle');
+    if (title) title.textContent = view === 'goose' ? '阿鵝管家' : '設定';
     target.style.display='block';
     target.style.transition='none';
     target.style.opacity='1';
@@ -7196,7 +7264,19 @@ window.switchPage = function(page) {
     if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
     window.currentPage = page;
     if (typeof currentPage !== 'undefined') currentPage = page;
-    var pages = ['dashboard', 'photos', 'finance', 'wallet', 'more'];
+    if (page === 'wallet' && typeof window.callNative === 'function') {
+      var watchWalletState = window.state || {};
+      var watchCards = (Array.isArray(watchWalletState.cards) ? watchWalletState.cards : []).map(function(card){
+        var value = card.qrValue || card.barcode || card.code || card.ticketNo || card.transitNo || '';
+        var type = String(card.type || '').toLowerCase();
+        var isScanCard = type === 'qr' || type === 'barcode' || !!card.isScanCard || type === 'boarding' || type === 'transit';
+        return isScanCard && value ? { id:String(card.id || ''), name:String(card.name || '票卡'), code:String(value), format:(type === 'qr' || card.codeType === 'qr') ? 'qr' : 'barcode' } : null;
+      }).filter(Boolean);
+      window.callNative('sync-wallet-watch', {cards:watchCards});
+    }
+    var pages = ['dashboard', 'database', 'photos', 'finance', 'wallet', 'more'];
+    var walletEntry = document.querySelector('.wallet-finance-entry');
+    if(walletEntry) walletEntry.style.display = page === 'finance' ? 'flex' : 'none';
     pages.forEach(function(p) {
       var el = document.getElementById('page-' + p);
       if (el) el.style.display = (p === page) ? '' : 'none';
@@ -7204,6 +7284,7 @@ window.switchPage = function(page) {
     if (page === 'more') {
       window.showMoreSubView('hub');
     }
+    if (page === 'database' && typeof window.syncDashboardDatabase === 'function') window.syncDashboardDatabase();
     if (page === 'finance' && typeof renderFinance === 'function') {
       renderFinance();
     }
@@ -7214,8 +7295,10 @@ window.switchPage = function(page) {
       window.PhotoVault.activate();
     }
     document.querySelectorAll('.tab[data-tab]').forEach(function(t) {
-      t.classList.toggle('active', t.dataset.tab === page);
+      t.classList.toggle('active', t.dataset.tab === (page === 'wallet' ? 'finance' : page));
     });
+    var brandTitle = document.getElementById('brandTitle');
+    if (brandTitle) brandTitle.textContent = page === 'wallet' ? '超級錢包' : (page === 'database' ? '資料庫' : (page === 'photos' ? '相片庫' : (page === 'finance' ? '財務' : '超級儀錶板')));
     if (typeof window._updateAddCardBtnVisibility === 'function') {
       window._updateAddCardBtnVisibility();
     }
@@ -7339,7 +7422,7 @@ window.safeSetIcon = safeSetIcon;
     try {
       var curState = window.state || (typeof state !== 'undefined' ? state : null);
       if(!curState || !curState.copyItems) return;
-      var top6 = (curState.copyItems || []).filter(function(it){ return !(it.type === 'image' || (it.text || '').indexOf('data:image') === 0); }).slice(0, 6).map(function(item){
+      var top6 = (curState.copyItems || []).filter(function(it){ return !(it.type === 'image' || (it.text || '').indexOf('data:image') === 0); }).slice(0, 10).map(function(item){
         var txt = item.text || '';
         var lbl = window.safeTrunc(item.name || txt, 10) + (!item.name && Array.from(txt).length > 10 ? '...' : '');
         return {
@@ -7575,7 +7658,7 @@ window.safeSetIcon = safeSetIcon;
       if(seconds <= 0){
         el.textContent = '重新安裝提醒：期限已到，請重新安裝';
       } else {
-        el.textContent = '重新安裝提醒倒數：' + days + '天 ' + hours + '小時 ' + minutes + '分 ' + secs + '秒' + (notificationPending ? ' · 通知已排程' : ' · 通知未排程（請檢查通知權限）');
+        el.textContent = '重新安裝提醒倒數：' + days + '天 ' + hours + '小時 ' + minutes + '分 ' + secs + '秒\n' + (notificationPending ? '通知已排程' : '通知未排程（請檢查通知權限）');
       }
     }
     render();
@@ -8305,9 +8388,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   safeSetIcon('iconAccountSection', 'landmark');
   safeSetIcon('iconExpenseSection', 'receipt');
   safeSetIcon('tabIconDashboard', 'house');
+  safeSetIcon('tabIconDatabase', 'database');
   safeSetIcon('tabIconPhotos', 'image');
   safeSetIcon('tabIconFinance', 'wallet');
-  safeSetIcon('tabIconWallet', 'credit-card');
   safeSetIcon('tabIconP1', 'ellipsis');
   safeSetIcon('iconMoreServices', 'feather');
   safeSetIcon('iconGooseEntry', 'feather');
@@ -8559,6 +8642,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       if(!state.copyItems) state.copyItems = [];
       state.copyItems.unshift(newItem);
       saveData();
+      try{ if(window.syncDynamicShortcuts) window.syncDynamicShortcuts(); }catch(e){}
       // 以實際寫入的儲存內容確認持久化（空間不足時 saveData 會失敗，這裡就會回報 false）
       var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       if(!Array.isArray(saved.copyItems) || !saved.copyItems.some(function(i){ return i.id === newItem.id; })){
@@ -8601,7 +8685,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v27';
+  var APP_VERSION = 'v28';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -8619,11 +8703,19 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var items = type === 'copy' ? state.copyItems : state.shortcutItems;
     var color = type === 'copy' ? 'teal' : 'amber';
     container.innerHTML = '';
+    if(type === 'shortcut' && !container.dataset.reorderReady){
+      container.dataset.reorderReady='1';
+      container.addEventListener('dragstart',function(e){var tile=e.target.closest('.keycap[data-item-id]');if(!tile||state.editMode)return;container.dataset.draggedItem=tile.dataset.itemId;e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',tile.dataset.itemId)}catch(err){} });
+      container.addEventListener('dragover',function(e){if(container.dataset.draggedItem)e.preventDefault()});
+      container.addEventListener('drop',function(e){e.preventDefault();var fromId=container.dataset.draggedItem||e.dataTransfer.getData('text/plain'),target=e.target.closest('.keycap[data-item-id]');container.dataset.draggedItem='';if(!fromId||!target||fromId===target.dataset.itemId)return;var from=state.shortcutItems.findIndex(function(x){return x.id===fromId}),to=state.shortcutItems.findIndex(function(x){return x.id===target.dataset.itemId});if(from<0||to<0)return;var moved=state.shortcutItems.splice(from,1)[0];state.shortcutItems.splice(to,0,moved);saveData();renderGrid(container,'shortcut')});
+    }
 
     items.forEach(function(item){
       if(state.editMode && pendingRemove[type].has(item.id)) return;
       var label = type === 'copy' ? item.text : item.name;
       var cap = document.createElement('div');
+      cap.dataset.itemId = item.id;
+      cap.draggable = type === 'shortcut' && !state.editMode;
 
       var isImgE = (type === 'copy' && (item.type === 'image' || (item.text && item.text.indexOf('data:image') === 0)));
       if(state.editMode){
@@ -9167,9 +9259,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     var v = 'c-white';
     var logo = '<svg class="logo"><use href="#mc"/></svg>';
     var label = 'Debit';
-    var last = '••••';
-    var name = (card && card.name && card.name !== '新卡片') ? card.name : 'Leonardo De Luca';
-    var exp = 'XX/XX';
+    var hasIssuedDetails = !!(card && card.last4);
+    var last = hasIssuedDetails ? '••••' : '';
+    var name = (card && card.name && card.name !== '新卡片') ? card.name : '加入後設定';
+    var exp = hasIssuedDetails ? 'XX/XX' : '';
     var hasWave = false;
 
     if(thm.indexOf('visa-light') !== -1){
@@ -9177,32 +9270,32 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
       hasWave = true;
-      last = '••••';
-      exp = 'XX/XX';
+      last = hasIssuedDetails ? '••••' : '';
+      exp = hasIssuedDetails ? 'XX/XX' : '';
     } else if(thm.indexOf('visa-dark') !== -1){
       v = 'c-visa-dark visa';
       logo = '<svg class="logo visa-logo"><use href="#visa"/></svg>';
       label = 'Credit Cashback';
-      last = '••••';
-      exp = 'XX/XX';
+      last = hasIssuedDetails ? '••••' : '';
+      exp = hasIssuedDetails ? 'XX/XX' : '';
     } else if(thm.indexOf('dark') !== -1){
       v = 'c-dark';
       logo = '<svg class="logo"><use href="#mc"/></svg>';
       label = 'Debit';
-      last = '••••';
-      exp = 'XX/XX';
+      last = hasIssuedDetails ? '••••' : '';
+      exp = hasIssuedDetails ? 'XX/XX' : '';
     } else if(thm.indexOf('silver') !== -1){
       v = 'c-silver';
       logo = '<img class="logo cent" alt="" src="cent_silver.png">';
       label = 'Rewards';
-      last = '••••';
-      exp = 'XX/XX';
+      last = hasIssuedDetails ? '••••' : '';
+      exp = hasIssuedDetails ? 'XX/XX' : '';
     } else if(thm.indexOf('bronze') !== -1){
       v = 'c-bronze';
       logo = '<img class="logo cent" alt="" src="cent_bronze.png">';
       label = 'Rewards';
-      last = '••••';
-      exp = 'XX/XX';
+      last = hasIssuedDetails ? '••••' : '';
+      exp = hasIssuedDetails ? 'XX/XX' : '';
     }
 
     var waveHtml = hasWave ? BW_SVG : '';
@@ -9233,7 +9326,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
   function ensureMetroExpiry(c){
     if(isMetroPass(c) && !c.expiresAt){
-      c.activatedAt = Date.now();
+      // Preserve the original tap-in time when repairing a partially saved pass.
+      // Only legacy cards without either timestamp start their timer on first use.
+      c.activatedAt = Number(c.activatedAt) || Date.now();
       c.expiresAt = c.activatedAt + 24 * 3600 * 1000;
       try{ saveData(); }catch(e){}
     }
@@ -9323,7 +9418,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '</div>';
     }
 
-    // 1. 星宇航空登機證 (航太深藍午夜金)
+    // 1. 咖啡券使用獨立商品券版型，不共用機票航線欄位。
+    if(card.type === 'boarding' && (card.passType === 'seven' || card.passType === 'starbucks')){
+      var isSevenCoupon = card.passType === 'seven';
+      var couponBrand = isSevenCoupon ? '7-ELEVEN CITY CAFE' : 'STARBUCKS COFFEE';
+      var couponProduct = isSevenCoupon ? '特大熱拿鐵' : '燕麥馥列白 · Grande';
+      var couponPlace = isSevenCoupon ? '全台門市兌換 · 冰熱可選' : '信義微風門市 · 行動預點取餐';
+      return '<div class="coffee-coupon-card ' + (isSevenCoupon ? 'seven' : 'starbucks') + '">' +
+        '<div class="coffee-coupon-head"><span class="coffee-coupon-brand">' + couponBrand + '</span><span class="ticket-pill green">商品兌換</span></div>' +
+        '<div><div class="coffee-coupon-product">' + couponProduct + '</div><div class="coffee-coupon-detail">' + couponPlace + '</div></div>' +
+        '<div class="coffee-coupon-foot"><span class="coffee-coupon-code">' + escapeHtml(card.ticketNo || '加入後建立兌換碼') + '</span><span style="font-size:10px;font-weight:800;">' + escapeHtml(card.boardingTime || '兌換券') + '</span></div>' +
+        '<span aria-hidden="true" style="position:absolute;right:-13px;top:37px;width:86px;height:86px;border:1px solid rgba(255,255,255,.12);border-radius:50%;box-shadow:0 0 0 8px rgba(255,255,255,.035),0 0 0 17px rgba(255,255,255,.025);"></span>' +
+        '</div>';
+    }
+
+    // 2. 星宇航空登機證 (航太深藍午夜金)
     if(card.type === 'boarding'){
       return '<div class="boarding-card-horizontal">' +
         '<div class="boarding-h-top">' +
@@ -9384,7 +9493,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '<div class="merch-value-badge">' + (card.balance ? ('NT$ ' + card.balance) : '掃碼專用') + '</div>' +
         '</div>' +
         '<div style="margin:auto 0; display:flex; flex-direction:column; align-items:center; gap:6px;">' +
-          '<div style="font-family:ui-monospace, monospace; font-size:14px; letter-spacing:3px; color:var(--gold); font-weight:700;">•••• ' + (card.last4 || '8866') + '</div>' +
+          '<div style="font-family:ui-monospace, monospace; font-size:14px; letter-spacing:3px; color:var(--gold); font-weight:700;">•••• ' + (card.last4 || '') + '</div>' +
           '<div style="font-size:10px; color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:4px;">' +
             '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3"/><rect width="5" height="5" x="16" y="3"/><rect width="5" height="5" x="3" y="16"/></svg>' +
             '<span>靠近掃碼器以解鎖條碼</span>' +
@@ -9423,7 +9532,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '</div>' +
       nfcRightSvg +
       carSilhouetteSvg +
-      '<div class="v-card-number" style="margin: auto 0 8px 0; font-size:16px; letter-spacing:1.5px;">•••• ' + (card.last4 || '8888') + '</div>' +
+      '<div class="v-card-number" style="margin: auto 0 8px 0; font-size:16px; letter-spacing:1.5px;">•••• ' + (card.last4 || '') + '</div>' +
       '<div class="v-card-bottom">' +
         '<span></span>' +
         '<span class="v-card-brand">' + icon('key') + '</span>' +
@@ -9448,7 +9557,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       '<span class="transit-type-tag">' + (card.type === 'credential' ? '身分憑證' : escapeHtml(card.name || '智慧卡片')) + '</span>' +
     '</div>' +
     nfcRightSvg +
-    '<div class="v-card-number" style="margin: auto 0 8px 0; font-size:16px; letter-spacing:1.5px;">•••• ' + (card.last4 || '6688') + '</div>' +
+    '<div class="v-card-number" style="margin: auto 0 8px 0; font-size:16px; letter-spacing:1.5px;">•••• ' + (card.last4 || '') + '</div>' +
     '<div class="v-card-bottom">' +
       '<span></span>' +
       '<span class="v-card-brand">' + (card.type === 'credential' ? icon('id-card') : icon('credit-card')) + '</span>' +
@@ -10256,7 +10365,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     } else {
       var randSpend = Math.floor(35 + Math.random() * 95);
       card.balance = Math.max(0, (card.balance || 0) - randSpend);
-      txTitle = (card.name || '感應支付卡') + ' · 超商感應消費扣款';
+      txTitle = (card.name || '感應支付卡') + ' · 感應成功';
       txAmount = '-NT$' + randSpend;
     }
 
@@ -10283,7 +10392,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(isBoarding && pChk) pChk.classList.add('show');
     else if(chk) chk.classList.add('show');
 
-    if(navigator.vibrate) navigator.vibrate([40, 60, 40]);
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.performHaptic) window.webkit.messageHandlers.performHaptic.postMessage('success');
+    else if(navigator.vibrate) navigator.vibrate([40, 60, 40]);
     performSense(senseActiveCard);
     setTimeout(function(){
       if(chk) chk.classList.remove('show');
@@ -10505,8 +10615,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       editBtn.removeAttribute('aria-label');
       editBtn.removeAttribute('title');
       editBtn.style.width='';
-      editBtn.style.minWidth='76px';
-      editBtn.style.padding='6px 14px';
+      editBtn.style.minWidth='';
+      editBtn.style.padding='';
       if(isWallet){
         // 在錢包頁面：只有在已經有至少一張卡片時才顯示「編輯」按鈕
         editBtn.style.display = hasCards ? 'inline-block' : 'none';
@@ -10519,11 +10629,11 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
         editBtn.style.display = 'inline-flex';
         editBtn.setAttribute('aria-label', '設定');
         editBtn.title = '設定';
-        editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8.92 3a1.65 1.65 0 0 0 1.08-1.51V1a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15.08 2.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 7a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09A1.65 1.65 0 0 0 19.4 15Z"/></svg>';
-        editBtn.style.padding = '6px 14px';
-        editBtn.style.width = '84px';
-        editBtn.style.minWidth = '84px';
-        editBtn.style.height = '40px';
+        editBtn.innerHTML = icon('settings', 'header-settings-icon');
+        editBtn.style.padding = '';
+        editBtn.style.width = '';
+        editBtn.style.minWidth = '';
+        editBtn.style.height = '';
         editBtn.style.justifyContent = 'center';
       } else {
         // 在儀表板或財務頁面：正常顯示編輯按鈕
@@ -15120,6 +15230,20 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
 
 
+<script>
+(function(){
+  'use strict';
+  var KEY='super_dashboard_database_v1', EP='super_dashboard_database_endpoint_v1', DEFAULT_EP='https://super-dashboard-weather.jispig28.workers.dev/api/database/items';
+  function read(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+  function write(rows){localStorage.setItem(KEY,JSON.stringify(rows));}
+  function esc(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]})}
+  function render(){var host=document.getElementById('databaseRecords'),empty=document.getElementById('databaseEmpty');if(!host)return;var rows=read();host.innerHTML=rows.map(function(r){return '<article class="database-record" data-id="'+esc(r.id)+'"><div class="database-record-head"><div><div class="database-record-title">'+esc(r.title||r.name||'未命名紀錄')+'</div><div class="database-record-meta">'+esc(r.updatedAt||'本機資料')+'</div></div><div class="database-actions"><button class="btn" data-action="edit">編輯</button><button class="btn" data-action="delete">刪除</button></div></div><pre class="database-record-payload">'+esc(JSON.stringify(r.data===undefined?r:r.data,null,2))+'</pre></article>'}).join('');if(empty)empty.style.display=rows.length?'none':'';}
+  function addOrEdit(record){var title=prompt('紀錄標題',record&&record.title||'');if(title===null)return;var raw=prompt('資料 JSON（可為任意 JSON 物件）',JSON.stringify(record&&record.data!==undefined?record.data:{},null,2));if(raw===null)return;var data;try{data=JSON.parse(raw)}catch(e){alert('JSON 格式錯誤，沒有儲存。');return}var rows=read(),r={id:record&&record.id||('db_'+Date.now()),title:title.trim()||'未命名紀錄',data:data,updatedAt:new Date().toLocaleString()};var i=rows.findIndex(function(x){return x.id===r.id});if(i<0)rows.unshift(r);else rows[i]=r;try{write(rows);render();}catch(e){alert('本機儲存空間不足，資料未儲存。')}}
+  document.addEventListener('DOMContentLoaded',function(){var ep=document.getElementById('databaseEndpoint'),save=document.getElementById('databaseSaveEndpoint'),sync=document.getElementById('databaseSyncNow'),host=document.getElementById('databaseRecords'),add=document.getElementById('databaseAddBtn');if(!ep)return;try{ep.value=localStorage.getItem(EP)||DEFAULT_EP}catch(e){ep.value=DEFAULT_EP}render();if(add)add.onclick=function(){addOrEdit(null)};if(host)host.addEventListener('click',function(e){var b=e.target.closest('[data-action]'),a=b&&b.dataset.action,card=b&&b.closest('[data-id]');if(!a||!card)return;var rows=read(),r=rows.find(function(x){return x.id===card.dataset.id});if(!r)return;if(a==='edit')addOrEdit(r);else if(confirm('刪除此筆本機資料？')){write(rows.filter(function(x){return x.id!==r.id}));render()}});if(save)save.onclick=function(){var val=ep.value.trim();if(val&&(!/^https:\/\//i.test(val))){alert('資料來源必須使用 HTTPS。');return}localStorage.setItem(EP,val);status('來源已儲存在本機');};function status(t){var s=document.getElementById('databaseSyncStatus');if(s)s.textContent=t}async function doSync(){var url=(ep.value||'').trim();if(!url){status('請先設定 webhook');return}if(!/^https:\/\//i.test(url)){status('只允許 HTTPS');return}if(sync)sync.disabled=true;status('同步中…');try{var c=new AbortController(),timer=setTimeout(function(){c.abort()},15000),res=await fetch(url,{headers:{Accept:'application/json'},cache:'no-store',signal:c.signal});clearTimeout(timer);if(!res.ok)throw Error('HTTP '+res.status);var body=await res.json(),items=Array.isArray(body)?body:(Array.isArray(body.items)?body.items:null);if(!items)throw Error('回應需為 JSON 陣列或 {items:[]}');var localRows=read().filter(function(x){return !x.remote});var rows=items.map(function(x,i){return{id:String(x.id||('remote_'+i)),title:String(x.title||x.name||('資料 '+(i+1))),data:x.data===undefined?x:x.data,updatedAt:new Date().toLocaleString(),remote:true}});write(rows.concat(localRows));render();localStorage.setItem(EP,url);status('已同步 '+rows.length+' 筆並存入本機');}catch(e){status('同步失敗：'+(e.name==='AbortError'?'逾時':e.message))}finally{if(sync)sync.disabled=false}}if(sync)sync.onclick=doSync;window.syncDashboardDatabase=doSync;document.addEventListener('visibilitychange',function(){if(!document.hidden&&window.currentPage==='database'&&localStorage.getItem(EP))doSync()});window.addEventListener('online',function(){if(window.currentPage==='database'&&localStorage.getItem(EP))doSync()});setInterval(function(){if(!document.hidden&&window.currentPage==='database'&&localStorage.getItem(EP))doSync()},15*60*1000);});
+})();
+</script>
+<script>(function(){var K='super_dashboard_home_widget_v1';document.addEventListener('DOMContentLoaded',function(){var slogan=document.getElementById('homeWidgetSlogan'),file=document.getElementById('homeWidgetImage'),preview=document.getElementById('homeWidgetPreview'),save=document.getElementById('homeWidgetSave'),status=document.getElementById('homeWidgetStatus');if(!slogan)return;var saved={};try{saved=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}slogan.value=saved.slogan||'';var imageData=saved.image||'';function show(){if(preview){preview.src=imageData;preview.style.display=imageData?'block':'none'}}show();if(file)file.addEventListener('change',function(){var f=file.files&&file.files[0];if(!f)return;if(f.size>12*1024*1024){file.value='';status.textContent='圖片超過 12 MB';return}var img=new Image(),url=URL.createObjectURL(f);img.onload=function(){var c=document.createElement('canvas'),scale=Math.min(1,1000/Math.max(img.width,img.height));c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);imageData=c.toDataURL('image/jpeg',.78);URL.revokeObjectURL(url);show()};img.onerror=function(){URL.revokeObjectURL(url);status.textContent='無法讀取圖片'};img.src=url});if(save)save.onclick=function(){var data={slogan:slogan.value.trim(),image:imageData};try{localStorage.setItem(K,JSON.stringify(data));if(window.callNative)window.callNative('save-home-widget',data);status.textContent='已儲存，可加入桌面小工具';}catch(e){status.textContent='儲存失敗，請縮小圖片'}}})})();</script>
+<script>(function(){var K='super_dashboard_cwa_weather_v1',ENDPOINT='https://super-dashboard-weather.jispig28.workers.dev/api/weather';window.refreshDashboardWeather=async function(){if(ENDPOINT.indexOf('__CWA_')===0)return;try{var r=await fetch(ENDPOINT+'?city=%E8%87%BA%E5%8C%97%E5%B8%82&district=%E4%B8%AD%E6%AD%A3%E5%8D%80',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);var w=await r.json();if(w.temperature===null||w.temperature===undefined)return;var data={temperature:String(w.temperature),weather:String(w.weather||'多雲'),rainProbability:Number(w.rainProbability)||0,updatedAt:Date.now()/1000,iconUrl:w.iconUrl||''};localStorage.setItem(K,JSON.stringify(data));if(window.callNative)window.callNative('save-cwa-weather',data);var icon=document.getElementById('dashboardWeatherIcon');if(icon&&data.iconUrl)icon.src=data.iconUrl;var temp=document.getElementById('dashboardWeatherTemp');if(temp)temp.textContent=data.temperature+'°C'}catch(e){console.warn('CWA weather refresh failed',e)}};document.addEventListener('DOMContentLoaded',function(){var saved={};try{saved=JSON.parse(localStorage.getItem(K)||'{}')}catch(e){}var icon=document.getElementById('dashboardWeatherIcon');if(icon&&saved.iconUrl)icon.src=saved.iconUrl;var temp=document.getElementById('dashboardWeatherTemp');if(temp&&saved.temperature)temp.textContent=saved.temperature+'°C';window.refreshDashboardWeather();setInterval(function(){if(!document.hidden)window.refreshDashboardWeather()},30*60*1000)})})();</script>
 </body>
 </html>
 

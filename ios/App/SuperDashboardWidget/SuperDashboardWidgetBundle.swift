@@ -7,5 +7,7 @@ struct SuperDashboardWidgetBundle: WidgetBundle {
         SuperDashboardWidget()
         SuperDashboardWidgetLiveActivity()
         QuickCopyLiveActivity()
+        SuperDashboardShowcaseWidget()
+        WeatherLockScreenWidget()
     }
 }

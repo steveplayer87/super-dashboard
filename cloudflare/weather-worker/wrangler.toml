@@ -1,0 +1,8 @@
+name = "super-dashboard-weather"
+main = "src/index.js"
+compatibility_date = "2026-11-18"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "DATABASE"
+id = "b80b00c3e82d4df8a1e81600fc8aefa7"
