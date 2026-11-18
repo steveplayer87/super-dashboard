@@ -7210,8 +7210,8 @@ window.switchPage = function(page) {
     if (window.PhotoVault && typeof window.PhotoVault.closeLightbox === 'function') {
       window.PhotoVault.closeLightbox();
     }
-    if (page === 'photos' && window.PhotoVault && typeof window.PhotoVault.render === 'function') {
-      window.PhotoVault.render();
+    if (page === 'photos' && window.PhotoVault && typeof window.PhotoVault.activate === 'function') {
+      window.PhotoVault.activate();
     }
     document.querySelectorAll('.tab[data-tab]').forEach(function(t) {
       t.classList.toggle('active', t.dataset.tab === page);
@@ -13196,6 +13196,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     activeLightboxItem: null,
     metaDrawerOpen: false,
     forceLiveNextImport: false,
+    initialized: false,
+    initializing: false,
+    rendered: false,
+    visibleLimit: 90,
     sortBy: localStorage.getItem('photo_vault_sort_by') || 'created_desc'
   };
 
@@ -13598,7 +13602,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           '<div style="margin-bottom:8px;"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>' +
           emptyMsg + backBtn + '</div>';
       } else {
-        grid.innerHTML = activeList.map(function(item) {
+        var visibleItems = activeList.slice(0, state.visibleLimit);
+        grid.innerHTML = visibleItems.map(function(item) {
           var isSel = state.selectedIds.has(item.id);
           var cls = 'photo-cell' + (state.selectMode ? ' select-mode' : '') + (isSel ? ' selected' : '');
           var liveBadge = item.isLive ? '<div class="photo-badge-live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></div>' : '';
@@ -13612,6 +13617,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
             '</div>';
         }).join('');
 
+        if (activeList.length > visibleItems.length) {
+          grid.insertAdjacentHTML('beforeend', '<button type="button" class="photos-btn" onclick="window.PhotoVault.loadMore()" style="grid-column:1/-1;justify-self:center;margin:12px auto 20px;min-height:40px;padding:0 22px;">載入更多相片（' + (activeList.length - visibleItems.length) + '）</button>');
+        }
         grid.querySelectorAll('.photo-cell').forEach(function(cell) {
           var id = cell.dataset.id;
           var item = activeList.find(function(x) { return x.id === id; });
@@ -13630,6 +13638,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(state.subtab==='mediatypes') renderMediaTypes();
     if(state.subtab==='deleted') renderDeletedGrid(trashList);
     updateSelectToolbar();
+    state.rendered = true;
   }
 
   function updateCountsOnly() {
@@ -13774,6 +13783,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function switchSubtab(tab, keepFilter) {
     state.subtab = tab;
+    state.visibleLimit = 90;
     if (!keepFilter) {
       state.albumFilter = null;
       state.mediaTypeFilter = null;
@@ -13794,6 +13804,72 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if (viewDel) viewDel.style.display = (tab === 'deleted') ? '' : 'none';
 
     render();
+  }
+
+  function loadMore() {
+    state.visibleLimit += 90;
+    render();
+  }
+
+  function migrateLegacyFiles(items, index) {
+    if (!items || index >= items.length) {
+      try { localStorage.setItem('sd-file-provider-migrated', '1'); } catch(e) {}
+      return;
+    }
+    var item = items[index];
+    if (item && (item.dataUrl || item.liveVideoUrl)) {
+      if (item.dataUrl) window.callNative('store-file-provider-photo', { filename:item.filename||'Photo', dataUrl:item.dataUrl });
+      if (item.liveVideoUrl) window.callNative('store-file-provider-photo', { filename:(item.filename||'LivePhoto').replace(/\.[^.]+$/, '')+'.mov', dataUrl:item.liveVideoUrl });
+    }
+    setTimeout(function(){ migrateLegacyFiles(items, index + 1); }, 120);
+  }
+
+  function activate() {
+    if (state.initialized) { if (!state.rendered) render(); return; }
+    if (state.initializing) return;
+    state.initializing = true;
+    var summary = document.getElementById('photosItemsSummary');
+    var grid = document.getElementById('photosGrid');
+    var selectButton = document.getElementById('photosSelectToggleBtn');
+    var addButton = document.getElementById('photosAddMenuBtn');
+    if (selectButton) selectButton.disabled = true;
+    if (addButton) addButton.disabled = true;
+    if (summary) summary.textContent = '正在載入相片…';
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;padding:48px 16px;text-align:center;color:var(--text-muted);font-size:13px;">正在載入相片與影片…</div>';
+    // Let WebKit paint the page shell before opening IndexedDB or building thumbnails.
+    setTimeout(function() {
+      openDB().then(function() {
+        ensureNativeFolder();
+        return getAllFromDB();
+      }).then(function(items) {
+        if (!items || items.length === 0) {
+          seedDefaultPhotos();
+        } else {
+          state.items = items;
+          var migratedDurations=false;
+          state.items.forEach(function(item){
+            if(item.mediaType==='video' && item.duration==='00:15' && (item.videoUrl || (item.dataUrl && item.dataUrl.indexOf('data:video/')===0))){item.duration='';migratedDurations=true;}
+            if(item.id==='sample-2' && item.mediaType==='video' && !item.videoUrl && item.dataUrl && item.dataUrl.indexOf('data:image/')===0){item.mediaType='image';item.filename='IMG_20261113_SERVER.jpg';delete item.duration;migratedDurations=true;}
+          });
+          if(migratedDurations) saveBatch(state.items);
+        }
+        state.initialized = true;
+        state.initializing = false;
+        if (selectButton) selectButton.disabled = false;
+        if (addButton) addButton.disabled = false;
+        if (window.currentPage === 'photos') render();
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard && localStorage.getItem('sd-file-provider-migrated') !== '1') {
+          migrateLegacyFiles(state.items.slice(), 0);
+        }
+      }).catch(function(error) {
+        state.initializing = false;
+        if (selectButton) selectButton.disabled = false;
+        if (addButton) addButton.disabled = false;
+        if (summary) summary.textContent = '相片載入失敗，請重新切換此頁';
+        if (grid) grid.innerHTML = '<div style="grid-column:1/-1;padding:32px 16px;text-align:center;color:var(--text-muted);font-size:13px;">相片資料暫時無法開啟</div>';
+        console.error('PhotoVault initialization error', error);
+      });
+    }, 40);
   }
 
   function filterByAlbum(album) {
@@ -14918,35 +14994,10 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     }
   }
 
-  // ==================== 初始化 ====================
-  openDB().then(function() {
-    ensureNativeFolder();
-    return getAllFromDB();
-  }).then(function(items) {
-    if (!items || items.length === 0) {
-      seedDefaultPhotos();
-    } else {
-      state.items = items;
-      var migratedDurations=false;
-      state.items.forEach(function(item){
-        if(item.mediaType==='video' && item.duration==='00:15' && (item.videoUrl || (item.dataUrl && item.dataUrl.indexOf('data:video/')===0))){item.duration='';migratedDurations=true;}
-        if(item.id==='sample-2' && item.mediaType==='video' && !item.videoUrl && item.dataUrl && item.dataUrl.indexOf('data:image/')===0){item.mediaType='image';item.filename='IMG_20261113_SERVER.jpg';delete item.duration;migratedDurations=true;}
-      });
-      if(migratedDurations) saveBatch(state.items);
-      // 舊版已存在 IndexedDB 的項目做一次性遷移，之後 Files 會看到這些檔案。
-      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.superdashboard && localStorage.getItem('sd-file-provider-migrated') !== '1') {
-        items.forEach(function(item){
-          if (item.dataUrl) window.callNative('store-file-provider-photo', { filename:item.filename||'Photo', dataUrl:item.dataUrl });
-          if (item.liveVideoUrl) window.callNative('store-file-provider-photo', { filename:(item.filename||'LivePhoto').replace(/\.[^.]+$/, '')+'.mov', dataUrl:item.liveVideoUrl });
-        });
-        localStorage.setItem('sd-file-provider-migrated','1');
-      }
-    }
-    render();
-  });
-
   window.PhotoVault = {
     render: render,
+    activate: activate,
+    loadMore: loadMore,
     requestNativeCamera: requestNativeCamera,
     setSort: setSort,
     refreshVisibleView: function(){ /* IndexedDB 已在啟動時載入；切回頁面不重建整張相片網格。 */ },

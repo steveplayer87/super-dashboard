@@ -358,3 +358,13 @@ iOS App：WebView + Swift 原生層
 - 指定 iPhone 安裝：成功。
 - App 未被強制啟動；因此本輪沒有新的實機操作驗收結果。
 - 未追蹤建置資料仍保留，未清理或刪除：build_dev/、build_shortcut_open/、build_super_shortcut/、ios/App/SourcePackages/、ios/build_dinosaur_primary/、ios/build_icon_native/、ios/build_icon_obsidian_fix/、ios/build_messages/、ios/build_messages_device/。
+
+### 8.5 相片庫切換白畫面與延遲修正（2026-11-18）
+
+- 初步根因：PhotoVault 在 HTML 載入期間就開啟 IndexedDB、讀取所有媒體並同步建立整張網格；每次切回相片庫又會立即重建網格。首次載入時還會一次將舊項目的 Base64 原始檔送往原生檔案區。這些主執行緒與記憶體工作會延後 WebView 繪製，可能連帶讓「更多」頁面短暫白屏。此為依程式流程判斷，尚未以當下白畫面取得 crash log 證實。
+- 修正：相片資料改為首次進入相片庫才開啟；先顯示頁面及載入提示，讓 WebView 有機會先繪製，再開始讀取 IndexedDB。網格第一批最多建立 90 個項目，按「載入更多相片」逐批增加。舊檔案遷移改為逐項排程，避免一次傳送大量 Base64。
+- Web 原始資產為 `www/index.html`；`npx cap copy ios` 後 `www/index.html` 與 `ios/App/App/public/index.html` SHA-256 相同。根目錄 `index.html` 原本就與這兩份不同，本次沒有覆蓋它。
+- APP_VERSION 及原生版本號未調整，本次為 v27 既有版本上的修正。
+- JavaScript inline script 語法檢查及 `git diff --check` 通過；Xcode iOS Debug build 成功。建置使用 `CODE_SIGNING_ALLOWED=NO`，因此沒有安裝至 iPhone。
+- 已透過 CoreDevice 讀取指定 iPhone 17 Pro 的進程清單並擷取當下螢幕；App 進程仍執行，取樣畫面在儀錶板。該畫面不是問題重現時的畫面，無法證明白屏已排除；本次進程查詢也不包含記憶體用量。主機 `security find-identity` 回報 0 個有效簽署身分，暫不能安裝驗證。
+- 待使用者在手機確認：相片庫 tab 是否立即切入並顯示載入狀態；大量照片是否逐批顯示；切往「更多」再返回是否不再白屏。真機互動尚未驗收。
