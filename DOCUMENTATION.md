@@ -158,17 +158,17 @@ interface WalletCard {
   category?: 'transit' | 'credit' | 'access' | 'car' | 'other'; // 子類別
   theme?: string;                // 卡面主題 (theme-gold, theme-black, theme-custom 等)
   customImage?: string;          // 自訂相片之 Base64 資料 (經 Canvas 壓縮)
-  
+
   // 交通卡 / 信用卡
   balance?: number;              // 餘額 (交通卡)
   cardNumber?: string;           // 卡號末四碼或完整遮罩卡號
   holderName?: string;           // 持卡人姓名
   expiry?: string;               // 有效月年 (MM/YY)
-  
+
   // 車鑰匙
   boundCar?: string;             // 綁定車種 (如 Porsche 911 GT3 RS)
   carBattery?: number;           // 電量或油量百分比 (0-100)
-  
+
   // 票卡專屬欄位
   passType?: 'airline' | 'subway' | 'seven' | 'starbucks' | 'other';
   airline?: string;              // 發行機構/航空公司名稱
@@ -294,3 +294,67 @@ iOS App：WebView + Swift 原生層
 6. 哪些功能已實際操作驗證、哪些仍待驗證。
 
 不得以「已修改」代稱「已建置」，不得以「已建置」代稱「已安裝」，也不得以「已安裝」代稱「功能已驗證」。
+
+---
+
+## 8. v27 實裝更新紀錄與驗收狀態（2026-11-18）
+
+### 8.1 版本與交付識別
+
+- Web 端更新公告版本：**v27**（www/index.html 的 APP_VERSION）。
+- Git 分支：main。
+- 最新提交：eb18e59e557ab9645a496a91231a984c3554775e（升級阿鵝動作圖鑑與3D模型單元）。
+- GitHub origin/main 已確認指向相同 commit。
+- v27 已安裝至指定 iPhone；本次交付沒有強制啟動 App，因此尚未完成開啟後的真機互動驗收。
+- **版本號不一致警示：**目前 ios/App/App.xcodeproj/project.pbxproj 多個 target 的 MARKETING_VERSION／CURRENT_PROJECT_VERSION 仍為 21，而 Web 更新公告為 v27。下次發版前應確認主 App、鍵盤、訊息擴充功能及 File Provider 的版本號策略，避免更新公告與原生版本資訊不一致。不可只改其中一個 target。
+
+### 8.2 最近版本已實裝項目
+
+**相機與相片庫（v24–v25）**
+- 相機新增前後雙鏡合成；錄影輸出為單一子母畫面影片，前鏡頭小窗往左內縮並加大圓角。
+- 相片庫改用完整檢視器；影片顯示實際時長與可拖曳進度列，切換／關閉時停止播放並釋放媒體來源。
+- 使用 Apple 原生照片選取器，匯入使用者選取的照片與影片；可取得時保留照片地點及 EXIF GPS。
+- 匯入照片以完整解析度原圖供檢視，720px 縮圖僅供列表顯示。
+- Live Photo 匯入時保留配對動態影片；拍攝時改用 JPEG 靜態影像搭配配對 MOV，以避開 HEVC 擷取組合相容問題。
+- Live Photo 檢視以靜態畫面呈現，長按播放；效果入口包含循環、來回、長曝與關閉等模式。
+- 相片放大器使用雙指中心點縮放，支援縮放狀態下滑動切換照片；垃圾桶使用版面內確認浮層。
+
+**原況照片修正（v26）**
+- 長按播放加入指標捕捉及播放狀態識別，降低手指微移造成提早中斷的情況。
+- 效果圖示獨立處理點擊，避免與相片左右滑動手勢衝突。
+- 這些修正已建置、推送及安裝，但仍須由使用者在實機確認長按播放是否完整、效果切換是否有反應；目前不可標記為功能驗收通過。
+
+**阿鵝動作圖鑑與 3D 單元（v27）**
+- 動作圖鑑改為簡化動作卡片；內建 dash、tilt、dive 三種動作，使用者自訂動作可設定圖示及圖片／GIF。
+- 點擊動作卡片開啟詳情視窗，顯示動作內容與 GIF／圖片。
+- 新增 IndexedDB（資料庫 super-dashboard-goose-media），儲存使用者動作、相片圖庫及 GLB 模型；並嘗試遷移既有 localStorage 動作資料。
+- 阿鵝相片上傳改為持久化儲存，重新開啟後應可還原。
+- 新增動作視窗改為固定置中並限制高度，避免在已捲動頁面中跑出可視範圍。
+- 阿鵝頁面背景改為跟隨主題；返回手勢改走共用 showMoreSubView('hub') 轉場。
+- 原生 CoreMotion 加入加速度感測，並保留 motionEnded 作為備援；目前程式門檻約 1.8、回落門檻 1.3、冷卻 1.2 秒。實際靈敏度仍需實機調整。
+- 新增 GLB 匯入及 model-viewer 旋轉／縮放展示；模型檔存入 IndexedDB，程式限制檔案大小 100MB。
+- 目前 model-viewer 由 Google CDN 載入，因此首次載入或離線環境可能無法顯示 3D 檢視器。此單元目前定位為 GLB 模型檢視，不可宣稱已支援完整動畫片段播放或動畫控制。
+- 尚未匯入使用者實際的阿鵝 GLB 模型；LiDAR 掃描流程、模型品質、模型大小及實機效能均未驗證。
+
+### 8.3 尚待實機驗收／後續工作
+
+1. **Live Photo：**實際長按是否完整播放；循環／來回／長曝／關閉效果是否正確切換；快速連續操作是否仍會中斷。
+2. **阿鵝動作圖鑑：**新增動作、選擇圖示、匯入 GIF／圖片、詳情播放、重新啟動後資料仍存在。
+3. **相片圖庫：**上傳多張照片、重新啟動後仍存在；原圖與縮圖是否各自正確；大檔案是否造成記憶體或 IndexedDB 配額問題。
+4. **3D GLB：**選取 GLB、儲存、重開 App、旋轉、縮放；測試無網路時 CDN 依賴的失敗狀態。後續可評估將 model-viewer 改成本機資產。
+5. **LiDAR：**iPhone 17 Pro 可用 LiDAR／攝影測量工具嘗試掃描阿鵝，但活體移動會造成網格破碎；掃描品質與 GLB 匯出尚未實測。
+6. **晃動返回：**測試輕晃、正常拿取、走路及強烈晃動，確認不會誤觸；依實機回饋調整門檻。
+7. **返回手勢：**從阿鵝頁面左緣滑回，確認與垂直捲動、內部互動及設定頁轉場一致。
+8. **原生版本號：**處理 Web v27 與 Xcode 專案版本 21 不一致；先確認主 App 與各 Extension 的版本政策，再統一設定。
+
+### 8.4 v27 建置與交付證據
+
+- JavaScript inline script 語法檢查：通過。
+- git diff --check：通過。
+- plutil -lint ios/App/App/Info.plist：通過。
+- npx cap copy ios：通過。
+- Xcode build：成功（存在既有警告，未因此判定執行期功能通過）。
+- Git commit／push：成功；遠端 origin/main SHA 與本機 HEAD 一致。
+- 指定 iPhone 安裝：成功。
+- App 未被強制啟動；因此本輪沒有新的實機操作驗收結果。
+- 未追蹤建置資料仍保留，未清理或刪除：build_dev/、build_shortcut_open/、build_super_shortcut/、ios/App/SourcePackages/、ios/build_dinosaur_primary/、ios/build_icon_native/、ios/build_icon_obsidian_fix/、ios/build_messages/、ios/build_messages_device/。
