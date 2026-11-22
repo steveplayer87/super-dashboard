@@ -399,4 +399,5 @@ iOS App：WebView + Swift 原生層
 - 編輯時點擊卡片標記待刪除，鉛筆仍開啟項目編輯；非編輯／刪除區域維持防誤觸。儲存鉛筆編輯時正常清理全域編輯狀態。
 - 延續相片庫重複切頁及燈箱動畫競態修正。
 - Web、主 App 與所有 iOS／Watch targets 版本統一為 v31 / build 25。
+- 主 App `Info.plist` 改為引用 `MARKETING_VERSION` 與 `CURRENT_PROJECT_VERSION`，避免 plist 內殘留 v21/build21 覆蓋 Xcode 專案設定。
 - 本次狀態：來源已修改；建置、安裝及 iPhone 上連點驗收待完成。
