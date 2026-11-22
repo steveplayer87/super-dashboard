@@ -10,6 +10,7 @@
 <title>超級儀錶板</title>
 <style>
   :root{
+    --bg:#0E0C09;
     --panel:#1A1815;
     --panel-raised:#221F19;
     --panel-raised-2:#17140F;
@@ -3251,7 +3252,8 @@
     font-weight: 700 !important;
     padding: 3px 8px !important;
   }
-  #gooseSubView { background:var(--bg) !important; }
+  #gooseSubView { background:var(--bg, #0E0C09) !important; background-color:#0E0C09; }
+  body.theme-halloween #gooseSubView { background:#0C0A17 !important; background-color:#0C0A17; }
   #gooseSubView .odyssey-action-card { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:100px;border-radius:14px;padding:12px 8px;box-shadow:none; }
   #gooseActionModal, #gooseActionDetailModal { position:fixed !important; inset:0 !important; }
   #gooseActionModal > div { max-height:86vh; overflow-y:auto; overscroll-behavior:contain; }
@@ -5634,7 +5636,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v28 · 資料庫、快捷動態島與小工具更新</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v29 · 阿鵝管家底色修復</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -5698,7 +5700,7 @@
       </div>
 
       <!-- 阿鵝管家 專屬子頁面 -->
-      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:var(--bg); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
+      <div id="gooseSubView" style="display:none; position:fixed; inset:0; z-index:90; background:var(--bg, #0E0C09); overflow-y:auto; -webkit-overflow-scrolling:touch; padding:calc(env(safe-area-inset-top, 20px) + 12px) 16px calc(env(safe-area-inset-bottom, 20px) + 70px); box-sizing:border-box;">
                 <!-- 系統級手勢返回左側感應條 -->
         <div id="gooseLeftEdgeHandle" style="position:fixed; top:0; left:0; width:35px; height:100%; z-index:100; pointer-events:auto;"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
@@ -6613,9 +6615,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v28</h2>
+    <h2 id="updateNotesTitle">已更新至 v29</h2>
     <div class="update-notes-list">
-      <div class="update-notes-group"><strong>新增與修正（v28）</strong><ul><li>新增資料庫第二分頁：本機 JSON 紀錄、HTTPS webhook 手動與定時同步</li><li>修正設定齒輪尺寸與圖示，與新增卡片按鈕一致</li><li>阿鵝與設定子頁改用不透明主題底色並顯示各自標題</li><li>錢包併入財務頁，新增浮動入口、返回按鈕與右側返回手勢</li><li>改善錢包卡片滑動露出比例與卡面圓角</li><li>咖啡券改用商品兌換卡面；模擬感應加入觸覺回饋</li><li>常用速貼動態島新增秒鐘、恐龍標誌與 2×5 快捷格</li><li>桌面展示小工具支援自訂標語與圖片</li><li>新增鎖定畫面日期／農曆／天氣小工具與 Cloudflare CWA 代理服務</li><li>Safari 擴充功能新增目前頁面的恐龍浮動標誌開關</li><li>系統資訊倒數分行顯示並固定版面高度</li></ul></div>
+      <div class="update-notes-group"><strong>修正（v29）</strong><ul><li>修復阿鵝管家頁底色變透明、透出「更多」頁的問題</li></ul></div>
       <div class="update-notes-group"><strong>修正</strong><ul><li>阿鵝動作圖鑑新增持久化照片／GIF 儲存、詳情播放視窗與圖示</li><li>阿鵝新增動作視窗改為固定置中顯示，修正捲動頁面中視窗跑出可視範圍</li><li>阿鵝頁面背景改為跟隨主題，返回手勢統一使用設定頁的轉場機制</li><li>新增可旋轉的 GLB 3D 模型匯入區</li><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
       <div class="update-notes-group"><strong>修復</strong><ul><li>編輯模式保留原有版面位置，未支援編輯的項目灰化</li><li>修正更多頁齒輪中心偏移與狀態列樣式</li><li>刪除相片選取工具列重複的取消按鈕，並為刪除加上圖示</li></ul></div>
@@ -8685,7 +8687,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v28';
+  var APP_VERSION = 'v29';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
