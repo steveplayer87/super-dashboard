@@ -25,4 +25,7 @@
 - 裝置清單／CoreDevice 探測逾時不等於 iPhone 未連線。先前曾遇到 `devicectl` 清單服務逾時，但直接指定 UDID 的 build 與 install 可成功；遇到清單逾時時，不要改走 UI 或無限重試，改用已知 UDID 做一次目標 build，再以 install 結果判定。
 - 插入 Swift delegate 方法前，必須用 `rg` 找出目標類別與結束大括號，並讀取方法前後完整片段；檔案內若有相似的 WKWebView delegate 方法，修改後先確認新方法仍在正確類別內，再開始 build。
 - 2026-11-23 復盤：本輪安裝最終成功，手機連線並非失敗原因。兩次 build 失敗是因 WebKit process-termination 回呼先後被插入 `WatchSyncManager`／`WardrobeMiniAppViewController` 的範圍，編譯器因此找不到 `MainViewController` 的節流狀態；第三次移到正確類別後 build 成功。避免方式是先檢查類別邊界與縮排範圍，只在確認後建置。這些失敗增加了等待與重試，和裝置連線無關。
+- 2026-11-23 v32 交付復盤：`devicectl device info apps` 確認手機裝的是 32/build 26，建置包內 `public/index.html` 也與 `www/index.html` 同 SHA；但使用者回報介面與相片庫問題仍未改善。版本、安裝成功與資產雜湊只能證明交付的是新包，不能證明修正有效，之後不得把它們當功能驗收。
+- v32 相片庫改動只把畫面 DOM 首批從 90 降至 24，沒有減少啟動時 `getAllFromDB()` 讀入 `dataUrl`／影片 Base64 原檔的記憶體；因此不是已證實的記憶體根因修復。相片庫效能工作要沿資料流檢查載入、解碼與釋放，不能只縮小渲染批次。使用者未確認效果前，文件及回覆應標成「程式已修改、真機效果未驗收」。
+- 編輯列定位曾用推算的 `top:12px`，沒有實機畫面證據證明已對齊；版面修正須先核對實際 containing block、正常模式按鈕座標及編輯模式座標，再宣稱完成。
 - 推送後立即以 `git ls-remote origin refs/heads/<BRANCH>` 比對本機 `git rev-parse HEAD`。若之後網路 DNS 暫時失敗，但 push 與緊接其後的 SHA 比對已成功，記錄那次成功結果即可，不要將稍後的單次查詢失敗誤報成 push 失敗或反覆探測。
