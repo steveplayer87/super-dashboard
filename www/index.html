@@ -1624,7 +1624,7 @@
   }
   .wallet-more-btn:hover{ border-color:var(--gold); color:var(--gold); }
   .wallet-more-btn:active{ transform:scale(0.95); }
-  .wallet-back-finance{ width:52px; min-width:52px; height:36px; min-height:36px; padding:0; margin-right:auto; border-radius:18px; display:none; align-items:center; justify-content:center; box-sizing:border-box; }
+  .wallet-back-finance{ margin-right:auto; display:none; }
   .wallet-back-finance svg{ width:18px; height:18px; flex:none; }
   .edit-mode-delete-overlay .edit-pencil{ top:4px !important; right:4px !important; width:28px !important; height:28px !important; box-sizing:border-box !important; }
 
@@ -4694,7 +4694,7 @@
 
   <div class="content">
     <div class="content-header">
-      <button class="btn wallet-back-finance" id="walletBackFinanceBtn" type="button" title="返回財務" aria-label="返回財務" onclick="window.switchPage('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <button class="btn wallet-more-btn wallet-back-finance" id="walletBackFinanceBtn" type="button" title="返回財務" aria-label="返回財務" onclick="window.switchPage('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
       <button class="btn wallet-more-btn" id="walletMoreBtn" style="display:none;" title="全域設定中樞"><span style="letter-spacing:1.5px;font-weight:900;">•••</span></button>
       <button class="btn" id="editBtn">編輯</button>
@@ -5646,7 +5646,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v32 · 編輯列定位與相片庫穩定性修正</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v33 · 返回財務膠囊樣式修正</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -6625,8 +6625,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v32</h2>
+    <h2 id="updateNotesTitle">已更新至 v33</h2>
     <div class="update-notes-list">
+      <div class="update-notes-group"><strong>修正（v33）</strong><ul><li>錢包「返回財務」直接沿用 Git 舊版三點按鈕的完整膠囊樣式，包含底色、邊框、色彩、圓角與尺寸</li></ul></div>
       <div class="update-notes-group"><strong>修正（v32）</strong><ul><li>對齊主頁編輯模式操作列，固定取消與完成按鈕位置</li><li>錢包返回財務移入標題列，沿用 Git 舊版三點膠囊按鈕規格</li><li>相片庫改為每批載入 24 個項目並非同步解碼；WebView 內容程序中止時自動嘗試恢復</li></ul></div>
       <div class="update-notes-group"><strong>修正（v31）</strong><ul><li>從 Git 舊版取回紅底垃圾桶卡片與鉛筆編輯樣式，改為原位覆蓋，編輯時不移動格子或財務列</li><li>保留 v30 修正的編輯防誤觸及相片庫快速切頁防黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v30）</strong><ul><li>主頁快捷項目及財務編輯模式改回垃圾桶圖示，保留項目位置並防止誤觸其他操作</li><li>修正相片庫重複切頁與延遲關閉燈箱造成的黑畫面</li></ul></div>
@@ -8701,7 +8702,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v32';
+  var APP_VERSION = 'v33';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');

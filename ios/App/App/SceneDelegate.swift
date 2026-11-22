@@ -915,7 +915,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
         startSensitiveShakeDetection()
-        NotificationManager.scheduleUpdateNotification(version: "v32")
+        NotificationManager.scheduleUpdateNotification(version: "v33")
     }
 
     private func setupDelegatesAndHandlers() {
