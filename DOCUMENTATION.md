@@ -306,7 +306,7 @@ iOS App：WebView + Swift 原生層
 - 最新提交：eb18e59e557ab9645a496a91231a984c3554775e（升級阿鵝動作圖鑑與3D模型單元）。
 - GitHub origin/main 已確認指向相同 commit。
 - v27 已安裝至指定 iPhone；本次交付沒有強制啟動 App，因此尚未完成開啟後的真機互動驗收。
-- **版本號不一致警示：**目前 ios/App/App.xcodeproj/project.pbxproj 多個 target 的 MARKETING_VERSION／CURRENT_PROJECT_VERSION 仍為 21，而 Web 更新公告為 v27。下次發版前應確認主 App、鍵盤、訊息擴充功能及 File Provider 的版本號策略，避免更新公告與原生版本資訊不一致。不可只改其中一個 target。
+- **版本號歷史備註：**當時該版本確有原生版本設定落後的情況；v29 起已將主 App、鍵盤、訊息擴充功能、File Provider 與 Watch targets 統一版本。
 
 ### 8.2 最近版本已實裝項目
 
@@ -386,3 +386,11 @@ iOS App：WebView + Swift 原生層
 - 根因：全域樣式使用 `var(--bg)`，但預設主題沒有定義 `--bg`；CSS 宣告因此失效，固定定位的阿鵝管家子頁背景透明，會看見下層「更多」頁。
 - 在根主題定義不透明底色並為阿鵝管家子頁加上明確 fallback；Halloween 主題仍使用其專屬底色。
 - Web、主 App 與所有 iOS／Watch targets 版本統一為 v29 / build 23。
+
+## 11. v30 編輯模式與相片庫穩定性修復（2026-11-23）
+
+- 主頁快捷項目恢復 Lucide 垃圾桶標記；以絕對定位標記，不重新排列格子，編輯時只允許項目編輯／刪除與取消／完成操作。
+- 財務帳戶與固定支出列恢復垃圾桶標記及待刪除流程；編輯模式停用預算等非編輯操作，取消可復原標記。
+- 移除分頁按鈕的重複點擊監聽；切換離開相片庫時才關閉燈箱，重開檢視器會取消過期的關閉動畫，避免快速連點導致黑畫面。
+- Web、主 App 與所有 iOS／Watch targets 版本統一為 v30 / build 24。
+- 本次狀態：來源已修改；建置、安裝及 iPhone 上連點驗收待完成。

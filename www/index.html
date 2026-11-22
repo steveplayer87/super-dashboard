@@ -286,7 +286,12 @@
   .global-edit-mode .keycap.pending-remove, .global-edit-mode .fin-row.pending-remove, .global-edit-mode .wallet-card-slide.pending-remove { opacity:.38; }
   .global-edit-mode .v-card-delete-overlay { display:flex !important; opacity:1 !important; }
   .global-edit-mode .wallet-card-slide { filter:grayscale(.55); }
-  .global-edit-mode .keycap::after { content:'−'; position:absolute; top:4px; right:4px; width:18px; height:18px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#d94c45; color:white; font-size:16px; font-weight:800; opacity:.9; pointer-events:none; }
+  .edit-trash-indicator{ position:absolute; top:5px; right:5px; z-index:20; width:25px; height:25px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.35); border-radius:8px; background:#D94C45; color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.35); pointer-events:none; }
+  .edit-trash-indicator svg{ width:16px; height:16px; stroke:currentColor; }
+  .global-edit-mode #page-dashboard > *,.global-edit-mode #page-finance > *{ pointer-events:none; }
+  .global-edit-mode #page-dashboard .keycap[data-item-id],.global-edit-mode #page-finance .fin-row[data-item-id],.global-edit-mode #page-finance .fin-row-main[data-item-id]{ pointer-events:auto; }
+  .global-edit-mode #page-finance .edit-trash-indicator{ top:50%; right:10px; transform:translateY(-50%); }
+  .global-edit-mode .fin-row[data-item-id],.global-edit-mode .fin-row-main[data-item-id]{ position:relative; }
   .family-member-edit-btn:hover{ color:var(--text); border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); }
 
   .family-member-status{
@@ -5636,7 +5641,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v29 · 阿鵝管家底色修復</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v30 · 編輯模式與相片庫穩定性修復</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -6615,8 +6620,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v29</h2>
+    <h2 id="updateNotesTitle">已更新至 v30</h2>
     <div class="update-notes-list">
+      <div class="update-notes-group"><strong>修正（v30）</strong><ul><li>主頁快捷項目及財務編輯模式改回垃圾桶圖示，保留項目位置並防止誤觸其他操作</li><li>修正相片庫重複切頁與延遲關閉燈箱造成的黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v29）</strong><ul><li>修復阿鵝管家頁底色變透明、透出「更多」頁的問題</li></ul></div>
       <div class="update-notes-group"><strong>修正</strong><ul><li>阿鵝動作圖鑑新增持久化照片／GIF 儲存、詳情播放視窗與圖示</li><li>阿鵝新增動作視窗改為固定置中顯示，修正捲動頁面中視窗跑出可視範圍</li><li>阿鵝頁面背景改為跟隨主題，返回手勢統一使用設定頁的轉場機制</li><li>新增可旋轉的 GLB 3D 模型匯入區</li><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
       <div class="update-notes-group"><strong>調整</strong><ul><li>設定頁支援左側邊緣右滑返回，並加大設定項目間距</li><li>衣櫥內容避開狀態列，僅背景延伸至頂部安全區</li><li>相片庫選取、取消與分頁切換減少不必要的重繪</li></ul></div>
@@ -7218,7 +7224,7 @@ window.syncSuperShortcutOptions = function(enabled) {
 };
 document.addEventListener('click', function(e){
   if (!state.editMode) return;
-  var row = e.target && e.target.closest ? e.target.closest('.fin-row[data-item-id]') : null;
+  var row = e.target && e.target.closest ? e.target.closest('.fin-row[data-item-id], .fin-row-main[data-item-id]') : null;
   if (!row) return;
   var type=row.dataset.itemType, id=row.dataset.itemId;
   if (!type || !id || !pendingRemove[type]) return;
@@ -7264,6 +7270,10 @@ document.addEventListener('DOMContentLoaded', function(){
 window.switchPage = function(page) {
   try {
     if (typeof window._cancelEditMode === 'function') window._cancelEditMode();
+    var previousPage = window.currentPage || 'dashboard';
+    if (previousPage === 'photos' && page !== 'photos' && window.PhotoVault && typeof window.PhotoVault.closeLightbox === 'function') {
+      window.PhotoVault.closeLightbox();
+    }
     window.currentPage = page;
     if (typeof currentPage !== 'undefined') currentPage = page;
     if (page === 'wallet' && typeof window.callNative === 'function') {
@@ -7289,9 +7299,6 @@ window.switchPage = function(page) {
     if (page === 'database' && typeof window.syncDashboardDatabase === 'function') window.syncDashboardDatabase();
     if (page === 'finance' && typeof renderFinance === 'function') {
       renderFinance();
-    }
-    if (window.PhotoVault && typeof window.PhotoVault.closeLightbox === 'function') {
-      window.PhotoVault.closeLightbox();
     }
     if (page === 'photos' && window.PhotoVault && typeof window.PhotoVault.activate === 'function') {
       window.PhotoVault.activate();
@@ -8687,7 +8694,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v29';
+  var APP_VERSION = 'v30';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -9038,6 +9045,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
         var mainRow = document.createElement('div');
         mainRow.className = 'fin-row-main fin-card-row';
+        mainRow.dataset.itemId = item.id;
+        mainRow.dataset.itemType = type;
 
         var dueDate = nextDueDate(item);
         var left = daysUntil(dueDate);
@@ -10716,18 +10725,21 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   window._cancelEditMode = function() { if (state.editMode) cancelEdit(); };
   window._updateAddCardBtnVisibility = updateAddCardBtnVisibility;
 
-  function switchPage(page){
-    window.switchPage(page);
-  }
-  document.querySelectorAll('.tab[data-tab]').forEach(function(t){
-    t.addEventListener('click', function(){ switchPage(t.dataset.tab); });
-  });
+  function switchPage(page){ window.switchPage(page); }
 
   // ==================== 編輯 / 取消 / 完成 ====================
   function resetPending(){
     pendingRemove = { copy:new Set(), shortcut:new Set(), account:new Set(), expense:new Set(), card:new Set() };
   }
   function renderEverything(){ renderAll(); renderFinance(); renderWallet(); }
+  function syncEditModeBadges(enabled){
+    document.querySelectorAll('#copyGrid .keycap[data-item-id], #shortcutGrid .keycap[data-item-id], #page-finance .fin-row[data-item-id], #page-finance .fin-row-main[data-item-id]').forEach(function(item){
+      var badge = item.querySelector(':scope > .edit-trash-indicator');
+      if(enabled){
+        if(!badge){ badge = document.createElement('span'); badge.className = 'edit-trash-indicator'; badge.setAttribute('aria-hidden', 'true'); badge.innerHTML = icon('trash-2'); item.appendChild(badge); }
+      } else if(badge) badge.remove();
+    });
+  }
 
   window._commitEditMode = function(){ commitEdit(); };
   function enterEdit(){
@@ -10741,6 +10753,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
     document.body.classList.add('global-edit-mode');
+    syncEditModeBadges(true);
   }
   function cancelEdit(){
     state.editMode = false;
@@ -10753,6 +10766,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
     document.body.classList.remove('global-edit-mode');
+    syncEditModeBadges(false);
     document.querySelectorAll('.pending-remove').forEach(function(el){ el.classList.remove('pending-remove'); });
   }
   function commitEdit(){
@@ -10774,6 +10788,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     if(floatBar) floatBar.style.display = 'none';
     updateAddCardBtnVisibility();
     document.body.classList.remove('global-edit-mode');
+    syncEditModeBadges(false);
     saveData();
     renderEverything();
     showToast('已完成編輯並離開');
@@ -14342,7 +14357,9 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   // 開啟相片檢視 (支援自縮圖無縫展開之原生彈性過渡動畫)
+  var lightboxCloseTimer = null;
   function openLightbox(item, sourceEl) {
+    if (lightboxCloseTimer) { clearTimeout(lightboxCloseTimer); lightboxCloseTimer = null; }
     state.activeLightboxItem = item;
     state.activeLightboxSource = sourceEl || null;
     var box = document.getElementById('photoLightbox');
@@ -14639,6 +14656,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function closeLightbox() {
     var box = document.getElementById('photoLightbox');
     var wrapper = document.getElementById('lightboxMediaWrapper');
+    if (!box || (!box.classList.contains('show') && !state.activeLightboxItem)) return;
+    if (lightboxCloseTimer) { clearTimeout(lightboxCloseTimer); lightboxCloseTimer = null; }
     if(wrapper){wrapper.querySelectorAll('video').forEach(function(v){v.pause();v.removeAttribute('src');v.load();});}
     var source = state.activeLightboxItem && document.querySelector('.photo-cell[data-id="' + state.activeLightboxItem.id + '"]');
     if (box && wrapper && source && source.isConnected) {
@@ -14649,8 +14668,8 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
       wrapper.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1),opacity .24s ease,border-radius .28s ease';
       wrapper.style.transform = 'translate('+dx+'px,'+dy+'px) scale('+scale+')';
       wrapper.style.borderRadius = '12px'; wrapper.style.opacity = '.7';
-      setTimeout(function(){ box.classList.remove('show','zooming'); wrapper.style.transform=''; wrapper.style.transition=''; wrapper.style.borderRadius=''; wrapper.style.opacity=''; }, 290);
-    } else if (box) { box.classList.add('zooming'); setTimeout(function(){ box.classList.remove('show','zooming'); }, 180); }
+      lightboxCloseTimer = setTimeout(function(){ box.classList.remove('show','zooming'); wrapper.style.transform=''; wrapper.style.transition=''; wrapper.style.borderRadius=''; wrapper.style.opacity=''; lightboxCloseTimer = null; }, 290);
+    } else { box.classList.add('zooming'); lightboxCloseTimer = setTimeout(function(){ box.classList.remove('show','zooming'); lightboxCloseTimer = null; }, 180); }
     toggleMetaDrawer(false);
 
     var appTopbar = document.querySelector('.topbar');

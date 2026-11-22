@@ -554,7 +554,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = ( AppIcon-AerospaceTitanium, AppIcon-CosmicTeal, AppIcon-DinosaurClassic, AppIcon-GuardianCrest, AppIcon-HeritageAmber, AppIcon-ObsidianGold, AppIcon-StealthBlack, );
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				INFOPLIST_FILE = App/Info.plist;
@@ -564,7 +564,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -580,7 +580,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = ( AppIcon-AerospaceTitanium, AppIcon-CosmicTeal, AppIcon-DinosaurClassic, AppIcon-GuardianCrest, AppIcon-HeritageAmber, AppIcon-ObsidianGold, AppIcon-StealthBlack, );
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				INFOPLIST_FILE = App/Info.plist;
@@ -590,7 +590,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -612,7 +612,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = SuperDashboardWidget/Widget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -627,7 +627,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardWidget;
@@ -656,7 +656,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_ENTITLEMENTS = SuperDashboardWidget/Widget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -671,7 +671,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"@executable_path/../../Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -696,7 +696,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -711,7 +711,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardShare;
@@ -736,7 +736,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 23;
+				CURRENT_PROJECT_VERSION = 24;
 				DEVELOPMENT_TEAM = KVQ2KCRGLG;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -751,7 +751,7 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 29;
+				MARKETING_VERSION = 30;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.SuperDashboardShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -763,15 +763,15 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 			};
 			name = Release;
 		};
-		A10000000000000000000017 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardMessages/Messages.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_FILE = SuperDashboardMessages/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.messages; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
-		A10000000000000000000018 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardMessages/Messages.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_FILE = SuperDashboardMessages/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.messages; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+		A10000000000000000000017 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardMessages/Messages.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_FILE = SuperDashboardMessages/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.messages; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		A10000000000000000000018 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardMessages/Messages.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_FILE = SuperDashboardMessages/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.messages; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
 		A10000000000000000000012 /* Build configuration list for PBXNativeTarget "SuperDashboardMessagesExtension" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000017 /* Debug */, A10000000000000000000018 /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		D1000000000000000000000B /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = SuperDashboardFileProvider/FileProvider.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardFileProvider/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.FileProvider; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
-		D1000000000000000000000C /* Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = SuperDashboardFileProvider/FileProvider.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardFileProvider/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.FileProvider; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+		D1000000000000000000000B /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = SuperDashboardFileProvider/FileProvider.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardFileProvider/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.FileProvider; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		D1000000000000000000000C /* Release */ = {isa = XCBuildConfiguration; buildSettings = {APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGN_ENTITLEMENTS = SuperDashboardFileProvider/FileProvider.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardFileProvider/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.FileProvider; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
 /* End XCBuildConfiguration section */
 
-006FEA066C1F4F70A9E0F33D /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
-51858C49FA184E25B3187F6E /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+006FEA066C1F4F70A9E0F33D /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+51858C49FA184E25B3187F6E /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = SuperDashboardKeyboard/Keyboard.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SuperDashboardKeyboard/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.keyboard; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
 67C6CA7935BF485DAEC6F391 /* Build configuration list for PBXNativeTarget "SuperDashboardKeyboard" */ = {isa = XCConfigurationList; buildConfigurations = (006FEA066C1F4F70A9E0F33D /* Debug */, 51858C49FA184E25B3187F6E /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* Begin XCConfigurationList section */
 		504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */ = {
@@ -811,8 +811,8 @@ A568068DC5074A67AF4AE708 /* SuperDashboardKeyboard */ = {isa = PBXFileSystemSync
 			defaultConfigurationName = Release;
 		};
 		D1000000000000000000000A /* Build configuration list for PBXNativeTarget "SuperDashboardFileProvider" */ = {isa = XCConfigurationList; buildConfigurations = (D1000000000000000000000B /* Debug */, D1000000000000000000000C /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-		F0000000000000000000000B /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.steveplayer87.superdashboard; INFOPLIST_KEY_WKWatchKitApp = YES; INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = watchos; SKIP_INSTALL = NO; SUPPORTED_PLATFORMS = "watchos watchsimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 4; WATCHOS_DEPLOYMENT_TARGET = 10.0; }; name = Debug; };
-		F0000000000000000000000C /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 23; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.steveplayer87.superdashboard; INFOPLIST_KEY_WKWatchKitApp = YES; INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO; MARKETING_VERSION = 29; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = watchos; SKIP_INSTALL = NO; SUPPORTED_PLATFORMS = "watchos watchsimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 4; WATCHOS_DEPLOYMENT_TARGET = 10.0; }; name = Release; };
+		F0000000000000000000000B /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.steveplayer87.superdashboard; INFOPLIST_KEY_WKWatchKitApp = YES; INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = watchos; SKIP_INSTALL = NO; SUPPORTED_PLATFORMS = "watchos watchsimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 4; WATCHOS_DEPLOYMENT_TARGET = 10.0; }; name = Debug; };
+		F0000000000000000000000C /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 24; DEVELOPMENT_TEAM = KVQ2KCRGLG; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "Super Dashboard"; INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.steveplayer87.superdashboard; INFOPLIST_KEY_WKWatchKitApp = YES; INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO; MARKETING_VERSION = 30; PRODUCT_BUNDLE_IDENTIFIER = com.steveplayer87.superdashboard.watchkitapp; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = watchos; SKIP_INSTALL = NO; SUPPORTED_PLATFORMS = "watchos watchsimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 4; WATCHOS_DEPLOYMENT_TARGET = 10.0; }; name = Release; };
 		F0000000000000000000000D /* Build configuration list for SuperDashboardWatch */ = {isa = XCConfigurationList; buildConfigurations = (F0000000000000000000000B /* Debug */, F0000000000000000000000C /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
