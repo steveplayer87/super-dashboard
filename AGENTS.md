@@ -17,3 +17,12 @@
 8. **外部依賴揭露：**CDN、網路、權限、檔案格式、容量上限及裝置硬體限制，需明確記錄；不得將依賴網路的功能描述成完全離線。
 9. **保護使用者資料：**不刪除、不覆蓋未追蹤檔案、建置資料、暫存檔或使用者資產；未經確認不得批次套用可能重複或衝突的 diff。
 10. **交付閉環：**必要檢查通過後 commit，立即 push 至目前分支，確認遠端 SHA；回報 commit、分支、建置結果、安裝結果、未追蹤檔案及尚待實機驗證項目。
+
+## iPhone CLI 交付流程與 2026-11-23 復盤
+
+- 使用者要求 CLI 操作時，只用 Terminal 指令（`xcodebuild`、`xcrun devicectl`、`git`）；不要開 Xcode／Finder／系統監視器視窗，也不要用 UI 自動化反覆查裝置。
+- 本專案已驗證可用的流程：先用目標 UDID 執行 `xcodebuild -quiet -project ios/App/App.xcodeproj -scheme App -destination 'id=<DEVICE_UDID>' -derivedDataPath /private/tmp/super-dashboard-derived build`；Build 成功後用 `xcrun devicectl device install app --device <DEVICE_UDID> <DERIVED_DATA>/Build/Products/Debug-iphoneos/App.app` 安裝。使用者指定同一輪只安裝一次時，所有修改收斂後才做一次正式安裝，且安裝後不呼叫 launch。
+- 裝置清單／CoreDevice 探測逾時不等於 iPhone 未連線。先前曾遇到 `devicectl` 清單服務逾時，但直接指定 UDID 的 build 與 install 可成功；遇到清單逾時時，不要改走 UI 或無限重試，改用已知 UDID 做一次目標 build，再以 install 結果判定。
+- 插入 Swift delegate 方法前，必須用 `rg` 找出目標類別與結束大括號，並讀取方法前後完整片段；檔案內若有相似的 WKWebView delegate 方法，修改後先確認新方法仍在正確類別內，再開始 build。
+- 2026-11-23 復盤：本輪安裝最終成功，手機連線並非失敗原因。兩次 build 失敗是因 WebKit process-termination 回呼先後被插入 `WatchSyncManager`／`WardrobeMiniAppViewController` 的範圍，編譯器因此找不到 `MainViewController` 的節流狀態；第三次移到正確類別後 build 成功。避免方式是先檢查類別邊界與縮排範圍，只在確認後建置。這些失敗增加了等待與重試，和裝置連線無關。
+- 推送後立即以 `git ls-remote origin refs/heads/<BRANCH>` 比對本機 `git rev-parse HEAD`。若之後網路 DNS 暫時失敗，但 push 與緊接其後的 SHA 比對已成功，記錄那次成功結果即可，不要將稍後的單次查詢失敗誤報成 push 失敗或反覆探測。
