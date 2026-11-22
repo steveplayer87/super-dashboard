@@ -283,14 +283,19 @@
     transition: opacity .12s ease, filter .12s ease;
   }
   .global-edit-mode .keycap, .global-edit-mode .fin-row, .global-edit-mode .wallet-card-slide { filter: grayscale(.72); }
+  .global-edit-mode .keycap.delete-tile,.global-edit-mode .fin-row[data-item-id],.global-edit-mode .fin-row-main[data-item-id]{ filter:none; }
   .global-edit-mode .keycap.pending-remove, .global-edit-mode .fin-row.pending-remove, .global-edit-mode .wallet-card-slide.pending-remove { opacity:.38; }
   .global-edit-mode .v-card-delete-overlay { display:flex !important; opacity:1 !important; }
   .global-edit-mode .wallet-card-slide { filter:grayscale(.55); }
-  .edit-trash-indicator{ position:absolute; top:5px; right:5px; z-index:20; width:25px; height:25px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.35); border-radius:8px; background:#D94C45; color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.35); pointer-events:none; }
-  .edit-trash-indicator svg{ width:16px; height:16px; stroke:currentColor; }
+  .edit-mode-delete-overlay{ position:absolute; inset:0; z-index:18; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px; overflow:hidden; border-radius:inherit; background:linear-gradient(180deg, #D9564B 0%, var(--danger) 100%); border:1px solid #8f2f28; color:#fff; pointer-events:none; box-sizing:border-box; }
+  .edit-mode-delete-overlay .trash-icon{ width:24px; height:24px; stroke:currentColor; flex:none; }
+  .edit-mode-delete-overlay .label{ max-width:100%; color:#FFECEA; font-size:12px; font-weight:500; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+  .edit-mode-delete-overlay .edit-pencil{ pointer-events:auto !important; }
+  .edit-mode-delete-overlay .edit-pencil svg,.edit-mode-delete-overlay .edit-pencil path{ pointer-events:none !important; }
   .global-edit-mode #page-dashboard > *,.global-edit-mode #page-finance > *{ pointer-events:none; }
   .global-edit-mode #page-dashboard .keycap[data-item-id],.global-edit-mode #page-finance .fin-row[data-item-id],.global-edit-mode #page-finance .fin-row-main[data-item-id]{ pointer-events:auto; }
-  .global-edit-mode #page-finance .edit-trash-indicator{ top:50%; right:10px; transform:translateY(-50%); }
+  .global-edit-mode #page-finance .edit-mode-delete-overlay{ flex-direction:row; justify-content:flex-start; gap:10px; }
+  .global-edit-mode #page-finance .edit-mode-delete-overlay .trash-icon{ width:20px; height:20px; }
   .global-edit-mode .fin-row[data-item-id],.global-edit-mode .fin-row-main[data-item-id]{ position:relative; }
   .family-member-edit-btn:hover{ color:var(--text); border-color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); }
 
@@ -5641,7 +5646,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v30 · 編輯模式與相片庫穩定性修復</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v31 · 還原舊版垃圾桶編輯樣式</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -6620,8 +6625,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v30</h2>
+    <h2 id="updateNotesTitle">已更新至 v31</h2>
     <div class="update-notes-list">
+      <div class="update-notes-group"><strong>修正（v31）</strong><ul><li>從 Git 舊版取回紅底垃圾桶卡片與鉛筆編輯樣式，改為原位覆蓋，編輯時不移動格子或財務列</li><li>保留 v30 修正的編輯防誤觸及相片庫快速切頁防黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v30）</strong><ul><li>主頁快捷項目及財務編輯模式改回垃圾桶圖示，保留項目位置並防止誤觸其他操作</li><li>修正相片庫重複切頁與延遲關閉燈箱造成的黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v29）</strong><ul><li>修復阿鵝管家頁底色變透明、透出「更多」頁的問題</li></ul></div>
       <div class="update-notes-group"><strong>修正</strong><ul><li>阿鵝動作圖鑑新增持久化照片／GIF 儲存、詳情播放視窗與圖示</li><li>阿鵝新增動作視窗改為固定置中顯示，修正捲動頁面中視窗跑出可視範圍</li><li>阿鵝頁面背景改為跟隨主題，返回手勢統一使用設定頁的轉場機制</li><li>新增可旋轉的 GLB 3D 模型匯入區</li><li>原況照片長按播放改用指標捕捉，避免手指微移造成提早中斷</li><li>原況效果圖示改為獨立點擊切換，並排除相片滑動手勢干擾</li><li>系統相簿匯入改以完整解析度原圖供檢視，720px 縮圖僅供列表使用</li><li>前鏡頭子母畫面往左內縮，圓角加大</li><li>原況照片拍攝改用 JPEG 靜態影像搭配配對 MOV，避開 HEVC Live Photo 擷取組合</li><li>影片顯示實際時長並加入可拖曳播放進度列</li><li>影片切換與關閉時停止播放及釋放媒體來源</li><li>相機拍攝預覽入口改為開啟完整相片庫檢視器</li><li>新增相機介面內的前後雙鏡開關，拍照與錄影均合成單一子母畫面檔案</li><li>拍攝時請求定位權限並記錄可取得的座標</li><li>相機焦段加入 0.5×，並支援滑桿與捏合連續變焦</li><li>錄影快門保留白色圓形外框，內部改為紅色方形，計時置於上方</li><li>新增詳細資訊入口，後設資料下滑收合不退出照片</li><li>原況影片設定移除，效果圖示可直接切換播放</li><li>相機最近拍攝縮圖改為直接開啟完整相片庫檢視器</li><li>原況照片拍攝加入錯誤回復，避免配對影片失敗時卡住快門狀態</li><li>一般影片預覽改為自訂播放按鈕，不顯示系統 AirPlay、子母畫面與放大控制</li><li>原況照片檢視改為靜態呈現，長按播放；圖示可切換循環、來回、長曝與關閉</li><li>相片放大器改以雙指中心點作為縮放錨點，並可從縮放狀態滑動切換照片</li><li>垃圾桶改用版面內確認浮層，不再跳出系統確認框</li><li>匯入照片與影片時一併讀取 Photos 地點及照片 EXIF GPS</li><li>改用 Apple 原生照片選取器，僅匯入使用者選取的照片與影片</li><li>原況照片匯入時一併取得配對動態影片</li><li>新增 Files 文件提供者，將相片庫檔案呈現在「瀏覽」位置</li><li>設定新增「晃動返回更多」開關與重新安裝倒數</li></ul></div>
@@ -8694,7 +8700,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v30';
+  var APP_VERSION = 'v31';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -10734,10 +10740,40 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   function renderEverything(){ renderAll(); renderFinance(); renderWallet(); }
   function syncEditModeBadges(enabled){
     document.querySelectorAll('#copyGrid .keycap[data-item-id], #shortcutGrid .keycap[data-item-id], #page-finance .fin-row[data-item-id], #page-finance .fin-row-main[data-item-id]').forEach(function(item){
-      var badge = item.querySelector(':scope > .edit-trash-indicator');
+      var isKeycap = item.classList.contains('keycap');
+      var overlay = item.querySelector(':scope > .edit-mode-delete-overlay');
       if(enabled){
-        if(!badge){ badge = document.createElement('span'); badge.className = 'edit-trash-indicator'; badge.setAttribute('aria-hidden', 'true'); badge.innerHTML = icon('trash-2'); item.appendChild(badge); }
-      } else if(badge) badge.remove();
+        if(!overlay){
+          var itemType = item.dataset.itemType;
+          var list = itemType === 'copy' ? state.copyItems : (itemType === 'shortcut' ? state.shortcutItems : (itemType === 'account' ? state.accounts : state.expenses));
+          var data = (list || []).find(function(candidate){ return candidate.id === item.dataset.itemId; });
+          var label = data ? (itemType === 'copy' ? data.text : data.name) : '';
+          if(itemType === 'copy' && typeof label === 'string' && label.indexOf('data:image') === 0) label = '圖片';
+          overlay = document.createElement('div');
+          overlay.className = 'edit-mode-delete-overlay';
+          overlay.setAttribute('aria-hidden', 'true');
+          overlay.innerHTML = icon('trash-2','trash-icon') + '<div class="label">' + escapeHtml(window.safeTrunc(String(label || ''), 40)) + '</div>';
+          if(isKeycap){
+            item.classList.add('delete-tile');
+            var pencil = document.createElement('button');
+            pencil.type = 'button';
+            pencil.className = 'edit-pencil';
+            pencil.title = '編輯此項目';
+            pencil.setAttribute('aria-label', '編輯此項目');
+            pencil.innerHTML = icon('pencil','pencil-icon');
+            pencil.addEventListener('click', function(event){
+              event.preventDefault(); event.stopPropagation();
+              if(data) openEditModal(itemType, data);
+            });
+            overlay.removeAttribute('aria-hidden');
+            overlay.appendChild(pencil);
+          }
+          item.appendChild(overlay);
+        }
+      } else {
+        if(overlay) overlay.remove();
+        if(isKeycap) item.classList.remove('delete-tile');
+      }
     });
   }
 
@@ -11720,11 +11756,15 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     closeModal();
     if(modalMode === 'edit'){
       state.editMode = false;
+      document.body.classList.remove('global-edit-mode');
+      syncEditModeBadges(false);
       if(editBtn) editBtn.style.display = '';
+      if(editBtn){ editBtn.disabled = false; editBtn.textContent = '編輯'; }
       if(editActions) editActions.classList.remove('show');
       var floatBar = document.getElementById('floatEditDoneBar');
       if(floatBar) floatBar.style.display = 'none';
       resetPending();
+      if(typeof window._updateAddCardBtnVisibility === 'function') window._updateAddCardBtnVisibility();
       showToast('已儲存變更！');
     } else {
       showToast('已成功新增項目！');
