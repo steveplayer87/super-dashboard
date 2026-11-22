@@ -401,3 +401,11 @@ iOS App：WebView + Swift 原生層
 - Web、主 App 與所有 iOS／Watch targets 版本統一為 v31 / build 25。
 - 主 App `Info.plist` 改為引用 `MARKETING_VERSION` 與 `CURRENT_PROJECT_VERSION`，避免 plist 內殘留 v21/build21 覆蓋 Xcode 專案設定。
 - 本次狀態：來源已修改；建置、安裝及 iPhone 上連點驗收待完成。
+
+## 13. v32 編輯列定位與相片庫穩定性修正（2026-11-23）
+
+- 主頁進入編輯模式時，取消／完成操作列依標題列內距定位，寬度固定容納兩顆按鈕，避免按鈕偏移或溢出。
+- 錢包的「返回財務」移至標題列，按鈕採 Git 歷史 `.wallet-more-btn` 三點膠囊樣式尺寸（52×36 CSS px）；不使用刪除／禁止符號。
+- 相片庫初始網格改為每批 24 個項目、圖片非同步解碼；切換分類時沿用相同批次大小。原生端偵測 WKWebView 內容程序終止後節流重載目前頁面，以嘗試從黑／白畫面復原。
+- Web、主 App 與所有 iOS／Watch targets 版本統一為 v32 / build 26；原生更新通知版本同步為 v32。
+- 本次為程式修正與部署準備；黑畫面原因尚未取得發生當下的裝置 crash log，因此需由使用者在 iPhone 重試確認實機行為。

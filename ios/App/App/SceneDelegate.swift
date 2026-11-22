@@ -815,6 +815,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
     private let shakeMotionManager = CMMotionManager()
     private var lastSensitiveShakeAt: TimeInterval = 0
     private var shakeAboveThreshold = false
+    private var lastWebContentRecoveryAt: TimeInterval = 0
 
     private func startSensitiveShakeDetection() {
         guard shakeMotionManager.isAccelerometerAvailable, !shakeMotionManager.isAccelerometerActive else { return }
@@ -914,7 +915,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         setupDelegatesAndHandlers()
         NotificationManager.checkAndReportStatus()
         startSensitiveShakeDetection()
-        NotificationManager.scheduleUpdateNotification(version: "v28")
+        NotificationManager.scheduleUpdateNotification(version: "v32")
     }
 
     private func setupDelegatesAndHandlers() {
@@ -1713,6 +1714,19 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler, WKNav
         let miniApp = WardrobeMiniAppViewController()
         miniApp.modalPresentationStyle = .fullScreen
         present(miniApp, animated: true)
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard now - lastWebContentRecoveryAt > 8 else {
+            NSLog("[WebView] Content process terminated again within recovery window; suppressing reload")
+            return
+        }
+        lastWebContentRecoveryAt = now
+        NSLog("[WebView] Content process terminated; reloading current page to recover from blank screen")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak webView] in
+            webView?.reload()
+        }
     }
 }
 

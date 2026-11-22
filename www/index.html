@@ -89,7 +89,7 @@
   .btn.cancel{ background:var(--panel-raised-2); color:var(--text-muted); }
   .btn.done{ background:var(--amber); border-color:var(--amber); color:#241705; font-weight:700; }
   .edit-actions{ display:none; gap:8px; }
-  .edit-actions.show{ display:flex; position:absolute; right:0; top:0; z-index:5; width:176px; height:40px; align-items:center; justify-content:flex-end; gap:8px; }
+  .edit-actions.show{ display:flex; position:absolute; right:0; top:12px; z-index:5; width:216px; height:40px; align-items:center; justify-content:flex-end; gap:8px; }
   #editBtn,.content-header .btn.cancel,.content-header .btn.done,.content-header .btn.add-card-header-btn{height:40px;min-height:40px;min-width:104px;width:104px;padding:0 14px;box-sizing:border-box;border-radius:18px;line-height:1;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
   .content-header .btn.add-card-header-btn{gap:6px;background:var(--panel-raised);border:1px solid var(--border);color:var(--text);}
   .content-header #editBtn{background:var(--panel-raised);border:1px solid var(--border);color:var(--text);}
@@ -1618,12 +1618,15 @@
      ======================================================== */
   .wallet-more-btn{
     background:var(--panel-raised-2); border:1px solid var(--border); color:var(--text);
-    padding:6px 12px; border-radius:18px; font-size:14px; font-weight:700; cursor:pointer;
+    width:52px; min-width:52px; height:36px; min-height:36px; padding:0; box-sizing:border-box; border-radius:18px; font-size:14px; font-weight:700; cursor:pointer;
     display:inline-flex; align-items:center; justify-content:center;
     transition:all .18s ease;
   }
   .wallet-more-btn:hover{ border-color:var(--gold); color:var(--gold); }
   .wallet-more-btn:active{ transform:scale(0.95); }
+  .wallet-back-finance{ width:52px; min-width:52px; height:36px; min-height:36px; padding:0; margin-right:auto; border-radius:18px; display:none; align-items:center; justify-content:center; box-sizing:border-box; }
+  .wallet-back-finance svg{ width:18px; height:18px; flex:none; }
+  .edit-mode-delete-overlay .edit-pencil{ top:4px !important; right:4px !important; width:28px !important; height:28px !important; box-sizing:border-box !important; }
 
   /* 全域中樞 Modal */
   .hub-modal{
@@ -4691,6 +4694,7 @@
 
   <div class="content">
     <div class="content-header">
+      <button class="btn wallet-back-finance" id="walletBackFinanceBtn" type="button" title="返回財務" aria-label="返回財務" onclick="window.switchPage('finance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <button class="btn add-card-header-btn" id="addCardHeaderBtn" style="display:none;"><span id="iconAddCardHeader"></span>新增卡片</button>
       <button class="btn wallet-more-btn" id="walletMoreBtn" style="display:none;" title="全域設定中樞"><span style="letter-spacing:1.5px;font-weight:900;">•••</span></button>
       <button class="btn" id="editBtn">編輯</button>
@@ -4945,10 +4949,6 @@
 
     <!-- ===== 頁面三:錢包(虛擬卡)===== -->
     <div class="page" id="page-wallet" style="display:none;">
-      <button type="button" class="btn wallet-back-finance" onclick="window.switchPage('finance')" style="display:inline-flex;align-items:center;gap:7px;min-height:38px;margin:0 0 12px;padding:0 12px;">
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/><path d="M20 12H9"/></svg>返回財務
-      </button>
-
       <!-- 視圖一：卡片主視圖容器 -->
       <div id="walletSubViewCards">
 
@@ -5646,7 +5646,7 @@
             <div class="fin-row" id="aboutVersionRow" style="display:flex; align-items:center; cursor:pointer;" title="點擊查看本次更新">
               <div class="fin-row-name" style="flex:1;">
                 <div style="font-weight:600; color:var(--text);">超級儀錶板 Super Dashboard</div>
-                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v31 · 還原舊版垃圾桶編輯樣式</div>
+                <div id="aboutVersionLabel" style="font-size:11.5px; color:var(--text-muted); font-weight:normal;">版本 v32 · 編輯列定位與相片庫穩定性修正</div>
                 <div id="installExpiryCountdown" style="font-size:11px;color:var(--gold);margin-top:7px;font-weight:600;">重新安裝提醒倒數：計算中…</div>
               </div>
               <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:rgba(92,214,138,0.12); color:var(--good); font-weight:600;">ACTIVE</span>
@@ -6625,8 +6625,9 @@
   <div class="update-notes-panel">
     <button type="button" class="update-notes-close" id="updateNotesClose" aria-label="關閉更新公告">×</button>
     <div class="update-notes-kicker">SUPER DASHBOARD · UPDATE</div>
-    <h2 id="updateNotesTitle">已更新至 v31</h2>
+    <h2 id="updateNotesTitle">已更新至 v32</h2>
     <div class="update-notes-list">
+      <div class="update-notes-group"><strong>修正（v32）</strong><ul><li>對齊主頁編輯模式操作列，固定取消與完成按鈕位置</li><li>錢包返回財務移入標題列，沿用 Git 舊版三點膠囊按鈕規格</li><li>相片庫改為每批載入 24 個項目並非同步解碼；WebView 內容程序中止時自動嘗試恢復</li></ul></div>
       <div class="update-notes-group"><strong>修正（v31）</strong><ul><li>從 Git 舊版取回紅底垃圾桶卡片與鉛筆編輯樣式，改為原位覆蓋，編輯時不移動格子或財務列</li><li>保留 v30 修正的編輯防誤觸及相片庫快速切頁防黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v30）</strong><ul><li>主頁快捷項目及財務編輯模式改回垃圾桶圖示，保留項目位置並防止誤觸其他操作</li><li>修正相片庫重複切頁與延遲關閉燈箱造成的黑畫面</li></ul></div>
       <div class="update-notes-group"><strong>修正（v29）</strong><ul><li>修復阿鵝管家頁底色變透明、透出「更多」頁的問題</li></ul></div>
@@ -8700,7 +8701,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   })();
 
 
-  var APP_VERSION = 'v31';
+  var APP_VERSION = 'v32';
   function openUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.add('show'); }
   function closeUpdateNotes(){ var el = document.getElementById('updateNotesOverlay'); if(el) el.classList.remove('show'); }
   var updateNotesClose = document.getElementById('updateNotesClose');
@@ -10616,10 +10617,12 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   var currentPage = 'dashboard';
   var addCardHeaderBtn = document.getElementById('addCardHeaderBtn');
   var walletMoreBtn = document.getElementById('walletMoreBtn');
+  var walletBackFinanceBtn = document.getElementById('walletBackFinanceBtn');
   function updateAddCardBtnVisibility(){
     var cur = window.currentPage || currentPage;
     var isWallet = (cur === 'wallet');
     var hasCards = (state.cards && state.cards.length > 0);
+    if(walletBackFinanceBtn) walletBackFinanceBtn.style.display = isWallet ? 'inline-flex' : 'none';
 
     // 在錢包頁面隨時可新增第二張以上卡片
     if(addCardHeaderBtn){
@@ -13366,7 +13369,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
     initialized: false,
     initializing: false,
     rendered: false,
-    visibleLimit: 90,
+    visibleLimit: 24,
     sortBy: localStorage.getItem('photo_vault_sort_by') || 'created_desc'
   };
 
@@ -13779,7 +13782,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
           var selectCheck = '<div class="photo-select-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>';
 
           return '<div class="' + cls + '" data-id="' + item.id + '">' +
-            '<img src="' + (item.thumbnailUrl || item.dataUrl) + '" alt="' + item.filename + '" loading="lazy">' +
+            '<img src="' + (item.thumbnailUrl || item.dataUrl) + '" alt="' + item.filename + '" loading="lazy" decoding="async">' +
             liveBadge + videoBadge + favBadge + selectCheck +
             '</div>';
         }).join('');
@@ -13950,7 +13953,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
 
   function switchSubtab(tab, keepFilter) {
     state.subtab = tab;
-    state.visibleLimit = 90;
+    state.visibleLimit = 24;
     if (!keepFilter) {
       state.albumFilter = null;
       state.mediaTypeFilter = null;
@@ -13974,7 +13977,7 @@ if (typeof module !== 'undefined') module.exports = QRCodeGenerator;
   }
 
   function loadMore() {
-    state.visibleLimit += 90;
+    state.visibleLimit += 24;
     render();
   }
 
